@@ -1,0 +1,65 @@
+:root {
+  --si-navy: #003da5;
+  --si-blue: #0077c8;
+  --si-teal: #00707a;
+  --si-teal-bg: #e6fbfb;
+  --si-green: #0d7a3e;
+  --si-green-bg: #e8f7ee;
+  --si-purple: #772583;
+  --si-purple-bg: #f4ecf7;
+  --si-red: #c8102e;
+  --si-red-bg: #fdeceb;
+  --si-amber: #b45309;
+  --si-amber-bg: #fef3e2;
+  --si-indigo: #1f2f7a;
+  --si-indigo-bg: #e8ecfa;
+
+  --si-bg: #f5f6f8;
+  --si-surface: #ffffff;
+  --si-border: #e6e9ee;
+  --si-text: #12172a;
+  --si-text-secondary: #4b5563;
+  --si-text-muted: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--si-bg);
+  color: var(--si-text);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.si-display {
+  font-family: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.si-mono {
+  font-family: "IBM Plex Mono", monospace;
+}
+
+a {
+  color: var(--si-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--si-navy);
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input {
+  font-family: inherit;
+}

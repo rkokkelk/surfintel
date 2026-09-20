@@ -1,0 +1,56 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev-db: start",
+      "type": "shell",
+      "command": "docker compose -f docker-compose-dev.yml up -d && until docker compose -f docker-compose-dev.yml exec -T db pg_isready -U surfintel >/dev/null 2>&1; do sleep 1; done",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "dev-db: stop",
+      "type": "shell",
+      "command": "docker compose -f docker-compose-dev.yml down",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: alembic upgrade head",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/alembic upgrade head",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "dependsOn": ["dev-db: start"],
+      "dependsOrder": "sequence",
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: install deps",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/pip install -e '.[dev]'",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: run tests",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/pytest -v",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend: npm install",
+      "type": "shell",
+      "command": "npm install",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    }
+  ]
+}

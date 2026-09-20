@@ -1,0 +1,101 @@
+import type { Item, ItemEnrichment } from "@/lib/types";
+
+const SEVERITY_STYLE: Record<string, { color: string; bg: string }> = {
+  kritiek: { color: "var(--si-red)", bg: "var(--si-red-bg)" },
+  hoog: { color: "var(--si-amber)", bg: "var(--si-amber-bg)" },
+  midden: { color: "var(--si-indigo)", bg: "var(--si-indigo-bg)" },
+};
+
+const CATEGORY_STYLE: Record<string, { color: string; bg: string; label: string }> = {
+  advisory: { color: "var(--si-teal)", bg: "var(--si-teal-bg)", label: "Advisory" },
+  patch: { color: "var(--si-green)", bg: "var(--si-green-bg)", label: "Patch" },
+  malware: { color: "var(--si-indigo)", bg: "var(--si-indigo-bg)", label: "Malware" },
+};
+
+function enrichment(item: ItemWithEnrichments, moduleName: string) {
+  return item.enrichments?.find((e) => e.module_name === moduleName)?.data as
+    | Record<string, unknown>
+    | undefined;
+}
+
+type ItemWithEnrichments = Item & { enrichments?: ItemEnrichment[] };
+
+export function FeedCard({ item }: { item: ItemWithEnrichments }) {
+  const categorization = enrichment(item, "ai_categorizer");
+  const cve = enrichment(item, "cve_extractor");
+  const severity = (categorization?.severity as string) ?? null;
+  const category = (categorization?.category as string) ?? null;
+  const cveIds = (cve?.cve_ids as string[]) ?? [];
+
+  const severityStyle = severity ? SEVERITY_STYLE[severity] : null;
+  const categoryStyle = category ? CATEGORY_STYLE[category] : null;
+
+  return (
+    <div
+      style={{
+        background: "var(--si-surface)",
+        border: "1px solid var(--si-border)",
+        borderRadius: 12,
+        padding: "16px 20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 9,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 12, color: "var(--si-text-muted)" }}>
+          {item.published_at ? new Date(item.published_at).toLocaleString("nl-NL") : ""}
+        </span>
+        {severityStyle && (
+          <span
+            style={{
+              marginLeft: "auto",
+              fontSize: 11,
+              fontWeight: 600,
+              color: severityStyle.color,
+              background: severityStyle.bg,
+              borderRadius: 10,
+              padding: "3px 9px",
+            }}
+          >
+            {severity}
+          </span>
+        )}
+      </div>
+      <a
+        href={item.url}
+        target="_blank"
+        rel="noreferrer"
+        className="si-display"
+        style={{ fontSize: 16, fontWeight: 600, color: "var(--si-text)" }}
+      >
+        {item.title ?? item.url}
+      </a>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        {cveIds.map((id) => (
+          <span
+            key={id}
+            className="si-mono"
+            style={{ fontSize: 11.5, color: "var(--si-purple)", background: "var(--si-purple-bg)", borderRadius: 6, padding: "3px 8px" }}
+          >
+            {id}
+          </span>
+        ))}
+        {categoryStyle && (
+          <span
+            style={{
+              fontSize: 11.5,
+              fontWeight: 600,
+              color: categoryStyle.color,
+              background: categoryStyle.bg,
+              borderRadius: 6,
+              padding: "3px 8px",
+            }}
+          >
+            {categoryStyle.label}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}

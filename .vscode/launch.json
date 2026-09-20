@@ -1,0 +1,94 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // No --reload here on purpose: uvicorn's --reload runs the app in a
+      // spawned child process, and debugpy doesn't reliably keep breakpoints
+      // working across that child being killed/respawned on every file
+      // change. Restart this debug session after edits instead. Use
+      // `uvicorn app.main:app --reload` from a plain terminal (see README)
+      // for hot-reload without the debugger attached.
+      "name": "Backend: FastAPI (debug)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--port", "8000"],
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/.venv/bin/python",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "preLaunchTask": "backend: alembic upgrade head",
+      "justMyCode": true
+    },
+    {
+      "name": "Backend: run ingestion (debug)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.cli",
+      "args": ["run-ingestion"],
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/.venv/bin/python",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "preLaunchTask": "backend: alembic upgrade head",
+      "justMyCode": true
+    },
+    {
+      "name": "Backend: create platform admin",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.cli",
+      "args": [
+        "create-platform-admin",
+        "--email", "${input:adminEmail}",
+        "--name", "${input:adminName}",
+        "--password", "${input:adminPassword}"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/.venv/bin/python",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "preLaunchTask": "backend: alembic upgrade head",
+      "justMyCode": true
+    },
+    {
+      "name": "Backend: pytest (debug current file)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-v"],
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/.venv/bin/python",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "justMyCode": true
+    },
+    {
+      "name": "Frontend: Next.js dev server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/frontend"
+    },
+    {
+      "name": "Frontend: Next.js full stack (server + Chrome)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/frontend",
+      "serverReadyAction": {
+        "pattern": "- Local:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "SurfIntel: Backend + Frontend",
+      "configurations": ["Backend: FastAPI (debug)", "Frontend: Next.js full stack (server + Chrome)"],
+      "stopAll": true
+    }
+  ],
+  "inputs": [
+    { "id": "adminEmail", "type": "promptString", "description": "E-mailadres nieuwe platform-admin" },
+    { "id": "adminName", "type": "promptString", "description": "Naam nieuwe platform-admin" },
+    { "id": "adminPassword", "type": "promptString", "description": "Wachtwoord nieuwe platform-admin", "password": true }
+  ]
+}
