@@ -4,6 +4,7 @@ import uuid
 from pydantic import BaseModel, ConfigDict
 
 from app.models.item import ItemStatus
+from app.schemas.source import SourceOut
 
 
 class ItemEnrichmentOut(BaseModel):
@@ -25,6 +26,7 @@ class ItemOut(BaseModel):
     status: ItemStatus
     last_changed_at: dt.datetime | None
     created_at: dt.datetime
+    source: SourceOut
     # Populated by the route (batched, not a lazy relationship) — the feed
     # view needs severity/category/CVE badges without a request per item.
     enrichments: list[ItemEnrichmentOut] = []

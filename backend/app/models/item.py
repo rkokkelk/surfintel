@@ -3,9 +3,10 @@ import enum
 import uuid
 
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPk
+from app.models.source import Source
 
 
 class ItemStatus(str, enum.Enum):
@@ -30,6 +31,11 @@ class Item(Base, UUIDPk, TimestampMixin):
     status: Mapped[ItemStatus] = mapped_column(
         Enum(ItemStatus, name="item_status"), default=ItemStatus.discovered
     )
+    # many-to-one, joined eagerly: every place an Item loads gets its Source
+    # for free (no row duplication, since this side is always exactly one
+    # row) — avoids having to remember `.options(joinedload(...))` in every
+    # route that needs source.name/type for the UI.
+    source: Mapped["Source"] = relationship(lazy="joined")
     content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     last_changed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     raw_html: Mapped[str | None] = mapped_column(Text, nullable=True)

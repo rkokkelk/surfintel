@@ -1,4 +1,4 @@
-import type { Item, ItemEnrichment } from "@/lib/types";
+import type { Item } from "@/lib/types";
 
 const SEVERITY_STYLE: Record<string, { color: string; bg: string }> = {
   kritiek: { color: "var(--si-red)", bg: "var(--si-red-bg)" },
@@ -12,15 +12,13 @@ const CATEGORY_STYLE: Record<string, { color: string; bg: string; label: string 
   malware: { color: "var(--si-indigo)", bg: "var(--si-indigo-bg)", label: "Malware" },
 };
 
-function enrichment(item: ItemWithEnrichments, moduleName: string) {
+function enrichment(item: Item, moduleName: string) {
   return item.enrichments?.find((e) => e.module_name === moduleName)?.data as
     | Record<string, unknown>
     | undefined;
 }
 
-type ItemWithEnrichments = Item & { enrichments?: ItemEnrichment[] };
-
-export function FeedCard({ item }: { item: ItemWithEnrichments }) {
+export function FeedCard({ item }: { item: Item }) {
   const categorization = enrichment(item, "ai_categorizer");
   const cve = enrichment(item, "cve_extractor");
   const severity = (categorization?.severity as string) ?? null;
@@ -29,6 +27,16 @@ export function FeedCard({ item }: { item: ItemWithEnrichments }) {
 
   const severityStyle = severity ? SEVERITY_STYLE[severity] : null;
   const categoryStyle = category ? CATEGORY_STYLE[category] : null;
+
+  const timeFormatOptions: Intl.DateTimeFormatOptions = { 
+    month: 'short', 
+    weekday: "short",
+    day: '2-digit', 
+    hour: '2-digit', 
+    minute: '2-digit', 
+  };
+  const timeFormat = Intl.DateTimeFormat("nl-NL", timeFormatOptions);
+
 
   return (
     <div
@@ -43,13 +51,9 @@ export function FeedCard({ item }: { item: ItemWithEnrichments }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 12, color: "var(--si-text-muted)" }}>
-          {item.published_at ? new Date(item.published_at).toLocaleString("nl-NL") : ""}
-        </span>
         {severityStyle && (
           <span
             style={{
-              marginLeft: "auto",
               fontSize: 11,
               fontWeight: 600,
               color: severityStyle.color,
@@ -61,6 +65,9 @@ export function FeedCard({ item }: { item: ItemWithEnrichments }) {
             {severity}
           </span>
         )}
+        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--si-text-muted)" }}>
+          {item.source?.name} • {item.published_at ? timeFormat.format(new Date(item.published_at)) : ""}
+        </span>
       </div>
       <a
         href={item.url}

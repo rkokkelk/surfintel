@@ -22,6 +22,8 @@ def list_items(
 ) -> list[Item]:
     # The item feed is shared across every organization — no organization_id
     # filter here, unlike the org-owned tables (see app/api/deps.py).
+    # Item.source is `lazy="joined"` (see app/models/item.py), so it's
+    # eagerly loaded here without needing an explicit join/option.
     query = select(Item).where(Item.status == ItemStatus.enriched)
 
     if category:
