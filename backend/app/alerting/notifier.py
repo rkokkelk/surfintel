@@ -4,6 +4,7 @@ import apprise
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.media import screenshot_path
 from app.core.encryption import decrypt
 from app.models.alert import AlertChannel, AlertMatch, AlertRule, NotificationStatus
 from app.models.item import Item
@@ -25,7 +26,7 @@ def send_alert_notification(db: Session, rule: AlertRule, item: Item, match: Ale
     title = f"SurfIntel alert: {rule.name}"
     body = f"{item.title or item.url}\n{item.url}"
 
-    sent = notifier.notify(title=title, body=body)
+    sent = notifier.notify(title=title, body=body, attach=str(screenshot_path(item.id)))
 
     match.notified_at = dt.datetime.now(dt.timezone.utc)
     match.notification_status = NotificationStatus.sent if sent else NotificationStatus.failed
