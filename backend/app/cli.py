@@ -6,6 +6,7 @@
 """
 
 import typer
+import logging
 from sqlalchemy import select
 
 from app.core.security import hash_password
@@ -14,16 +15,23 @@ from app.ingestion.pipeline import run_ingestion_cycle
 from app.models.organization import Organization
 from app.models.source import Source, SourceType
 from app.models.user import AppUser, UserRole
+from app.models.item import Item
+from app.ingestion.playwright import PlaywrightBackend
 
 cli = typer.Typer()
 
+logging.basicConfig(level=logging.DEBUG)
+
+
 
 @cli.command()
-def run_ingestion() -> None:
+def run_ingestion(force: bool = False) -> None:
     """One ingestion cycle: poll sources, fetch/enrich new items, evaluate alerts."""
     db = SessionLocal()
+    fetch_backend = PlaywrightBackend()
+
     try:
-        run_ingestion_cycle(db)
+        run_ingestion_cycle(db, fetch_backend, force)
     finally:
         db.close()
 

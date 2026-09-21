@@ -12,7 +12,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
-      "args": ["app.main:app", "--port", "8000"],
+      "args": ["app.main:app", "--port", "8000", "--log-level", "trace"],
       "cwd": "${workspaceFolder}/backend",
       "python": "${workspaceFolder}/backend/.venv/bin/python",
       "envFile": "${workspaceFolder}/backend/.env",

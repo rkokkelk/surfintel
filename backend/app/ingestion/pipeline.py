@@ -68,6 +68,7 @@ def _poll_source(db: Session, source: Source) -> None:
 
 def _fetch_and_enrich(db: Session, item: Item, fetch_backend: FetchBackend) -> None:
     try:
+        logger.debug("Parsed[%s]: %s", item.id, item.url)
         result = fetch_backend.fetch(item.id, item.url, item.source.config)
     except Exception as e:  # noqa: BLE001
         logger.error(e)
