@@ -62,6 +62,12 @@ export default function SourcesPage() {
     loadSources();
   }, [router]);
 
+  async function deleteSource() {
+    await apiFetch(`/sources/${editingId}`, {
+      method: "DELETE",
+    }).then(loadSources);
+  }
+
   function startCreate() {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -193,6 +199,7 @@ export default function SourcesPage() {
                       src={`data:image/png;base64,${source.favicon}`} 
                       height="20px"
                       width="20px"
+                      hidden={source.favicon == null}
                       />
                   </div>
                   <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--si-text)" }}>{source.name}</span>
@@ -372,6 +379,24 @@ export default function SourcesPage() {
                 Annuleren
               </button>
             )}
+            <button
+              type="button"
+              onClick={deleteSource}
+              style={{
+                marginLeft: "auto",
+                height: 36,
+                padding: "0 18px",
+                border: "none",
+                borderRadius: 8,
+                background: "var(--si-red)",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+            Verwijder
+            </button>
+
             <button
               type="submit"
               disabled={saving}

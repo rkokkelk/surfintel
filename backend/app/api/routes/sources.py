@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -54,3 +54,16 @@ def update_source(
 
     db.commit()
     return source
+
+@router.delete("/{source_id}", status_code=status.HTTP_202_ACCEPTED)
+def delete_source(
+    source_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_platform_admin),
+) -> None:
+    source = db.get(Source, source_id)
+    if source is None:
+        raise HTTPException(404, "Bron niet gevonden")
+
+    db.delete(source)
+    db.commit()
