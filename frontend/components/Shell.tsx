@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clearToken } from "@/lib/api";
+import { isPlatformAdmin } from "@/lib/auth";
 
 export function Shell({
   active,
   children,
 }: {
-  active: "overzicht" | "alerts";
+  active: "overzicht" | "alerts" | "sources";
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const showAdminSection = isPlatformAdmin();
 
   function logout() {
     clearToken();
@@ -94,6 +96,24 @@ export function Shell({
               binnenkort
             </span>
           </div>
+
+          {showAdminSection && (
+            <>
+              <div style={{ height: 1, background: "#eef0f3", margin: "12px 4px" }} />
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#9aa3b2",
+                  letterSpacing: "0.06em",
+                  padding: "0 12px 4px",
+                }}
+              >
+                BEHEER
+              </div>
+              <NavItem href="/sources" label="Bronnen" activeItem={active === "sources"} />
+            </>
+          )}
         </nav>
 
         <main style={{ flexGrow: 1, minWidth: 0 }}>{children}</main>

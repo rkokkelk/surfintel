@@ -13,6 +13,16 @@ class SourceCreate(BaseModel):
     poll_interval_seconds: int = 3600
 
 
+class SourceUpdate(BaseModel):
+    """All fields optional — only what's set gets changed (PATCH semantics)."""
+
+    name: str | None = None
+    type: SourceType | None = None
+    config: dict | None = None
+    enabled: bool | None = None
+    poll_interval_seconds: int | None = None
+
+
 class SourceOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
