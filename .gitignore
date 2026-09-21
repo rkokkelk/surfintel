@@ -226,3 +226,6 @@ npm-debug.log*
 
 # SurfIntel backend venv
 backend/.venv/
+
+# SurfIntel generated media (screenshots)
+backend/media/

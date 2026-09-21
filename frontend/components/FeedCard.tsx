@@ -1,4 +1,64 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import type { Item } from "@/lib/types";
+import { imgFetch } from "@/lib/api";
+
+const THUMB_WIDTH = 160;
+const THUMB_HEIGHT = 120;
+
+function ItemScreenshot({ itemId }: { itemId: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    setSrc(null);
+    setFailed(false);
+
+    imgFetch<Blob>(`/items/${itemId}/screenshot`)
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setSrc(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [itemId]);
+
+  return (
+    <div
+      style={{
+        width: THUMB_WIDTH,
+        height: THUMB_HEIGHT,
+        flexShrink: 0,
+        borderRadius: 8,
+        overflow: "hidden",
+        background: "var(--si-bg)",
+        border: "1px solid var(--si-border)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element -- object URL from an authenticated blob fetch, not a static/optimizable asset
+        <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      ) : (
+        <span style={{ fontSize: 11, color: "var(--si-text-muted)" }}>
+          {failed ? "Geen screenshot" : "Laden…"}
+        </span>
+      )}
+    </div>
+  );
+}
 
 const SEVERITY_STYLE: Record<string, { color: string; bg: string }> = {
   kritiek: { color: "var(--si-red)", bg: "var(--si-red-bg)" },
@@ -46,83 +106,81 @@ export function FeedCard({ item }: { item: Item }) {
         borderRadius: 12,
         padding: "16px 20px",
         display: "flex",
-        flexDirection: "column",
-        gap: 9,
+        flexDirection: "row",
+        gap: 16,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <img 
-          src={`${process.env.NEXT_PUBLIC_API_URL}/items/${item.id}/screenshot`}
-         />
-      </div>
+      <ItemScreenshot itemId={item.id} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {severityStyle && (
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: severityStyle.color,
-              background: severityStyle.bg,
-              borderRadius: 10,
-              padding: "3px 9px",
-            }}
-          >
-            {severity}
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, minWidth: 0, flexGrow: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {severityStyle && (
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: severityStyle.color,
+                background: severityStyle.bg,
+                borderRadius: 10,
+                padding: "3px 9px",
+              }}
+            >
+              {severity}
+            </span>
+          )}
+          <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--si-text-muted)" }}>
+            {item.source?.name} • {item.published_at ? timeFormat.format(new Date(item.published_at)) : ""}
           </span>
-        )}
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--si-text-muted)" }}>
-          {item.source?.name} • {item.published_at ? timeFormat.format(new Date(item.published_at)) : ""}
-        </span>
-      </div>
-      <a
-        href={item.url}
-        target="_blank"
-        rel="noreferrer"
-        className="si-display"
-        style={{ fontSize: 16, fontWeight: 600, color: "var(--si-text)" }}
-      >
-        {item.title ?? item.url}
-      </a>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-        {item.description && (
-          <span
-            className="si-mono"
-            style={{
-              fontSize: 11.5,
-              fontWeight: 600,
-              borderRadius: 6,
-              padding: "3px 8px",
-            }}
-          >
-            {item.description}
-          </span>
-        )}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-        {cveIds.map((id) => (
-          <span
-            key={id}
-            className="si-mono"
-            style={{ fontSize: 11.5, color: "var(--si-purple)", background: "var(--si-purple-bg)", borderRadius: 6, padding: "3px 8px" }}
-          >
-            {id}
-          </span>
-        ))}
-        {categoryStyle && (
-          <span
-            style={{
-              fontSize: 11.5,
-              fontWeight: 600,
-              color: categoryStyle.color,
-              background: categoryStyle.bg,
-              borderRadius: 6,
-              padding: "3px 8px",
-            }}
-          >
-            {categoryStyle.label}
-          </span>
-        )}
+        </div>
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noreferrer"
+          className="si-display"
+          style={{ fontSize: 16, fontWeight: 600, color: "var(--si-text)" }}
+        >
+          {item.title ?? item.url}
+        </a>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          {item.description && (
+            <span
+              className="si-mono"
+              style={{
+                fontSize: 11.5,
+                fontWeight: 600,
+                borderRadius: 6,
+                padding: "3px 8px",
+              }}
+            >
+              {item.description}
+            </span>
+          )}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          {cveIds.map((id) => (
+            <span
+              key={id}
+              className="si-mono"
+              style={{ fontSize: 11.5, color: "var(--si-purple)", background: "var(--si-purple-bg)", borderRadius: 6, padding: "3px 8px" }}
+            >
+              {id}
+            </span>
+          ))}
+          {categoryStyle && (
+            <span
+              style={{
+                fontSize: 11.5,
+                fontWeight: 600,
+                color: categoryStyle.color,
+                background: categoryStyle.bg,
+                borderRadius: 6,
+                padding: "3px 8px",
+              }}
+            >
+              {categoryStyle.label}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

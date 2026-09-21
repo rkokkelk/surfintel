@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, getToken } from "@/lib/api";
+import { apiFetch, getToken, imgFetch } from "@/lib/api";
 import type { Item } from "@/lib/types";
 import { Shell } from "@/components/Shell";
 import { FeedCard } from "@/components/FeedCard";

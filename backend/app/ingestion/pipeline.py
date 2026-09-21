@@ -3,6 +3,7 @@ Source -> discover links -> Item -> fetch -> enrich -> evaluate alerts.
 Invoked by app/cli.py (`surfintel run-ingestion`), e.g. from cron.
 """
 
+import logging
 import datetime as dt
 
 from sqlalchemy import select
@@ -23,8 +24,9 @@ CONNECTORS: dict[SourceType, SourceConnector] = {
     # built — deliberately not implemented yet.
 }
 
+logger = logging.getLogger(__name__)
 
-def run_ingestion_cycle(db: Session, fetch_backend: FetchBackend | None = None) -> None:
+def run_ingestion_cycle(db: Session, fetch_backend: FetchBackend | None = None, force: bool = False) -> None:
     fetch_backend = fetch_backend or HttpFetchBackend()
 
     sources = db.scalars(select(Source).where(Source.enabled.is_(True))).all()
@@ -33,7 +35,11 @@ def run_ingestion_cycle(db: Session, fetch_backend: FetchBackend | None = None) 
         source.last_polled_at = dt.datetime.now(dt.UTC)
         db.commit()
 
-    pending_items = db.scalars(select(Item).where(Item.status == ItemStatus.discovered)).all()
+    if force:
+        pending_items = db.scalars(select(Item)).all()
+    else:
+        pending_items = db.scalars(select(Item).where(Item.status == ItemStatus.discovered)).all()
+
     for item in pending_items:
         _fetch_and_enrich(db, item, fetch_backend)
         db.commit()
@@ -62,9 +68,9 @@ def _poll_source(db: Session, source: Source) -> None:
 
 def _fetch_and_enrich(db: Session, item: Item, fetch_backend: FetchBackend) -> None:
     try:
-        result = fetch_backend.fetch(item.url, item.source.config)
-        screenshot = fetch_backend.screenshot(item.url)
-    except Exception:  # noqa: BLE001
+        result = fetch_backend.fetch(item.id, item.url, item.source.config)
+    except Exception as e:  # noqa: BLE001
+        logger.error(e)
         item.status = ItemStatus.error
         return
 

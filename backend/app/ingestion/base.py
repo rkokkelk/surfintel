@@ -30,12 +30,7 @@ class FetchResult:
     raw_html: str
     extracted_text: str
     content_hash: str
-
-@dataclass
-class ScreenshotResult:
-    id: str
-    path: Path
-    success: bool
+    screenshot: bool
 
 class SourceConnector(ABC):
     @abstractmethod
@@ -45,8 +40,5 @@ class SourceConnector(ABC):
 
 class FetchBackend(ABC):
     @abstractmethod
-    def fetch(self, url: str) -> FetchResult:
-        raise NotImplementedError
-
-    def screenshot(self, url: str) -> ScreenshotResult:
+    def fetch(self, item_id: str, url: str, config: dict) -> FetchResult:
         raise NotImplementedError
