@@ -27,6 +27,7 @@ class Item(Base, UUIDPk, TimestampMixin):
     source_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("source.id"), index=True)
     url: Mapped[str] = mapped_column(String(2000), unique=True, index=True)
     title: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     published_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[ItemStatus] = mapped_column(
         Enum(ItemStatus, name="item_status"), default=ItemStatus.discovered

@@ -22,6 +22,7 @@ class ItemOut(BaseModel):
     source_id: uuid.UUID
     url: str
     title: str | None
+    description: str | None
     published_at: dt.datetime | None
     status: ItemStatus
     last_changed_at: dt.datetime | None
