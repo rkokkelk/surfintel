@@ -1,6 +1,9 @@
 import uuid
 
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -45,6 +48,16 @@ def get_item(item_id: uuid.UUID, db: Session = Depends(get_db), _user=Depends(ge
         raise HTTPException(404, "Item niet gevonden")
     _attach_enrichments(db, [item])
     return item
+
+@router.get("/{item_id}/screenshot", response_class=FileResponse)
+def get_screenshot(item_id: uuid.UUID, db: Session = Depends(get_db)) -> Item:
+    mediadir = Path("media")
+    screenshot = mediadir / "screenshots" / item_id
+
+    if not screenshot.is_file():
+        raise HTTPException(404, "No screenshot available")
+
+    return screenshot
 
 
 def _attach_enrichments(db: Session, items: list[Item]) -> None:

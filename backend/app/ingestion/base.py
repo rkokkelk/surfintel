@@ -14,6 +14,7 @@ from __future__ import annotations
 import datetime as dt
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -30,6 +31,11 @@ class FetchResult:
     extracted_text: str
     content_hash: str
 
+@dataclass
+class ScreenshotResult:
+    id: str
+    path: Path
+    success: bool
 
 class SourceConnector(ABC):
     @abstractmethod
@@ -40,4 +46,7 @@ class SourceConnector(ABC):
 class FetchBackend(ABC):
     @abstractmethod
     def fetch(self, url: str) -> FetchResult:
+        raise NotImplementedError
+
+    def screenshot(self, url: str) -> ScreenshotResult:
         raise NotImplementedError

@@ -3,7 +3,7 @@ import hashlib
 import httpx
 from bs4 import BeautifulSoup
 
-from app.ingestion.base import FetchBackend, FetchResult
+from app.ingestion.base import FetchBackend, FetchResult, ScreenshotResult
 
 _USER_AGENT = "SurfIntelBot/0.1 (+https://github.com/surf/surfintel)"
 
@@ -29,3 +29,6 @@ class HttpFetchBackend(FetchBackend):
 
         content_hash = hashlib.sha256(extracted_text.encode()).hexdigest()
         return FetchResult(raw_html=raw_html, extracted_text=extracted_text, content_hash=content_hash)
+
+    def screenshot(self, url: str) -> ScreenshotResult:
+        return ScreenshotResult(None, None, False)

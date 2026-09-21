@@ -63,6 +63,7 @@ def _poll_source(db: Session, source: Source) -> None:
 def _fetch_and_enrich(db: Session, item: Item, fetch_backend: FetchBackend) -> None:
     try:
         result = fetch_backend.fetch(item.url, item.source.config)
+        screenshot = fetch_backend.screenshot(item.url)
     except Exception:  # noqa: BLE001
         item.status = ItemStatus.error
         return

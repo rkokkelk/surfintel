@@ -51,6 +51,12 @@ export function FeedCard({ item }: { item: Item }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <img 
+          src={`${process.env.NEXT_PUBLIC_API_URL}/items/${item.id}/screenshot`}
+         />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {severityStyle && (
           <span
             style={{
