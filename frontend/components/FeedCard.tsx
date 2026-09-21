@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import type { Item } from "@/lib/types";
 import { imgFetch } from "@/lib/api";
 
-const THUMB_WIDTH = 160;
-const THUMB_HEIGHT = 120;
+const THUMB_WIDTH = 260;
+const THUMB_HEIGHT = 200;
 
 function ItemScreenshot({ itemId }: { itemId: string }) {
   const [src, setSrc] = useState<string | null>(null);

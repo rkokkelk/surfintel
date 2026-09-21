@@ -73,7 +73,7 @@ export default function OverviewPage() {
           </div>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 800 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 1000 }}>
           {items.map((item) => (
             <FeedCard key={item.id} item={item} />
           ))}
