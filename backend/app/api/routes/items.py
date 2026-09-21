@@ -32,7 +32,7 @@ def list_items(
             ItemEnrichment.data["category"].as_string() == category,
         )
 
-    query = query.order_by(Item.created_at.desc()).limit(limit)
+    query = query.order_by(Item.published_at.desc()).limit(limit)
     items = list(db.scalars(query))
     _attach_enrichments(db, items)
     return items
