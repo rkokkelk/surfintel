@@ -188,6 +188,13 @@ export default function SourcesPage() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "left", gap: 20 }}>
+                    <img 
+                      src={`data:image/png;base64,${source.favicon}`} 
+                      height="20px"
+                      width="20px"
+                      />
+                  </div>
                   <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--si-text)" }}>{source.name}</span>
                   <span
                     className="si-mono"

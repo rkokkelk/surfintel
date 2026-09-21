@@ -31,5 +31,6 @@ class SourceOut(BaseModel):
     type: SourceType
     config: dict
     enabled: bool
+    favicon: str | None = None
     poll_interval_seconds: int
     last_polled_at: dt.datetime | None
