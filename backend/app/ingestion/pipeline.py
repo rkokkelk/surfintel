@@ -30,7 +30,7 @@ def run_ingestion_cycle(db: Session, fetch_backend: FetchBackend | None = None) 
     sources = db.scalars(select(Source).where(Source.enabled.is_(True))).all()
     for source in sources:
         _poll_source(db, source)
-        source.last_polled_at = dt.datetime.now(dt.timezone.utc)
+        source.last_polled_at = dt.datetime.now(dt.UTC)
         db.commit()
 
     pending_items = db.scalars(select(Item).where(Item.status == ItemStatus.discovered)).all()
@@ -53,6 +53,7 @@ def _poll_source(db: Session, source: Source) -> None:
                 source_id=source.id,
                 url=link.url,
                 title=link.title,
+                description=link.description,
                 published_at=link.published_at,
                 status=ItemStatus.discovered,
             )
@@ -61,12 +62,12 @@ def _poll_source(db: Session, source: Source) -> None:
 
 def _fetch_and_enrich(db: Session, item: Item, fetch_backend: FetchBackend) -> None:
     try:
-        result = fetch_backend.fetch(item.url)
-    except Exception:
+        result = fetch_backend.fetch(item.url, item.source.config)
+    except Exception:  # noqa: BLE001
         item.status = ItemStatus.error
         return
 
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     if item.content_hash != result.content_hash:
         item.last_changed_at = now
     item.raw_html = result.raw_html

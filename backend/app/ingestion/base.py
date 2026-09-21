@@ -20,6 +20,7 @@ from dataclasses import dataclass
 class DiscoveredLink:
     url: str
     title: str | None = None
+    description: str | None = None
     published_at: dt.datetime | None = None
 
 

@@ -21,6 +21,7 @@ class RssSourceConnector(SourceConnector):
                 DiscoveredLink(
                     url=url,
                     title=entry.get("title"),
+                    description=entry.get("description"),
                     published_at=_parse_published(entry),
                 )
             )
@@ -31,4 +32,4 @@ def _parse_published(entry) -> dt.datetime | None:
     parsed_time = entry.get("published_parsed") or entry.get("updated_parsed")
     if not parsed_time:
         return None
-    return dt.datetime(*parsed_time[:6], tzinfo=dt.timezone.utc)
+    return dt.datetime(*parsed_time[:6], tzinfo=dt.UTC)

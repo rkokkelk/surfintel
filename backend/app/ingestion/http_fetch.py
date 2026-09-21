@@ -17,7 +17,7 @@ class HttpFetchBackend(FetchBackend):
     def __init__(self, timeout_seconds: float = 15.0) -> None:
         self._timeout = timeout_seconds
 
-    def fetch(self, url: str) -> FetchResult:
+    def fetch(self, url: str, config: dict) -> FetchResult:
         response = httpx.get(url, timeout=self._timeout, headers={"User-Agent": _USER_AGENT}, follow_redirects=True)
         response.raise_for_status()
         raw_html = response.text

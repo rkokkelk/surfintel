@@ -79,6 +79,21 @@ export function FeedCard({ item }: { item: Item }) {
         {item.title ?? item.url}
       </a>
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        {item.description && (
+          <span
+            className="si-mono"
+            style={{
+              fontSize: 11.5,
+              fontWeight: 600,
+              borderRadius: 6,
+              padding: "3px 8px",
+            }}
+          >
+            {item.description}
+          </span>
+        )}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
         {cveIds.map((id) => (
           <span
             key={id}
