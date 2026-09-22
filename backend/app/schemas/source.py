@@ -12,6 +12,11 @@ class SourceCreate(BaseModel):
     config: dict
     poll_interval_seconds: int = 3600
 
+class SourceIngestion(BaseModel):
+    """All fields optional — only what's set gets changed (PATCH semantics)."""
+
+    fetch_backend: str | None = None
+    force: bool = False
 
 class SourceUpdate(BaseModel):
     """All fields optional — only what's set gets changed (PATCH semantics)."""

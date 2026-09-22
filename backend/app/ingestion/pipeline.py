@@ -28,13 +28,21 @@ CONNECTORS: dict[SourceType, SourceConnector] = {
 
 logger = logging.getLogger(__name__)
 
-def run_ingestion_cycle(db: Session, fetch_backend: FetchBackend | None = None, force: bool = False) -> None:
-    fetch_backend = fetch_backend or HttpFetchBackend()
+def run_ingestion_cycle(db: Session, fetch_backend: FetchBackend | None = None, source: Source | None = None, force: bool = False) -> None:
+    """ Start Ingestion cycle
+    
+    :param Session: DB session
+    :param fetch_backend: FetchBackend to gather items via 
+    :param source: Source to limit ingestion on if given
+    :param force: Whether to gather all items, even if they are also gathered
+    """
 
-    sources = db.scalars(select(Source).where(Source.enabled.is_(True))).all()
-    for source in sources:
-        _poll_source(db, source)
-        source.last_polled_at = dt.datetime.now(dt.UTC)
+    fetch_backend = fetch_backend or HttpFetchBackend()
+    sources = [source] if source else db.scalars(select(Source).where(Source.enabled.is_(True))).all()
+
+    for entry in sources:
+        _poll_source(db, entry)
+        entry.last_polled_at = dt.datetime.now(dt.UTC)
         db.commit()
 
     if force:

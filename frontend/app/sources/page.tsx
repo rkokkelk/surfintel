@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiFetch, ApiError, getToken } from "@/lib/api";
 import { isPlatformAdmin } from "@/lib/auth";
 import type { Source, SourceType } from "@/lib/types";
+import { ToastContainer, toast } from 'react-toastify';
 import { Shell } from "@/components/Shell";
 
 const TYPE_OPTIONS: { value: SourceType; label: string }[] = [
@@ -35,6 +36,7 @@ export default function SourcesPage() {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPopupOpen, setPopupOpen] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SourceFormState>(EMPTY_FORM);
@@ -65,7 +67,21 @@ export default function SourcesPage() {
   async function deleteSource() {
     await apiFetch(`/sources/${editingId}`, {
       method: "DELETE",
-    }).then(loadSources);
+    }).then(function(){
+      loadSources();
+      toast.info("Source verwijderd");
+    });
+  }
+
+  async function ingestSource() {
+    await apiFetch(`/sources/${editingId}/ingest`, {
+      method: "POST",
+      body: JSON.stringify({})
+    }).then(function (){
+        toast.success("Ingestion started");
+    }).catch(function (){
+        toast.error("Failed to start ingest");
+    });
   }
 
   function startCreate() {
@@ -124,6 +140,7 @@ export default function SourcesPage() {
       }
       startCreate();
       loadSources();
+      toast.success("Source aangepast");
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Opslaan mislukt.");
     } finally {
@@ -381,6 +398,23 @@ export default function SourcesPage() {
             )}
             <button
               type="button"
+              onClick={ingestSource}
+              style={{
+                marginLeft: "auto",
+                height: 36,
+                padding: "0 18px",
+                border: "none",
+                borderRadius: 8,
+                background: "var(--si-green)",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+            Start ingest
+            </button>
+            <button
+              type="button"
               onClick={deleteSource}
               style={{
                 marginLeft: "auto",
@@ -417,6 +451,7 @@ export default function SourcesPage() {
           </div>
         </form>
       </div>
+      <ToastContainer />
     </Shell>
   );
 }

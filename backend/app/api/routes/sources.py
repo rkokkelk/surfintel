@@ -5,9 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_platform_admin
+from app.ingestion.pipeline import run_ingestion_cycle
 from app.db.session import get_db
 from app.models.source import Source
-from app.schemas.source import SourceCreate, SourceOut, SourceUpdate
+from app.ingestion.playwright import PlaywrightBackend
+from app.schemas.source import SourceCreate, SourceOut, SourceUpdate, SourceIngestion
 
 router = APIRouter(prefix="/sources", tags=["sources"])
 
@@ -19,7 +21,7 @@ def list_sources(db: Session = Depends(get_db), _user=Depends(get_current_user))
     return list(db.scalars(select(Source)))
 
 
-@router.post("", response_model=SourceOut, status_code=201)
+@router.post("", response_model=SourceOut, status_code=status.HTTP_201_CREATED)
 def create_source(
     body: SourceCreate, db: Session = Depends(get_db), _admin=Depends(require_platform_admin)
 ) -> Source:
@@ -34,6 +36,18 @@ def create_source(
     db.commit()
     return source
 
+
+@router.post("/{source_id}/ingest", status_code=status.HTTP_202_ACCEPTED)
+def ingest_source(
+    source_id: uuid.UUID,
+    body: SourceIngestion,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_platform_admin),
+):
+
+    source = db.get(Source, source_id)
+    fetch_backend = PlaywrightBackend()
+    run_ingestion_cycle(db, fetch_backend=fetch_backend, source=source, force=body.force)
 
 @router.patch("/{source_id}", response_model=SourceOut)
 def update_source(
