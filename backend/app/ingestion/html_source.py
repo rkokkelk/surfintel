@@ -20,7 +20,9 @@ class HTMLSourceConnector(SourceConnector):
             browser = p.chromium.launch()
             page = browser.new_page()
             page.goto(feed_url, timeout=self._timeout * 1000)
-            page.wait_for_selector("td#advisory-content.security-td")
+
+            if config.get('wait-selector'):
+                page.wait_for_selector(config['wait-selector'])
 
             raw_html = page.content()
 
