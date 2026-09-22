@@ -52,11 +52,12 @@ class Source(Base, UUIDPk, TimestampMixin):
             icon_link = soup.find("link", rel="shortcut icon")
 
         if not icon_link:
-            url_parsed = urlparse(url)
-            url = f"https://{url_parsed.netloc}/favicon.ico"
-            icon = httpx.get(url).read()
+            url_parsed = urlparse(url).netloc
+            domain = '.'.join(url_parsed.split('.')[-2:]) # Ensure only 2LD is used
+            url = f"https://{domain}/favicon.ico"
+            icon = httpx.get(url, follow_redirects=True).content
         else:
-            icon = httpx.get(icon_link['href']).read()
+            icon = httpx.get(icon_link['href']).content
         
         self.favicon = base64.b64encode(icon).decode()
 

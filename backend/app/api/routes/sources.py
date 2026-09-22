@@ -29,8 +29,7 @@ def create_source(
         name=body.name, type=body.type, config=body.config, poll_interval_seconds=body.poll_interval_seconds
     )
 
-    if not source.favicon:
-        source.get_favicon()
+    source.get_favicon()
 
     db.add(source)
     db.commit()
@@ -63,8 +62,7 @@ def update_source(
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(source, field, value)
 
-    if not source.favicon:
-        source.get_favicon()
+    source.get_favicon()
 
     db.commit()
     return source
