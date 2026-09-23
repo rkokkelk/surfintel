@@ -83,6 +83,7 @@
           "worker",
           "--loglevel",
           "DEBUG",
+          "--concurrency=2"
       ]
     },
     {
