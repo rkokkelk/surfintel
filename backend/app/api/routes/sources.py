@@ -5,10 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_platform_admin
-from app.ingestion.pipeline import run_ingestion_cycle
+from app.ingestion.tasks import run_ingestion_cycle
 from app.db.session import get_db
 from app.models.source import Source
-from app.ingestion.playwright import PlaywrightBackend
 from app.schemas.source import SourceCreate, SourceOut, SourceUpdate, SourceIngestion
 
 router = APIRouter(prefix="/sources", tags=["sources"])
@@ -43,10 +42,7 @@ def ingest_source(
     db: Session = Depends(get_db),
     _admin=Depends(require_platform_admin),
 ):
-
-    source = db.get(Source, source_id)
-    fetch_backend = PlaywrightBackend()
-    run_ingestion_cycle(db, fetch_backend=fetch_backend, source=source, force=body.force)
+    run_ingestion_cycle.delay(source_id=source_id, force=body.force)
 
 @router.patch("/{source_id}", response_model=SourceOut)
 def update_source(
