@@ -9,6 +9,7 @@ import datetime as dt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.celery import app
 from app.alerting.engine import evaluate_alerts_for_item
 from app.enrichment.pipeline import run_enrichment_for_item
 from app.ingestion.base import FetchBackend, SourceConnector
