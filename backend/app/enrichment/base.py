@@ -21,7 +21,7 @@ class EnrichmentModule(ABC):
     source_toggle: str | None = None
 
     @abstractmethod
-    def run(self, item: Item, prior_results: dict[str, dict]) -> dict:
+    def run(self, item: Item) -> dict:
         """Return the data to persist in item_enrichment.data for this item."""
         raise NotImplementedError
 

@@ -28,7 +28,7 @@ class AiCategorizer(EnrichmentModule):
     version = "1-heuristic"
     source_toggle = "enrich_ai"
 
-    def run(self, item: Item, prior_results: dict[str, dict]) -> dict:
+    def run(self, item: Item) -> dict:
         text = " ".join(filter(None, [item.title, item.extracted_text])).lower()
 
         severity = next((level for level, kws in _SEVERITY_KEYWORDS.items() if any(kw in text for kw in kws)), None)

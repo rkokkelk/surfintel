@@ -22,8 +22,8 @@ class KevChecker(EnrichmentModule):
         self._cached_ids: set[str] | None = None
         self._cached_at: dt.datetime | None = None
 
-    def run(self, item: Item, prior_results: dict[str, dict]) -> dict:
-        cve_ids: list[str] = prior_results.get("cve_extractor", {}).get("cve_ids", [])
+    def run(self, item: Item) -> dict:
+        cve_ids: list[str] = []
         if not cve_ids:
             return {"in_kev": False, "matched_cve_ids": []}
 

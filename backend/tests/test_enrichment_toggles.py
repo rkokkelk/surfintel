@@ -1,41 +1,29 @@
-from unittest.mock import MagicMock
+import uuid
 
-from app.enrichment.pipeline import run_enrichment_for_item
+from app.enrichment.tasks import get_enrichments_tasks
 from app.models.item import Item
 from app.models.source import Source, SourceType
 
 
-def _run(**toggles):
+def _module_keys(**toggles) -> set[str]:
     source = Source(name="s", type=SourceType.rss, config={}, **toggles)
-    # No CVE ids in the text, so kev_checker never has a reason to hit the network.
-    item = Item(title="Nieuws over een patch", extracted_text="Geen identifiers hier.")
-    item.source = source
+    item = Item(id=uuid.uuid4())
 
-    db = MagicMock()
-    db.scalar.return_value = None  # no existing item_enrichment rows
-
-    results = run_enrichment_for_item(db, item)
-    stored = {call.args[0].module_name for call in db.add.call_args_list}
-    return results, stored
+    # each header signature is run_enrichment_for_item.s(item_id, <toggle key>)
+    return {sig.args[1] for sig in get_enrichments_tasks(item, source)}
 
 
 def test_all_modules_run_when_all_toggles_on():
-    results, stored = _run(enrich_cve=True, enrich_cpe=True, enrich_kev=True, enrich_ai=True)
+    keys = _module_keys(enrich_cve=True, enrich_cpe=True, enrich_kev=True, enrich_ai=True)
 
-    expected = {"cve_extractor", "cpe_extractor", "kev_checker", "ai_categorizer"}
-    assert set(results) == expected
-    assert stored == expected
+    assert keys == {"enrich_cve", "enrich_cpe", "enrich_kev", "enrich_ai"}
 
 
-def test_disabled_modules_are_skipped_and_not_stored():
-    results, stored = _run(enrich_cve=True, enrich_cpe=False, enrich_kev=False, enrich_ai=True)
+def test_disabled_modules_are_left_out_of_the_chord_header():
+    keys = _module_keys(enrich_cve=True, enrich_cpe=False, enrich_kev=False, enrich_ai=True)
 
-    assert set(results) == {"cve_extractor", "ai_categorizer"}
-    assert stored == {"cve_extractor", "ai_categorizer"}
+    assert keys == {"enrich_cve", "enrich_ai"}
 
 
-def test_all_toggles_off_runs_nothing():
-    results, stored = _run(enrich_cve=False, enrich_cpe=False, enrich_kev=False, enrich_ai=False)
-
-    assert results == {}
-    assert stored == set()
+def test_all_toggles_off_gives_an_empty_header():
+    assert _module_keys(enrich_cve=False, enrich_cpe=False, enrich_kev=False, enrich_ai=False) == set()

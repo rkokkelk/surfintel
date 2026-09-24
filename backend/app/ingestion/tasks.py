@@ -12,13 +12,13 @@ from enum import Enum
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from celery import group
+from celery import group, chord
 
 from app.celery import app
 from app.ingestion.http_fetch import HttpFetchBackend
 from app.ingestion.playwright import PlaywrightBackend
-from app.alerting.engine import evaluate_alerts_for_item
-from app.enrichment.pipeline import run_enrichment_for_item
+from app.alerting.tasks import notify
+from app.enrichment.tasks import get_enrichments_tasks
 from app.ingestion.base import FetchBackend, SourceConnector
 from app.ingestion.rss_source import RssSourceConnector
 from app.ingestion.html_source import HTMLSourceConnector
@@ -54,7 +54,6 @@ def run_ingestion_cycle(fetch_identifier: str | None = FETCH_TYPES.HTTPX, source
     # outside any request. Open/close a session the same way app/cli.py does.
     with app.conf['dbSession']() as db:
         source = db.get(Source, source_id) if source_id else None
-        fetch_backend = FETCH_TYPES[fetch_identifier].value()
         sources = [source] if source else db.scalars(select(Source).where(Source.enabled.is_(True))).all()
 
         for entry in sources:
@@ -67,10 +66,9 @@ def run_ingestion_cycle(fetch_identifier: str | None = FETCH_TYPES.HTTPX, source
         else:
             pending_items = db.scalars(select(Item).where(Item.status == ItemStatus.discovered)).all()
 
+        # Start paralell fetching tasks
         group_task = group(fetch_discovered_item.s(item.id, source.id, fetch_identifier=fetch_identifier) for item in pending_items)
-
-        # Starting group tasks
-        group_task()
+        group_task()  
 
 
 def poll_source(db: Session, source: Source) -> None:
@@ -121,26 +119,18 @@ def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identi
             item.last_checked_at = now
             item.status = ItemStatus.fetched
 
+            # Commit *before* dispatching: the enrichment tasks run in other worker
+            # processes and read item.extracted_text from the database. The commit in
+            # `finally` below only happens after the chord has been sent, so without this
+            # they can start before the fetched content is visible.
+            db.commit()
+
+            # Start enrichment tasks and finally notify
+            chord(get_enrichments_tasks(item, source), notify.s(item_id=item.id, source_id=source.id))()
+
         except Exception as e:  # noqa: BLE001
             logger.warning("Fetching failed %s [%s] --> %s: %s", source.name, item.id, item.url, e)
             item.status = ItemStatus.error
 
         finally:
             db.commit()
-
-
-def _fetch_and_enrich(db: Session, item: Item, fetch_backend: FetchBackend) -> None:
-    try:
-        logger.debug("Parsed[%s]: %s", item.id, item.url)
-        result = fetch_backend.fetch(item.id, item.url, item.source.config)
-    except Exception as e:  # noqa: BLE001
-        logger.error(e)
-        item.status = ItemStatus.error
-        return
-
-
-    source = db.get(Source, item.source_id)
-    enrichment_results = run_enrichment_for_item(db, item)
-    item.status = ItemStatus.enriched
-
-    evaluate_alerts_for_item(db, item, source, enrichment_results)
