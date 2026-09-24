@@ -25,7 +25,14 @@ def create_source(
     body: SourceCreate, db: Session = Depends(get_db), _admin=Depends(require_platform_admin)
 ) -> Source:
     source = Source(
-        name=body.name, type=body.type, config=body.config, poll_interval_seconds=body.poll_interval_seconds
+        name=body.name,
+        type=body.type,
+        config=body.config,
+        poll_interval_seconds=body.poll_interval_seconds,
+        enrich_cve=body.enrich_cve,
+        enrich_cpe=body.enrich_cpe,
+        enrich_kev=body.enrich_kev,
+        enrich_ai=body.enrich_ai,
     )
 
     source.get_favicon()

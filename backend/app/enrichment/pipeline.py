@@ -20,13 +20,20 @@ ENRICHMENT_MODULES: list[EnrichmentModule] = [
 
 
 def run_enrichment_for_item(db: Session, item: Item) -> dict[str, dict]:
-    """Run every registered module against `item`, upserting its
-    item_enrichment row. Returns {module_name: data} for use by the alert
-    matching step that follows.
+    """Run every registered module that is enabled for the item's source,
+    upserting its item_enrichment row. Returns {module_name: data} for use by
+    the alert matching step that follows. A module switched off on the source
+    is skipped — rows it wrote earlier are left as they are.
+
+    kev_checker reads cve_extractor's output, so with CVE extraction off it
+    finds no CVE ids and reports nothing.
     """
     results: dict[str, dict] = {}
 
     for module in ENRICHMENT_MODULES:
+        if module.source_toggle and not getattr(item.source, module.source_toggle):
+            continue
+
         data = module.run(item, results)
         results[module.name] = data
 

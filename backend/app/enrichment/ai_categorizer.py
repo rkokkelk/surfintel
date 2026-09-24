@@ -26,6 +26,7 @@ _CATEGORY_KEYWORDS = {
 class AiCategorizer(EnrichmentModule):
     name = "ai_categorizer"
     version = "1-heuristic"
+    source_toggle = "enrich_ai"
 
     def run(self, item: Item, prior_results: dict[str, dict]) -> dict:
         text = " ".join(filter(None, [item.title, item.extracted_text])).lower()

@@ -16,6 +16,7 @@ class KevChecker(EnrichmentModule):
 
     name = "kev_checker"
     version = "1"
+    source_toggle = "enrich_kev"
 
     def __init__(self) -> None:
         self._cached_ids: set[str] | None = None

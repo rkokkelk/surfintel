@@ -14,6 +14,7 @@ _CPE_PATTERN = re.compile(r"cpe:2\.3(?::[^\s\"'<>]+)+", re.IGNORECASE)
 class CpeExtractor(EnrichmentModule):
     name = "cpe_extractor"
     version = "1"
+    source_toggle = "enrich_cpe"
 
     def run(self, item: Item, prior_results: dict[str, dict]) -> dict:
         text = " ".join(filter(None, [item.title, item.extracted_text]))
