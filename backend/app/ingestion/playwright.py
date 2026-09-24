@@ -27,7 +27,7 @@ class PlaywrightBackend(FetchBackend):
             page.goto(url, timeout=self._timeout * 1000)
 
             raw_html = page.content()
-            page.screenshot(path=screenshot_path(item_id))
+            page.screenshot(path=screenshot_path(item_id), full_page=True)
             browser.close()
 
         soup = BeautifulSoup(raw_html, "html.parser")
