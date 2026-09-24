@@ -99,11 +99,6 @@
       "request": "launch",
       "command": "npm run dev",
       "cwd": "${workspaceFolder}/frontend",
-      "serverReadyAction": {
-        "pattern": "- Local:\\s+(https?://\\S+)",
-        "uriFormat": "%s",
-        "action": "debugWithChrome"
-      }
     }
   ],
   "compounds": [

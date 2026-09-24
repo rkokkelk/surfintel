@@ -42,7 +42,7 @@ def ingest_source(
     db: Session = Depends(get_db),
     _admin=Depends(require_platform_admin),
 ):
-    run_ingestion_cycle.delay(source_id=source_id, force=body.force)
+    run_ingestion_cycle.delay(source_id=source_id, fetch_identifier='PLAYWRIGHT', force=body.force)
 
 @router.patch("/{source_id}", response_model=SourceOut)
 def update_source(
