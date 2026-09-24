@@ -12,9 +12,10 @@ from enum import Enum
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from celery import group, chord
+from celery import group, chord, Celery
 
 from app.celery import app
+from app.db.session import SessionLocal
 from app.ingestion.http_fetch import HttpFetchBackend
 from app.ingestion.playwright import PlaywrightBackend
 from app.alerting.tasks import notify
@@ -39,8 +40,22 @@ class FETCH_TYPES(Enum):
 
 logger = logging.getLogger(__name__)
 
+@app.on_after_finalize.connect
+def setup_source_periodic_tasks(sender: Celery, **kwargs):
+    with SessionLocal() as db:
+        sources = db.scalars(select(Source))
+
+        for source in sources:
+            source_signature = run_ingestion_cycle.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
+
+            logger.info("Setting up periodic tasks: %s - %ds ", source.name, source.poll_interval_seconds)
+            sender.add_periodic_task(source.poll_interval_seconds, source_signature, name=f"periodic_{source.id}")
+
+            logger.info("Trigger initial lookup: %s ", source.name)
+            source_signature.delay()
+
 @app.task
-def run_ingestion_cycle(fetch_identifier: str | None = FETCH_TYPES.HTTPX, source_id: uuid.UUID | None = None, force: bool = False) -> None:
+def run_ingestion_cycle(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX, force: bool = False) -> None:
     """ Start Ingestion cycle
     
     :param Session: DB session

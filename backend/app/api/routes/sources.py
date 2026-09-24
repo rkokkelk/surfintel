@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.celery import app
 from app.api.deps import get_current_user, require_platform_admin
 from app.ingestion.tasks import run_ingestion_cycle
 from app.db.session import get_db
@@ -64,6 +65,10 @@ def update_source(
 
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(source, field, value)
+
+    # Update periodic task
+    source_signature = run_ingestion_cycle.s(source.id, fetch_identifier='PLAYWRIGHT')
+    app.add_periodic_task(source.poll_interval_seconds, source_signature, name=f"periodic_{source.id}")  #TODO: fix updating periodic tasks
 
     source.get_favicon()
 
