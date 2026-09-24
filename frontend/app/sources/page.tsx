@@ -14,12 +14,22 @@ const TYPE_OPTIONS: { value: SourceType; label: string }[] = [
   { value: "custom_module", label: "Custom module" },
 ];
 
+type EnrichKey = "enrich_cve" | "enrich_cpe" | "enrich_kev" | "enrich_ai";
+
+const ENRICHMENT_OPTIONS: { key: EnrichKey; label: string }[] = [
+  { key: "enrich_cve", label: "CVE-extractie" },
+  { key: "enrich_cpe", label: "CPE-extractie" },
+  { key: "enrich_kev", label: "CISA KEV-check (heeft CVE-extractie nodig)" },
+  { key: "enrich_ai", label: "AI-/categorisatie (severity & categorie)" },
+];
+
 interface SourceFormState {
   name: string;
   type: SourceType;
   configText: string;
   poll_interval_seconds: number;
   enabled: boolean;
+  enrichment: Record<EnrichKey, boolean>;
 }
 
 const EMPTY_FORM: SourceFormState = {
@@ -28,6 +38,7 @@ const EMPTY_FORM: SourceFormState = {
   configText: '{\n  "feed_url": ""\n}',
   poll_interval_seconds: 3600,
   enabled: true,
+  enrichment: { enrich_cve: true, enrich_cpe: true, enrich_kev: true, enrich_ai: true },
 };
 
 export default function SourcesPage() {
@@ -98,6 +109,12 @@ export default function SourcesPage() {
       configText: JSON.stringify(source.config, null, 2),
       poll_interval_seconds: source.poll_interval_seconds,
       enabled: source.enabled,
+      enrichment: {
+        enrich_cve: source.enrich_cve,
+        enrich_cpe: source.enrich_cpe,
+        enrich_kev: source.enrich_kev,
+        enrich_ai: source.enrich_ai,
+      },
     });
     setFormError(null);
   }
@@ -125,6 +142,7 @@ export default function SourcesPage() {
             config,
             enabled: form.enabled,
             poll_interval_seconds: form.poll_interval_seconds,
+            ...form.enrichment,
           }),
         });
       } else {
@@ -135,6 +153,7 @@ export default function SourcesPage() {
             type: form.type,
             config,
             poll_interval_seconds: form.poll_interval_seconds,
+            ...form.enrichment,
           }),
         });
       }
@@ -363,6 +382,37 @@ export default function SourcesPage() {
               }}
             />
           </label>
+
+          <fieldset
+            style={{
+              border: "1px solid var(--si-border)",
+              borderRadius: 8,
+              padding: "10px 12px",
+              margin: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <legend style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)", padding: "0 6px" }}>
+              Enrichment voor deze bron
+            </legend>
+            {ENRICHMENT_OPTIONS.map((opt) => (
+              <label
+                key={opt.key}
+                style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--si-text)" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={form.enrichment[opt.key]}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, enrichment: { ...f.enrichment, [opt.key]: e.target.checked } }))
+                  }
+                />
+                {opt.label}
+              </label>
+            ))}
+          </fieldset>
 
           {editingId && (
             <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--si-text)" }}>

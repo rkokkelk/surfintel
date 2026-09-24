@@ -8,7 +8,7 @@ def test_extracts_and_dedupes_cve_ids():
         extracted_text="Zie ook cve-2026-31337 en CVE-2026-29844 voor meer details.",
     )
 
-    result = CveExtractor().run(item, prior_results={})
+    result = CveExtractor().run(item)
 
     assert result["cve_ids"] == ["CVE-2026-29844", "CVE-2026-31337"]
 

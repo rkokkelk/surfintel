@@ -4,11 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.celery import app
 from app.api.deps import get_current_user, require_platform_admin
-from app.ingestion.pipeline import run_ingestion_cycle
+from app.ingestion.tasks import run_ingestion_cycle
 from app.db.session import get_db
 from app.models.source import Source
-from app.ingestion.playwright import PlaywrightBackend
 from app.schemas.source import SourceCreate, SourceOut, SourceUpdate, SourceIngestion
 
 router = APIRouter(prefix="/sources", tags=["sources"])
@@ -26,7 +26,14 @@ def create_source(
     body: SourceCreate, db: Session = Depends(get_db), _admin=Depends(require_platform_admin)
 ) -> Source:
     source = Source(
-        name=body.name, type=body.type, config=body.config, poll_interval_seconds=body.poll_interval_seconds
+        name=body.name,
+        type=body.type,
+        config=body.config,
+        poll_interval_seconds=body.poll_interval_seconds,
+        enrich_cve=body.enrich_cve,
+        enrich_cpe=body.enrich_cpe,
+        enrich_kev=body.enrich_kev,
+        enrich_ai=body.enrich_ai,
     )
 
     source.get_favicon()
@@ -43,10 +50,7 @@ def ingest_source(
     db: Session = Depends(get_db),
     _admin=Depends(require_platform_admin),
 ):
-
-    source = db.get(Source, source_id)
-    fetch_backend = PlaywrightBackend()
-    run_ingestion_cycle(db, fetch_backend=fetch_backend, source=source, force=body.force)
+    run_ingestion_cycle.delay(source_id=source_id, fetch_identifier='PLAYWRIGHT', force=body.force)
 
 @router.patch("/{source_id}", response_model=SourceOut)
 def update_source(
@@ -61,6 +65,10 @@ def update_source(
 
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(source, field, value)
+
+    # Update periodic task
+    source_signature = run_ingestion_cycle.s(source.id, fetch_identifier='PLAYWRIGHT')
+    app.add_periodic_task(source.poll_interval_seconds, source_signature, name=f"periodic_{source.id}")  #TODO: fix updating periodic tasks
 
     source.get_favicon()
 

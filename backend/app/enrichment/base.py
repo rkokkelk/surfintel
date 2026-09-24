@@ -16,9 +16,12 @@ from app.models.item import Item
 class EnrichmentModule(ABC):
     name: str
     version: str = "1"
+    # Name of the boolean column on Source that switches this module on/off
+    # per source (e.g. "enrich_cve"). None = always runs.
+    source_toggle: str | None = None
 
     @abstractmethod
-    def run(self, item: Item, prior_results: dict[str, dict]) -> dict:
+    def run(self, item: Item) -> dict:
         """Return the data to persist in item_enrichment.data for this item."""
         raise NotImplementedError
 

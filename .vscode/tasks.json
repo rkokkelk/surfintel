@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "dev-db: start",
+      "label": "dev-env: start",
       "type": "shell",
       "command": "docker compose -f docker-compose-dev.yml up -d && until docker compose -f docker-compose-dev.yml exec -T db pg_isready -U surfintel >/dev/null 2>&1; do sleep 1; done",
       "options": { "cwd": "${workspaceFolder}" },
@@ -18,11 +18,25 @@
       "problemMatcher": []
     },
     {
+      "label": "celery beat",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/celery -A app.main.celery beat",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "api setup",
+      "dependsOn": ["backend: alembic upgrade head"],
+      "dependsOrder": "sequence",
+    },
+    {
       "label": "backend: alembic upgrade head",
       "type": "shell",
       "command": "${workspaceFolder}/backend/.venv/bin/alembic upgrade head",
       "options": { "cwd": "${workspaceFolder}/backend" },
-      "dependsOn": ["dev-db: start"],
+      "dependsOn": ["dev-env: start"],
       "dependsOrder": "sequence",
       "presentation": { "reveal": "silent", "panel": "shared" },
       "problemMatcher": []
@@ -32,15 +46,6 @@
       "type": "shell",
       "command": "${workspaceFolder}/backend/.venv/bin/pip install -e '.[dev]'",
       "options": { "cwd": "${workspaceFolder}/backend" },
-      "presentation": { "reveal": "always", "panel": "shared" },
-      "problemMatcher": []
-    },
-    {
-      "label": "backend: run tests",
-      "type": "shell",
-      "command": "${workspaceFolder}/backend/.venv/bin/pytest -v",
-      "options": { "cwd": "${workspaceFolder}/backend" },
-      "group": "test",
       "presentation": { "reveal": "always", "panel": "shared" },
       "problemMatcher": []
     },
