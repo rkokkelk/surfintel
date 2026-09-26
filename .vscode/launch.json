@@ -82,8 +82,7 @@
           "app.celery.app",
           "worker",
           "--loglevel",
-          "DEBUG",
-          "--concurrency=2"
+          "DEBUG"
       ]
     },
     {
