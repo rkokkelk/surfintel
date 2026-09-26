@@ -1,7 +1,7 @@
 import datetime as dt
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, NonNegativeInt
 
 from app.models.source import SourceType
 
@@ -15,6 +15,19 @@ class SourceCreate(BaseModel):
     enrich_cpe: bool = True
     enrich_kev: bool = True
     enrich_ai: bool = True
+
+
+class SourceHealthDay(BaseModel):
+
+    date: dt.datetime
+    total: NonNegativeInt = 0
+    error: NonNegativeInt = 0
+    fetched: NonNegativeInt = 0
+    discovered: NonNegativeInt = 0
+    enriched: NonNegativeInt =0
+
+class SourceHealth(BaseModel):
+    days: list[SourceHealthDay] = []
 
 class SourceIngestion(BaseModel):
     """All fields optional — only what's set gets changed (PATCH semantics)."""

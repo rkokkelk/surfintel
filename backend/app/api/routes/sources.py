@@ -1,15 +1,18 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
+
+from datetime import datetime
 
 from app.celery import app
 from app.api.deps import get_current_user, require_platform_admin
 from app.ingestion.tasks import run_ingestion_cycle
 from app.db.session import get_db
 from app.models.source import Source
-from app.schemas.source import SourceCreate, SourceOut, SourceUpdate, SourceIngestion
+from app.models.item import Item, ItemStatus
+from app.schemas.source import SourceCreate, SourceOut, SourceUpdate, SourceIngestion, SourceHealth, SourceHealthDay
 
 router = APIRouter(prefix="/sources", tags=["sources"])
 
@@ -87,3 +90,41 @@ def delete_source(
 
     db.delete(source)
     db.commit()
+
+@router.get("/{source_id}/health", response_model=SourceHealth)
+def health(
+    source_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_platform_admin),
+) -> SourceHealth:
+    if db.get(Source, source_id) is None:
+        raise HTTPException(404, "Bron niet gevonden")
+
+    # Grouping by (day, status) rather than one sum(case(...)) column per
+    # status avoids having to list every ItemStatus value by hand in SQL —
+    # a mismatched label here is exactly what caused the previous version's
+    # 'discoverd'/'discovered' AttributeError.
+    stmt = (
+        select(func.date(Item.created_at).label("day"), Item.status, func.count().label("count"))
+        .where(Item.source_id == source_id)
+        .group_by(func.date(Item.created_at), Item.status)
+        .order_by(func.date(Item.created_at))
+    )
+
+    by_day: dict[object, dict[str, int]] = {}
+    for row in db.execute(stmt).all():
+        by_day.setdefault(row.day, {})[row.status.value] = row.count
+
+    days = [
+        SourceHealthDay(
+            date=day,
+            total=sum(counts.values()),
+            discovered=counts.get(ItemStatus.discovered.value, 0),
+            fetched=counts.get(ItemStatus.fetched.value, 0),
+            enriched=counts.get(ItemStatus.enriched.value, 0),
+            error=counts.get(ItemStatus.error.value, 0),
+        )
+        for day, counts in sorted(by_day.items())
+    ]
+
+    return SourceHealth(days=days)

@@ -7,6 +7,7 @@ import { isPlatformAdmin } from "@/lib/auth";
 import type { Source, SourceType } from "@/lib/types";
 import { ToastContainer, toast } from 'react-toastify';
 import { Shell } from "@/components/Shell";
+import { SourceHealthChart } from "@/components/SourceHealthChart";
 
 const TYPE_OPTIONS: { value: SourceType; label: string }[] = [
   { value: "rss", label: "RSS/Atom-feed" },
@@ -270,11 +271,11 @@ export default function SourcesPage() {
           </div>
         </div>
 
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 16, alignSelf: "flex-start" }}>
+        {editingId && <SourceHealthChart sourceId={editingId} />}
         <form
           onSubmit={handleSubmit}
           style={{
-            flex: 1,
-            minWidth: 0,
             background: "var(--si-surface)",
             border: "1px solid var(--si-border)",
             borderRadius: 12,
@@ -282,7 +283,6 @@ export default function SourcesPage() {
             display: "flex",
             flexDirection: "column",
             gap: 14,
-            alignSelf: "flex-start",
           }}
         >
           <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
@@ -500,6 +500,7 @@ export default function SourcesPage() {
             </button>
           </div>
         </form>
+        </div>
       </div>
       <ToastContainer />
     </Shell>
