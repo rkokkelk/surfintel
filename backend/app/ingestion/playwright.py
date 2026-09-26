@@ -1,7 +1,7 @@
 import hashlib
 
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, Playwright
 
 from app.core.media import SCREENSHOT_DIR, screenshot_path
 from app.ingestion.base import FetchBackend, FetchResult
@@ -17,6 +17,23 @@ class PlaywrightBackend(FetchBackend):
 
     def __init__(self, timeout_seconds: float = 15.0) -> None:
         self._timeout = timeout_seconds
+
+    def load_extension(self, playwright:Playwright):
+        context = playwright.chromium.launch_persistent_context(
+            '.',
+            channel="chromium",
+            args=[
+                f"--disable-extensions-except=",
+                f"--load-extension=",
+            ],
+        )
+        if len(context.service_workers) == 0:
+            service_worker = context.wait_for_event('serviceworker')
+        else:
+            service_worker = context.service_workers[0]
+
+        # Test the service worker as you would any other worker.
+        context.close()
 
     def fetch(self, item_id: str, url: str, config: dict) -> FetchResult:
         SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
