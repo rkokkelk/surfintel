@@ -51,9 +51,6 @@ def setup_source_periodic_tasks(sender: Celery, **kwargs):
             logger.info("Setting up periodic tasks: %s - %ds ", source.name, source.poll_interval_seconds)
             sender.add_periodic_task(source.poll_interval_seconds, source_signature, name=f"periodic_{source.id}")
 
-            logger.info("Trigger initial lookup: %s ", source.name)
-            source_signature.delay()
-
 @app.task
 def run_ingestion_cycle(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX, force: bool = False) -> None:
     """ Start Ingestion cycle
