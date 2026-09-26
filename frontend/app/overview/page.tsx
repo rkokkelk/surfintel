@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, getToken, imgFetch } from "@/lib/api";
+import { apiFetch, getToken } from "@/lib/api";
 import type { Item } from "@/lib/types";
 import { Shell } from "@/components/Shell";
 import { FeedCard } from "@/components/FeedCard";
+import { ItemDetailPanel } from "@/components/ItemDetailPanel";
 
 const CATEGORIES = [
   { value: null, label: "Alles" },
@@ -20,6 +21,7 @@ export default function OverviewPage() {
   const [category, setCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!getToken()) {
@@ -75,10 +77,11 @@ export default function OverviewPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 1000 }}>
           {items.map((item) => (
-            <FeedCard key={item.id} item={item} />
+            <FeedCard key={item.id} item={item} onOpenDetail={setSelectedItemId} />
           ))}
         </div>
       </div>
+      <ItemDetailPanel itemId={selectedItemId} onClose={() => setSelectedItemId(null)} />
     </Shell>
   );
 }

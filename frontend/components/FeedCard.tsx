@@ -1,105 +1,57 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import type { Item } from "@/lib/types";
-import { imgFetch } from "@/lib/api";
+import {
+  ACTOR_STYLE,
+  AiClassification,
+  ENTITY_STYLE,
+  SEVERITY_STYLE,
+  VICTIM_STYLE,
+  countryLabel,
+  enrichmentData,
+  industryLabel,
+} from "@/lib/enrichment";
+import { ItemScreenshot } from "@/components/ItemScreenshot";
 
-const THUMB_WIDTH = 260;
-const THUMB_HEIGHT = 200;
-
-function ItemScreenshot({ itemId }: { itemId: string }) {
-  const [src, setSrc] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let objectUrl: string | null = null;
-    let cancelled = false;
-    setSrc(null);
-    setFailed(false);
-
-    imgFetch<Blob>(`/items/${itemId}/screenshot`)
-      .then((blob) => {
-        if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
-        setSrc(objectUrl);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [itemId]);
-
+function Badge({ color, bg, children }: { color: string; bg: string; children: React.ReactNode }) {
   return (
-    <div
+    <span
       style={{
-        width: THUMB_WIDTH,
-        height: THUMB_HEIGHT,
-        flexShrink: 0,
-        borderRadius: 8,
-        overflow: "hidden",
-        background: "var(--si-bg)",
-        border: "1px solid var(--si-border)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        fontSize: 11.5,
+        fontWeight: 600,
+        color,
+        background: bg,
+        borderRadius: 6,
+        padding: "3px 8px",
       }}
     >
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- object URL from an authenticated blob fetch, not a static/optimizable asset
-        <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-      ) : (
-        <span style={{ fontSize: 11, color: "var(--si-text-muted)" }}>
-          {failed ? "Geen screenshot" : "Laden…"}
-        </span>
-      )}
-    </div>
+      {children}
+    </span>
   );
 }
 
-const SEVERITY_STYLE: Record<string, { color: string; bg: string }> = {
-  kritiek: { color: "var(--si-red)", bg: "var(--si-red-bg)" },
-  hoog: { color: "var(--si-amber)", bg: "var(--si-amber-bg)" },
-  midden: { color: "var(--si-indigo)", bg: "var(--si-indigo-bg)" },
-};
-
-const CATEGORY_STYLE: Record<string, { color: string; bg: string; label: string }> = {
-  advisory: { color: "var(--si-teal)", bg: "var(--si-teal-bg)", label: "Advisory" },
-  patch: { color: "var(--si-green)", bg: "var(--si-green-bg)", label: "Patch" },
-  malware: { color: "var(--si-indigo)", bg: "var(--si-indigo-bg)", label: "Malware" },
-};
-
-function enrichment(item: Item, moduleName: string) {
-  return item.enrichments?.find((e) => e.module_name === moduleName)?.data as
-    | Record<string, unknown>
-    | undefined;
-}
-
-export function FeedCard({ item }: { item: Item }) {
-  const categorization = enrichment(item, "ai_categorizer");
-  const cve = enrichment(item, "cve_extractor");
-  const severity = (categorization?.severity as string) ?? null;
-  const category = (categorization?.category as string) ?? null;
+export function FeedCard({ item, onOpenDetail }: { item: Item; onOpenDetail: (itemId: string) => void }) {
+  const classification = enrichmentData(item, "ai_categorizer") as AiClassification | undefined;
+  const cve = enrichmentData(item, "cve_extractor");
   const cveIds = (cve?.cve_ids as string[]) ?? [];
 
+  const severity = classification?.severity ?? null;
   const severityStyle = severity ? SEVERITY_STYLE[severity] : null;
-  const categoryStyle = category ? CATEGORY_STYLE[category] : null;
+  const entities = classification?.entity ?? [];
+  const actor = classification?.actor ?? null;
 
-  const timeFormatOptions: Intl.DateTimeFormatOptions = { 
-    month: 'short', 
+  const timeFormat = Intl.DateTimeFormat("nl-NL", {
+    month: "short",
     weekday: "short",
-    day: '2-digit', 
-    hour: '2-digit', 
-    minute: '2-digit', 
-  };
-  const timeFormat = Intl.DateTimeFormat("nl-NL", timeFormatOptions);
-
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
     <div
+      onClick={() => onOpenDetail(item.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onOpenDetail(item.id)}
       style={{
         background: "var(--si-surface)",
         border: "1px solid var(--si-border)",
@@ -108,26 +60,14 @@ export function FeedCard({ item }: { item: Item }) {
         display: "flex",
         flexDirection: "row",
         gap: 16,
+        cursor: "pointer",
       }}
     >
-      <ItemScreenshot itemId={item.id} />
+      <ItemScreenshot itemId={item.id} width={260} height={200} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 9, minWidth: 0, flexGrow: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {severityStyle && (
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: severityStyle.color,
-                background: severityStyle.bg,
-                borderRadius: 10,
-                padding: "3px 9px",
-              }}
-            >
-              {severity}
-            </span>
-          )}
+          {severityStyle && <Badge color={severityStyle.color} bg={severityStyle.bg}>{severityStyle.label}</Badge>}
           <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--si-text-muted)" }}>
             {item.source?.name} • {item.published_at ? timeFormat.format(new Date(item.published_at)) : ""}
           </span>
@@ -136,26 +76,16 @@ export function FeedCard({ item }: { item: Item }) {
           href={item.url}
           target="_blank"
           rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
           className="si-display"
           style={{ fontSize: 16, fontWeight: 600, color: "var(--si-text)" }}
         >
           {item.title ?? item.url}
         </a>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          {item.description && (
-            <span
-              className="si-mono"
-              style={{
-                fontSize: 11.5,
-                fontWeight: 600,
-                borderRadius: 6,
-                padding: "3px 8px",
-              }}
-            >
-              {item.description}
-            </span>
-          )}
-        </div>
+        {item.description && (
+          <div style={{ fontSize: 13, color: "var(--si-text-secondary)", lineHeight: 1.4 }}>{item.description}</div>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           {cveIds.map((id) => (
             <span
@@ -166,19 +96,21 @@ export function FeedCard({ item }: { item: Item }) {
               {id}
             </span>
           ))}
-          {categoryStyle && (
-            <span
-              style={{
-                fontSize: 11.5,
-                fontWeight: 600,
-                color: categoryStyle.color,
-                background: categoryStyle.bg,
-                borderRadius: 6,
-                padding: "3px 8px",
-              }}
-            >
-              {categoryStyle.label}
-            </span>
+          {actor && <Badge color={ACTOR_STYLE.color} bg={ACTOR_STYLE.bg}>{actor}</Badge>}
+          {entities.map((name) => (
+            <Badge key={name} color={ENTITY_STYLE.color} bg={ENTITY_STYLE.bg}>
+              {name}
+            </Badge>
+          ))}
+          {classification?.victim_country && (
+            <Badge color={VICTIM_STYLE.color} bg={VICTIM_STYLE.bg}>
+              {countryLabel(classification.victim_country)}
+            </Badge>
+          )}
+          {classification?.victim_industry && (
+            <Badge color={VICTIM_STYLE.color} bg={VICTIM_STYLE.bg}>
+              {industryLabel(classification.victim_industry)}
+            </Badge>
           )}
         </div>
       </div>
