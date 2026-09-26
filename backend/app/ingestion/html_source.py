@@ -18,23 +18,30 @@ class HTMLSourceConnector(SourceConnector):
 
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            page = browser.new_page()
+            context = browser.new_context()
+            page = context.new_page()
             page.goto(feed_url, timeout=self._timeout * 1000)
 
-            if config.get('wait-selector'):
-                page.wait_for_selector(config['wait-selector'])
+            try:
+                if config.get('wait-selector'):
+                    page.wait_for_selector(config['wait-selector'], state='attached')
 
-            raw_html = page.content()
+                raw_html = page.content()
+            except:
+                pass
+            finally:
+                context.close()
+                browser.close()
 
 
         soup = BeautifulSoup(raw_html, "html.parser")
 
 
-        for entry in soup.select(config['row_identifier']):
+        for entry in soup.select(config['row-selector']):
 
-            title = entry.select_one(config['item']['title']).text
-            link = entry.select_one(config['item']['link']).attrs['href']
-            description = entry.select_one(config['item']['description']).text
+            title = entry.select_one(config['item']['title-selector']).text
+            link = entry.select_one(config['item']['link-selector']).attrs['href']
+            description = entry.select_one(config['item']['description-selector']).text
 
             if not link:
                 continue
