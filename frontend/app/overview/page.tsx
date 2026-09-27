@@ -7,18 +7,23 @@ import type { Item } from "@/lib/types";
 import { Shell } from "@/components/Shell";
 import { FeedCard } from "@/components/FeedCard";
 import { ItemDetailPanel } from "@/components/ItemDetailPanel";
+import { EMPTY_FILTERS, OverviewFilters, type OverviewFilterState } from "@/components/OverviewFilters";
 
-const CATEGORIES = [
-  { value: null, label: "Alles" },
-  { value: "advisory", label: "Advisories" },
-  { value: "malware", label: "Malware" },
-  { value: "patch", label: "Patches" },
-];
+function buildQuery(filters: OverviewFilterState): string {
+  const params = new URLSearchParams();
+  if (filters.q) params.set("q", filters.q);
+  if (filters.sourceId) params.set("source_id", filters.sourceId);
+  if (filters.cveId) params.set("cve_id", filters.cveId);
+  if (filters.from) params.set("published_after", `${filters.from}T00:00:00`);
+  if (filters.to) params.set("published_before", `${filters.to}T23:59:59`);
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
 
 export default function OverviewPage() {
   const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
-  const [category, setCategory] = useState<string | null>(null);
+  const [filters, setFilters] = useState<OverviewFilterState>(EMPTY_FILTERS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -29,12 +34,11 @@ export default function OverviewPage() {
       return;
     }
     setLoading(true);
-    const query = category ? `?category=${category}` : "";
-    apiFetch<Item[]>(`/items${query}`)
+    apiFetch<Item[]>(`/items${buildQuery(filters)}`)
       .then(setItems)
       .catch(() => setError("Kon het nieuwsoverzicht niet laden."))
       .finally(() => setLoading(false));
-  }, [category, router]);
+  }, [filters, router]);
 
   return (
     <Shell active="overzicht">
@@ -46,32 +50,15 @@ export default function OverviewPage() {
           <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{items.length} items</div>
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.label}
-              onClick={() => setCategory(c.value)}
-              style={{
-                height: 30,
-                padding: "0 14px",
-                borderRadius: 15,
-                border: category === c.value ? "none" : "1px solid #d8dce3",
-                background: category === c.value ? "var(--si-navy)" : "#fff",
-                color: category === c.value ? "#fff" : "#384152",
-                fontSize: 13,
-                fontWeight: 500,
-              }}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
+        <OverviewFilters value={filters} onChange={setFilters} />
 
         {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
         {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
         {!loading && !error && items.length === 0 && (
           <div style={{ color: "var(--si-text-muted)" }}>
-            Nog geen items. Voeg een bron toe en draai de ingestion-pipeline.
+            {filters.q || filters.sourceId || filters.cveId || filters.from || filters.to
+              ? "Geen items gevonden voor deze filters."
+              : "Nog geen items. Voeg een bron toe en draai de ingestion-pipeline."}
           </div>
         )}
 

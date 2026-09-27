@@ -1,8 +1,9 @@
+import datetime as dt
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -20,7 +21,11 @@ def list_items(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
     limit: int = Query(50, le=200),
-    category: str | None = None,
+    q: str | None = Query(None, description="Zoekterm in titel, omschrijving of opgehaalde tekst"),
+    source_id: uuid.UUID | None = None,
+    cve_id: str | None = None,
+    published_after: dt.datetime | None = None,
+    published_before: dt.datetime | None = None,
 ) -> list[Item]:
     # The item feed is shared across every organization — no organization_id
     # filter here, unlike the org-owned tables (see app/api/deps.py).
@@ -28,10 +33,31 @@ def list_items(
     # eagerly loaded here without needing an explicit join/option.
     query = select(Item).where(Item.status == ItemStatus.enriched)
 
-    if category:
+    if source_id:
+        query = query.where(Item.source_id == source_id)
+
+    if published_after:
+        query = query.where(Item.published_at >= published_after)
+    if published_before:
+        query = query.where(Item.published_at <= published_before)
+
+    if q:
+        pattern = f"%{q}%"
+        query = query.where(
+            or_(
+                Item.title.ilike(pattern),
+                Item.description.ilike(pattern),
+                Item.extracted_text.ilike(pattern),
+            )
+        )
+
+    if cve_id:
+        # cve_extractor's `cve_ids` is a JSON array (one item has at most one row
+        # for this module — uq_item_module), so a substring match on its JSON
+        # text is a plain containment check, no risk of duplicate item rows.
         query = query.join(ItemEnrichment, ItemEnrichment.item_id == Item.id).where(
-            ItemEnrichment.module_name == "ai_categorizer",
-            ItemEnrichment.data["category"].as_string() == category,
+            ItemEnrichment.module_name == "cve_extractor",
+            ItemEnrichment.data["cve_ids"].as_string().ilike(f"%{cve_id}%"),
         )
 
     query = query.order_by(Item.published_at.desc()).limit(limit)
