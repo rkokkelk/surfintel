@@ -5,13 +5,15 @@
     python -m app.cli add-source --name "Security.NL" --feed-url https://www.security.nl/rss/headlines.xml
 """
 
+import uuid
 import typer
 import logging
 from sqlalchemy import select
 
+from app.celery import app
 from app.core.security import hash_password
 from app.db.session import SessionLocal
-from app.ingestion.pipeline import run_ingestion_cycle
+from app.ingestion.tasks import run_ingestion_cycle, fetch_discovered_item
 from app.models.organization import Organization
 from app.models.source import Source, SourceType
 from app.models.user import AppUser, UserRole
@@ -25,15 +27,16 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @cli.command()
-def run_ingestion(force: bool = False) -> None:
+def run_ingestion(force: bool = False, item_id: uuid.UUID | None = None) -> None:
     """One ingestion cycle: poll sources, fetch/enrich new items, evaluate alerts."""
-    db = SessionLocal()
-    fetch_backend = PlaywrightBackend()
 
-    try:
-        run_ingestion_cycle(db, fetch_backend, force)
-    finally:
-        db.close()
+    if item_id:
+        db = SessionLocal()
+        item = db.get(Item, item_id)
+        fetch_discovered_item.s(item.id, item.source.id, fetch_identifier='PLAYWRIGHT').delay()
+
+    else:
+        run_ingestion_cycle.s('PLAYWRIGHT', force)
 
 
 @cli.command()
