@@ -44,10 +44,19 @@ class PlaywrightBackend(FetchBackend):
             page.goto(url, timeout=self._timeout * 1000)
 
             raw_html = page.content()
-            page.screenshot(path=screenshot_path(item_id), full_page=True)
+
+            if config.get('content-selector'):
+                page.locator(config['content-selector']).screenshot(path=screenshot_path(item_id))
+            else:
+                page.screenshot(path=screenshot_path(item_id), full_page=True)
+
             browser.close()
 
         soup = BeautifulSoup(raw_html, "html.parser")
+
+        if config.get('content-selector'):
+            soup = soup.select(config['content-selector'])[0]
+
         for tag in soup(["script", "style", "nav", "footer"]):
             tag.decompose()
         extracted_text = " ".join(soup.get_text(separator=" ").split())
