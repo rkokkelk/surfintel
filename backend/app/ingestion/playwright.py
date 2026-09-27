@@ -43,15 +43,15 @@ class PlaywrightBackend(FetchBackend):
             page = browser.new_page()
             page.goto(url, timeout=self._timeout * 1000)
 
-            raw_html = page.content()
-
             if config.get('content-selector'):
+                page.wait_for_selector(config['content-selector'], state='attached')
                 page.locator(config['content-selector']).screenshot(path=screenshot_path(item_id))
             else:
                 page.screenshot(path=screenshot_path(item_id), full_page=True)
 
             browser.close()
 
+        raw_html = page.content()
         soup = BeautifulSoup(raw_html, "html.parser")
 
         if config.get('content-selector'):
