@@ -23,12 +23,14 @@ from app.enrichment.tasks import get_enrichments_tasks
 from app.ingestion.base import FetchBackend, SourceConnector
 from app.ingestion.rss_source import RssSourceConnector
 from app.ingestion.html_source import HTMLSourceConnector
+from app.ingestion.github_source import GithubSource
 from app.models.item import Item, ItemStatus
 from app.models.source import Source, SourceType
 
 CONNECTORS: dict[SourceType, SourceConnector] = {
     SourceType.rss: RssSourceConnector(),
     SourceType.html: HTMLSourceConnector(),
+    SourceType.gh: GithubSource(),
     # SourceType.custom_module: resolved per-source via config["module"] once
     # the first custom module (e.g. a changedetection.io-backed connector) is
     # built — deliberately not implemented yet.

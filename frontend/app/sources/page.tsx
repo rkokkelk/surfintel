@@ -11,7 +11,8 @@ import { SourceHealthChart } from "@/components/SourceHealthChart";
 
 const TYPE_OPTIONS: { value: SourceType; label: string }[] = [
   { value: "rss", label: "RSS/Atom-feed" },
-  { value: "html", label: "HTML-pagina (custom selectors)" },
+  { value: "html", label: "HTML-pagina" },
+  { value: "gh", label: "Github Advisory" },
   { value: "custom_module", label: "Custom module" },
 ];
 

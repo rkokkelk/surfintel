@@ -15,6 +15,7 @@ from app.db.base import Base, TimestampMixin, UUIDPk
 class SourceType(str, enum.Enum):
     rss = "rss"
     html = "html"
+    gh = "gh"
     custom_module = "custom_module"
 
 
