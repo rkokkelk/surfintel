@@ -28,7 +28,15 @@ function Badge({ color, bg, children }: { color: string; bg: string; children: R
   );
 }
 
-export function FeedCard({ item, onOpenDetail }: { item: Item; onOpenDetail: (itemId: string) => void }) {
+export function FeedCard({
+  item,
+  onOpenDetail,
+  onOpenCve,
+}: {
+  item: Item;
+  onOpenDetail: (itemId: string) => void;
+  onOpenCve: (cveId: string) => void;
+}) {
   const classification = enrichmentData(item, "ai_categorizer") as AiClassification | undefined;
   const cve = enrichmentData(item, "cve_extractor");
   const cveIds = (cve?.cve_ids as string[]) ?? [];
@@ -88,13 +96,18 @@ export function FeedCard({ item, onOpenDetail }: { item: Item; onOpenDetail: (it
 
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           {cveIds.map((id) => (
-            <span
+            <button
               key={id}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenCve(id);
+              }}
               className="si-mono"
-              style={{ fontSize: 11.5, color: "var(--si-purple)", background: "var(--si-purple-bg)", borderRadius: 6, padding: "3px 8px" }}
+              style={{ fontSize: 11.5, color: "var(--si-purple)", background: "var(--si-purple-bg)", border: "none", borderRadius: 6, padding: "3px 8px", cursor: "pointer" }}
             >
               {id}
-            </span>
+            </button>
           ))}
           {actor && <Badge color={ACTOR_STYLE.color} bg={ACTOR_STYLE.bg}>{actor}</Badge>}
           {entities.map((name) => (

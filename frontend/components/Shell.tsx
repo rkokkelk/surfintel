@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearToken } from "@/lib/api";
 import { isPlatformAdmin } from "@/lib/auth";
@@ -9,11 +10,17 @@ export function Shell({
   active,
   children,
 }: {
-  active: "overzicht" | "alerts" | "sources";
+  active: "overzicht" | "alerts" | "cve" | "sources";
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const showAdminSection = isPlatformAdmin();
+  // isPlatformAdmin() reads localStorage, which the server can't see — start
+  // false (matching the server-rendered HTML) and flip after mount, rather
+  // than reading it directly during render, which produced a hydration
+  // mismatch (server always renders false, client could render true before
+  // hydration reconciles).
+  const [showAdminSection, setShowAdminSection] = useState(false);
+  useEffect(() => setShowAdminSection(isPlatformAdmin()), []);
 
   function logout() {
     clearToken();
@@ -72,30 +79,7 @@ export function Shell({
         >
           <NavItem href="/overview" label="Overzicht" activeItem={active === "overzicht"} />
           <NavItem href="/alerts" label="Alerts" activeItem={active === "alerts"} />
-          <div
-            style={{
-              height: 38,
-              display: "flex",
-              alignItems: "center",
-              padding: "0 12px",
-              fontSize: 14,
-              color: "#9aa3b2",
-            }}
-          >
-            CVE database
-            <span
-              style={{
-                marginLeft: "auto",
-                fontSize: 10,
-                fontWeight: 600,
-                background: "#f1f3f6",
-                borderRadius: 8,
-                padding: "2px 6px",
-              }}
-            >
-              binnenkort
-            </span>
-          </div>
+          <NavItem href="/cve" label="CVE database" activeItem={active === "cve"} />
 
           {showAdminSection && (
             <>

@@ -7,6 +7,7 @@ import type { Item } from "@/lib/types";
 import { Shell } from "@/components/Shell";
 import { FeedCard } from "@/components/FeedCard";
 import { ItemDetailPanel } from "@/components/ItemDetailPanel";
+import { CveDetailPanel } from "@/components/CveDetailPanel";
 import { EMPTY_FILTERS, OverviewFilters, type OverviewFilterState } from "@/components/OverviewFilters";
 
 function buildQuery(filters: OverviewFilterState): string {
@@ -27,6 +28,7 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedCveId, setSelectedCveId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!getToken()) {
@@ -64,11 +66,23 @@ export default function OverviewPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 1000 }}>
           {items.map((item) => (
-            <FeedCard key={item.id} item={item} onOpenDetail={setSelectedItemId} />
+            <FeedCard key={item.id} item={item} onOpenDetail={setSelectedItemId} onOpenCve={setSelectedCveId} />
           ))}
         </div>
       </div>
-      <ItemDetailPanel itemId={selectedItemId} onClose={() => setSelectedItemId(null)} />
+      <ItemDetailPanel itemId={selectedItemId} onClose={() => setSelectedItemId(null)} onOpenCve={setSelectedCveId} />
+      <CveDetailPanel
+        cveId={selectedCveId}
+        onClose={() => setSelectedCveId(null)}
+        onOpenItem={(id) => {
+          // CveDetailPanel renders after (on top of) ItemDetailPanel, so
+          // without closing it here, opening an item from a CVE's reference
+          // list would update the right state invisibly behind the still-
+          // open CVE panel.
+          setSelectedCveId(null);
+          setSelectedItemId(id);
+        }}
+      />
     </Shell>
   );
 }

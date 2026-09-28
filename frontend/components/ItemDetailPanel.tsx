@@ -36,7 +36,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 const KNOWN_MODULES = new Set(["ai_categorizer", "cve_extractor", "cpe_extractor", "kev_checker"]);
 
-export function ItemDetailPanel({ itemId, onClose }: { itemId: string | null; onClose: () => void }) {
+export function ItemDetailPanel({
+  itemId,
+  onClose,
+  onOpenCve,
+}: {
+  itemId: string | null;
+  onClose: () => void;
+  onOpenCve: (cveId: string) => void;
+}) {
   const [item, setItem] = useState<ItemDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -212,13 +220,15 @@ export function ItemDetailPanel({ itemId, onClose }: { itemId: string | null; on
                 <Section title="Kwetsbaarheden">
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {cveIds.map((id) => (
-                      <span
+                      <button
                         key={id}
+                        type="button"
+                        onClick={() => onOpenCve(id)}
                         className="si-mono"
-                        style={{ fontSize: 12, color: "var(--si-purple)", background: "var(--si-purple-bg)", borderRadius: 6, padding: "4px 9px" }}
+                        style={{ fontSize: 12, color: "var(--si-purple)", background: "var(--si-purple-bg)", border: "none", borderRadius: 6, padding: "4px 9px", cursor: "pointer" }}
                       >
                         {id}
-                      </span>
+                      </button>
                     ))}
                     {cpeIds.map((id) => (
                       <span
