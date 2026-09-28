@@ -10,9 +10,21 @@ export interface OverviewFilterState {
   cveId: string;
   from: string; // yyyy-mm-dd, "" = unset
   to: string;
+  minCvss: string; // "" = unset, else "0".."10"
+  minEpss: string; // "" = unset, else a percentage "0".."100"
+  kevOnly: boolean;
 }
 
-export const EMPTY_FILTERS: OverviewFilterState = { q: "", sourceId: null, cveId: "", from: "", to: "" };
+export const EMPTY_FILTERS: OverviewFilterState = {
+  q: "",
+  sourceId: null,
+  cveId: "",
+  from: "",
+  to: "",
+  minCvss: "",
+  minEpss: "",
+  kevOnly: false,
+};
 
 const PRESETS: { label: string; days: number | null }[] = [
   { label: "Alle tijd", days: null },
@@ -47,6 +59,8 @@ export function OverviewFilters({
   const [sources, setSources] = useState<Source[]>([]);
   const [qDraft, setQDraft] = useState(value.q);
   const [cveDraft, setCveDraft] = useState(value.cveId);
+  const [cvssDraft, setCvssDraft] = useState(value.minCvss);
+  const [epssDraft, setEpssDraft] = useState(value.minEpss);
 
   useEffect(() => {
     apiFetch<Source[]>("/sources").then(setSources).catch(() => setSources([]));
@@ -70,6 +84,22 @@ export function OverviewFilters({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cveDraft]);
 
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (cvssDraft !== value.minCvss) onChange({ ...value, minCvss: cvssDraft });
+    }, 350);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cvssDraft]);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (epssDraft !== value.minEpss) onChange({ ...value, minEpss: epssDraft });
+    }, 350);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [epssDraft]);
+
   function applyPreset(days: number | null) {
     if (days === null) {
       onChange({ ...value, from: "", to: "" });
@@ -92,7 +122,9 @@ export function OverviewFilters({
     return null; // custom range
   })();
 
-  const hasActiveFilters = Boolean(value.q || value.sourceId || value.cveId || value.from || value.to);
+  const hasActiveFilters = Boolean(
+    value.q || value.sourceId || value.cveId || value.from || value.to || value.minCvss || value.minEpss || value.kevOnly
+  );
 
   return (
     <div
@@ -151,6 +183,8 @@ export function OverviewFilters({
             onClick={() => {
               setQDraft("");
               setCveDraft("");
+              setCvssDraft("");
+              setEpssDraft("");
               onChange(EMPTY_FILTERS);
             }}
             style={{
@@ -210,6 +244,47 @@ export function OverviewFilters({
           className="si-mono"
           style={{ ...fieldStyle(Boolean(value.cveId)), width: 180 }}
         />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>CVE-status</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: "var(--si-text)" }}>
+          CVSS ≥
+          <input
+            type="number"
+            min={0}
+            max={10}
+            step={0.1}
+            value={cvssDraft}
+            onChange={(e) => setCvssDraft(e.target.value)}
+            placeholder="bv. 7"
+            className="si-mono"
+            style={{ ...fieldStyle(Boolean(value.minCvss)), width: 70 }}
+          />
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: "var(--si-text)" }}>
+          EPSS ≥
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={epssDraft}
+            onChange={(e) => setEpssDraft(e.target.value)}
+            placeholder="bv. 10"
+            className="si-mono"
+            style={{ ...fieldStyle(Boolean(value.minEpss)), width: 70 }}
+          />
+          %
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--si-text)" }}>
+          <input
+            type="checkbox"
+            checked={value.kevOnly}
+            onChange={(e) => onChange({ ...value, kevOnly: e.target.checked })}
+          />
+          Alleen CISA KEV
+        </label>
       </div>
     </div>
   );

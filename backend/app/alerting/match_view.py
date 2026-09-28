@@ -16,6 +16,12 @@ from app.models.source import Source
 
 MatchView = dict[str, list[str]]
 
+# Fields matched by "actual value >= wanted threshold" instead of set
+# membership — the condition's `values` holds a single minimum score (e.g.
+# ["7"] for "CVSS >= 7"), not an OR-list, and the view's value is the item's
+# max score across every CVE it mentions (computed in CveExtractor.run()).
+THRESHOLD_FIELDS = {AlertField.cvss_score, AlertField.epss_score}
+
 
 def build_match_view(
     item: Item,
@@ -42,6 +48,17 @@ def condition_matches(condition: AlertCondition, view: MatchView) -> bool:
     the rule "test" endpoint (app/api/routes/alerts.py), so a preview always
     reflects exactly what would fire for real.
     """
+    if condition.field in THRESHOLD_FIELDS:
+        try:
+            threshold = float(condition.values[0])
+        except (IndexError, ValueError):
+            return False  # no/unparsable threshold configured — never matches, rather than raising
+        actual = view.get(condition.field.value, [])
+        try:
+            return bool(actual) and float(actual[0]) >= threshold
+        except ValueError:
+            return False
+
     wanted = {v.lower() for v in condition.values}
 
     if condition.field == AlertField.keyword:

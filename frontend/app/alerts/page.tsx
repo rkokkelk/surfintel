@@ -15,7 +15,15 @@ const FIELD_OPTIONS: { value: AlertField; label: string }[] = [
   { value: "source", label: "Bron" },
   { value: "tag", label: "Tag" },
   { value: "keyword", label: "Zoekterm" },
+  { value: "cvss_score", label: "CVSS-score (hoger dan)" },
+  { value: "epss_score", label: "EPSS-score % (hoger dan)" },
+  { value: "kev", label: "CISA KEV" },
 ];
+
+// Matched with >= against the item's max CVSS/EPSS across all its CVEs
+// (see THRESHOLD_FIELDS in backend/app/alerting/match_view.py) — a single
+// number, not an OR-list like the other fields.
+const THRESHOLD_FIELDS: AlertField[] = ["cvss_score", "epss_score"];
 
 const TEMPLATE_PLACEHOLDERS = [
   { token: "{title}", desc: "Titel van het item" },
@@ -29,6 +37,9 @@ const TEMPLATE_PLACEHOLDERS = [
   { token: "{severity}", desc: "Severity, indien herkend" },
   { token: "{category}", desc: "Categorie, indien herkend" },
   { token: "{cve_id}", desc: "CVE-ID('s), indien gevonden" },
+  { token: "{cvss_score}", desc: "Hoogste CVSS-score onder de gekoppelde CVE's" },
+  { token: "{epss_score}", desc: "Hoogste EPSS-score onder de gekoppelde CVE's (fractie 0-1)" },
+  { token: "{kev}", desc: "\"true\" als een gekoppelde CVE in de CISA KEV-catalogus staat" },
 ];
 
 interface ConditionDraft {
@@ -62,11 +73,23 @@ function emptyForm(): FormState {
   };
 }
 
+function conditionValuesToDraft(field: AlertField, values: string[]): string {
+  if (field === "epss_score") {
+    // Stored/matched as a 0-1 fraction; shown to the user as a percentage.
+    const fraction = Number(values[0]);
+    return Number.isFinite(fraction) ? String(fraction * 100) : "";
+  }
+  if (THRESHOLD_FIELDS.includes(field) || field === "kev") {
+    return values[0] ?? "";
+  }
+  return values.join(", ");
+}
+
 function formFromRule(rule: AlertRule): FormState {
   return {
     name: rule.name,
     status: rule.status,
-    conditions: rule.conditions.map((c) => ({ field: c.field, values: c.values.join(", ") })),
+    conditions: rule.conditions.map((c) => ({ field: c.field, values: conditionValuesToDraft(c.field, c.values) })),
     channels: rule.channels.map((c) => ({
       id: c.id,
       label: c.label,
@@ -161,7 +184,17 @@ export default function AlertsPage() {
   function buildConditionsPayload() {
     return form.conditions
       .filter((c) => c.values.trim().length > 0)
-      .map((c) => ({ field: c.field, values: c.values.split(",").map((v) => v.trim()).filter(Boolean) }));
+      .map((c) => {
+        if (c.field === "epss_score") {
+          // Entered as a 0-100 percentage; stored/matched as the 0-1 fraction
+          // OpenCVE reports (same convention as the Overview EPSS filter).
+          return { field: c.field, values: [String(Number(c.values) / 100)] };
+        }
+        if (THRESHOLD_FIELDS.includes(c.field) || c.field === "kev") {
+          return { field: c.field, values: [c.values.trim()] };
+        }
+        return { field: c.field, values: c.values.split(",").map((v) => v.trim()).filter(Boolean) };
+      });
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -312,7 +345,13 @@ export default function AlertsPage() {
                     className="si-mono"
                     style={{ fontSize: 11.5, color: "#374151", background: "#f5f6f8", borderRadius: 6, padding: "2px 8px" }}
                   >
-                    {c.field}: {c.values.join(", ")}
+                    {c.field === "kev"
+                      ? "moet in KEV staan"
+                      : c.field === "cvss_score"
+                        ? `CVSS ≥ ${c.values[0]}`
+                        : c.field === "epss_score"
+                          ? `EPSS ≥ ${(Number(c.values[0]) * 100).toFixed(0)}%`
+                          : `${c.field}: ${c.values.join(", ")}`}
                   </span>
                 ))}
               </div>
@@ -384,7 +423,7 @@ export default function AlertsPage() {
               <div key={index} style={{ display: "flex", gap: 6 }}>
                 <select
                   value={condition.field}
-                  onChange={(e) => updateCondition(index, { field: e.target.value as AlertField })}
+                  onChange={(e) => updateCondition(index, { field: e.target.value as AlertField, values: "" })}
                   style={fieldStyle()}
                 >
                   {FIELD_OPTIONS.map((f) => (
@@ -393,12 +432,50 @@ export default function AlertsPage() {
                     </option>
                   ))}
                 </select>
-                <input
-                  value={condition.values}
-                  onChange={(e) => updateCondition(index, { values: e.target.value })}
-                  placeholder="bv. Ivanti, Fortinet"
-                  style={{ ...fieldStyle(), flexGrow: 1 }}
-                />
+                {condition.field === "kev" ? (
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--si-text)", flexGrow: 1 }}>
+                    <input
+                      type="checkbox"
+                      checked={condition.values === "true"}
+                      onChange={(e) => updateCondition(index, { values: e.target.checked ? "true" : "" })}
+                    />
+                    Moet in KEV staan
+                  </label>
+                ) : condition.field === "cvss_score" ? (
+                  <input
+                    type="number"
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    value={condition.values}
+                    onChange={(e) => updateCondition(index, { values: e.target.value })}
+                    placeholder="bv. 7"
+                    className="si-mono"
+                    style={{ ...fieldStyle(), width: 100 }}
+                  />
+                ) : condition.field === "epss_score" ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={condition.values}
+                      onChange={(e) => updateCondition(index, { values: e.target.value })}
+                      placeholder="bv. 10"
+                      className="si-mono"
+                      style={{ ...fieldStyle(), width: 100 }}
+                    />
+                    <span style={{ fontSize: 12.5, color: "var(--si-text-muted)" }}>%</span>
+                  </div>
+                ) : (
+                  <input
+                    value={condition.values}
+                    onChange={(e) => updateCondition(index, { values: e.target.value })}
+                    placeholder="bv. Ivanti, Fortinet"
+                    style={{ ...fieldStyle(), flexGrow: 1 }}
+                  />
+                )}
                 {form.conditions.length > 1 && (
                   <button
                     type="button"

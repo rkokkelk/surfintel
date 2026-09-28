@@ -32,6 +32,12 @@ class AlertField(str, enum.Enum):
     source = "source"
     tag = "tag"
     keyword = "keyword"
+    # Threshold fields (see condition_matches in app/alerting/match_view.py):
+    # `values` holds a single minimum score, matched with >=, not OR-membership.
+    cvss_score = "cvss_score"
+    epss_score = "epss_score"
+    # Boolean membership field: `values` is ["true"] to mean "must be in KEV".
+    kev = "kev"
 
 
 class NotificationStatus(str, enum.Enum):

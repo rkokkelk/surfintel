@@ -9,6 +9,7 @@ import {
   enrichmentData,
   industryLabel,
 } from "@/lib/enrichment";
+import { CVSS_SEVERITY_STYLE, cvssSeverity } from "@/lib/cvss";
 import { ItemScreenshot } from "@/components/ItemScreenshot";
 
 function Badge({ color, bg, children }: { color: string; bg: string; children: React.ReactNode }) {
@@ -46,6 +47,9 @@ export function FeedCard({
   const entities = classification?.entity ?? [];
   const actor = classification?.actor ?? null;
 
+  const cvssBand = cvssSeverity(item.max_cvss_score);
+  const cvssStyle = cvssBand ? CVSS_SEVERITY_STYLE[cvssBand] : null;
+
   const timeFormat = Intl.DateTimeFormat("nl-NL", {
     month: "short",
     weekday: "short",
@@ -76,6 +80,21 @@ export function FeedCard({
       <div style={{ display: "flex", flexDirection: "column", gap: 9, minWidth: 0, flexGrow: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {severityStyle && <Badge color={severityStyle.color} bg={severityStyle.bg}>{severityStyle.label}</Badge>}
+          {cvssStyle && (
+            <Badge color={cvssStyle.color} bg={cvssStyle.bg}>
+              CVSS {item.max_cvss_score?.toFixed(1)}
+            </Badge>
+          )}
+          {item.in_kev && (
+            <Badge color="var(--si-red)" bg="var(--si-red-bg)">
+              KEV
+            </Badge>
+          )}
+          {item.max_epss_score !== null && item.max_epss_score >= 0.1 && (
+            <Badge color="var(--si-text-muted)" bg="#f1f3f6">
+              EPSS {(item.max_epss_score * 100).toFixed(1)}%
+            </Badge>
+          )}
           <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--si-text-muted)" }}>
             {item.source?.name} • {item.published_at ? timeFormat.format(new Date(item.published_at)) : ""}
           </span>

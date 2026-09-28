@@ -31,17 +31,36 @@ class CveExtractor(EnrichmentModule):
         text = " ".join(filter(None, [item.title, item.extracted_text]))
         cve_ids = sorted({match.upper() for match in _CVE_PATTERN.findall(text)})
 
-        for cve_id in cve_ids:
-            self._sync_cve(db, cve_id)
+        cves = [self._sync_cve(db, cve_id) for cve_id in cve_ids]
 
+        for cve_id in cve_ids:
             exists = db.scalar(select(ItemCve).where(ItemCve.item_id == item.id, ItemCve.cve_id == cve_id))
             if not exists:
                 db.add(ItemCve(item_id=item.id, cve_id=cve_id))
 
-        return {"cve_ids": cve_ids}
+        # Alert conditions on cvss_score/epss_score/kev (see match_fields
+        # below) match against the item as a whole, so a mention of several
+        # CVEs is judged by its worst one — the max, not e.g. the average.
+        cvss_scores = [c.cvss_v4_score if c.cvss_v4_score is not None else c.cvss_v3_score for c in cves]
+        cvss_scores = [s for s in cvss_scores if s is not None]
+        epss_scores = [c.epss_score for c in cves if c.epss_score is not None]
+
+        return {
+            "cve_ids": cve_ids,
+            "max_cvss_score": max(cvss_scores) if cvss_scores else None,
+            "max_epss_score": max(epss_scores) if epss_scores else None,
+            "in_kev": any(c.in_kev for c in cves),
+        }
 
     def match_fields(self, data: dict) -> dict:
-        return {"cve_id": data.get("cve_ids", [])}
+        fields: dict[str, list[str]] = {"cve_id": data.get("cve_ids", [])}
+        if data.get("max_cvss_score") is not None:
+            fields["cvss_score"] = [str(data["max_cvss_score"])]
+        if data.get("max_epss_score") is not None:
+            fields["epss_score"] = [str(data["max_epss_score"])]
+        if data.get("in_kev"):
+            fields["kev"] = ["true"]
+        return fields
 
     def _sync_cve(self, db: Session, cve_id: str) -> Cve:
         now = dt.datetime.now(dt.timezone.utc)
