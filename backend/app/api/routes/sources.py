@@ -21,7 +21,7 @@ router = APIRouter(prefix="/sources", tags=["sources"])
 def list_sources(db: Session = Depends(get_db), _user=Depends(get_current_user)) -> list[Source]:
     # Sources are global/shared across every organization — any authenticated
     # user may see which feeds/advisories feed the platform.
-    return list(db.scalars(select(Source)))
+    return list(db.scalars(select(Source).order_by(Source.name)))
 
 
 @router.post("", response_model=SourceOut, status_code=status.HTTP_201_CREATED)
