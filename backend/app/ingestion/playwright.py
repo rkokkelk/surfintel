@@ -49,9 +49,9 @@ class PlaywrightBackend(FetchBackend):
             else:
                 page.screenshot(path=screenshot_path(item_id), full_page=True)
 
+            raw_html = page.content()
             browser.close()
 
-        raw_html = page.content()
         soup = BeautifulSoup(raw_html, "html.parser")
 
         if config.get('content-selector'):
