@@ -13,7 +13,7 @@ from sqlalchemy import select
 from app.celery import app
 from app.core.security import hash_password
 from app.db.session import SessionLocal
-from app.ingestion.tasks import run_ingestion_cycle, fetch_discovered_item
+from app.ingestion.tasks import run_ingestion_cycle, fetch_discovered_item, retry_failed_items
 from app.models.organization import Organization
 from app.models.source import Source, SourceType
 from app.models.user import AppUser, UserRole
@@ -27,13 +27,16 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @cli.command()
-def run_ingestion(force: bool = False, item_id: uuid.UUID | None = None) -> None:
+def run_ingestion(force: bool = False, failed: bool = False, item_id: uuid.UUID | None = None) -> None:
     """One ingestion cycle: poll sources, fetch/enrich new items, evaluate alerts."""
 
     if item_id:
         db = SessionLocal()
         item = db.get(Item, item_id)
         fetch_discovered_item.s(item.id, item.source.id, fetch_identifier='PLAYWRIGHT').delay()
+
+    elif failed:
+        retry_failed_items.s().delay()
 
     else:
         run_ingestion_cycle.s('PLAYWRIGHT', force)

@@ -84,6 +84,25 @@ def run_ingestion_cycle(source_id: uuid.UUID, fetch_identifier: str | None = FET
         group_task = group(fetch_discovered_item.s(item.id, source.id, fetch_identifier=fetch_identifier) for item in pending_items)
         group_task()  
 
+@app.task
+def retry_failed_items(status: list[ItemStatus] = [ItemStatus.discovered, ItemStatus.error, ItemStatus.fetched], source_id: uuid.UUID | None = None) -> None:
+    """ Refetch and analyse previously
+    
+    :param status: list of statusses to filter on
+    :param source: Source list to filter
+    """
+    with app.conf['dbSession']() as db:
+        stmt = select(Item).where(Item.status.in_(status))
+        
+        if source_id:
+            stmt = stmt.where(Item.source.id == source_id)
+
+        redo_items = db.scalars(stmt).all()
+
+        # Start paralell fetching tasks
+        group_task = group(fetch_discovered_item.s(item.id, item.source.id, fetch_identifier='PLAYWRIGHT') for item in redo_items)
+        group_task()  
+
 
 def poll_source(db: Session, source: Source) -> None:
     """ Get all the newly discovered itesm from the source
