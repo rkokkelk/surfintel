@@ -28,7 +28,7 @@ class HTMLSourceConnector(SourceConnector):
 
                 raw_html = page.content()
             except:
-                pass
+                return []
             finally:
                 context.close()
                 browser.close()
