@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from sqlalchemy.orm import Session
+
 from app.models.item import Item
 
 
@@ -21,8 +23,12 @@ class EnrichmentModule(ABC):
     source_toggle: str | None = None
 
     @abstractmethod
-    def run(self, item: Item) -> dict:
-        """Return the data to persist in item_enrichment.data for this item."""
+    def run(self, item: Item, db: Session) -> dict:
+        """Return the data to persist in item_enrichment.data for this item.
+        `db` is the same session the caller will commit — a module that owns
+        auxiliary tables (CveExtractor's `cve`/`item_cve`) writes to them here
+        rather than needing its own session/commit.
+        """
         raise NotImplementedError
 
     def match_fields(self, data: dict) -> dict:

@@ -1,6 +1,7 @@
 import datetime as dt
 
 import httpx
+from sqlalchemy.orm import Session
 
 from app.enrichment.base import EnrichmentModule
 from app.models.item import Item
@@ -22,7 +23,12 @@ class KevChecker(EnrichmentModule):
         self._cached_ids: set[str] | None = None
         self._cached_at: dt.datetime | None = None
 
-    def run(self, item: Item) -> dict:
+    def run(self, item: Item, db: Session) -> dict:
+        # STALE since enrichment modules moved to parallel Celery tasks (no
+        # shared prior_results pass anymore) — cve_ids is never populated, so
+        # this always reports False. Left as-is: CveExtractor now gets KEV
+        # status directly from OpenCVE per CVE, which may make this module
+        # redundant — a separate decision from this change, not fixed here.
         cve_ids: list[str] = []
         if not cve_ids:
             return {"in_kev": False, "matched_cve_ids": []}

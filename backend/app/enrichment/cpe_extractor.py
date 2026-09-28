@@ -1,5 +1,7 @@
 import re
 
+from sqlalchemy.orm import Session
+
 from app.enrichment.base import EnrichmentModule
 from app.models.item import Item
 
@@ -16,7 +18,7 @@ class CpeExtractor(EnrichmentModule):
     version = "1"
     source_toggle = "enrich_cpe"
 
-    def run(self, item: Item) -> dict:
+    def run(self, item: Item, db: Session) -> dict:
         text = " ".join(filter(None, [item.title, item.extracted_text]))
         cpe_ids = sorted({match.lower() for match in _CPE_PATTERN.findall(text)})
         return {"cpe_ids": cpe_ids}

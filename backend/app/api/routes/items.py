@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -14,6 +15,7 @@ from app.models.item import Item, ItemStatus
 from app.schemas.item import ItemDetailOut, ItemOut
 
 router = APIRouter(prefix="/items", tags=["items"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("", response_model=list[ItemOut])
@@ -96,6 +98,18 @@ def _attach_enrichments(db: Session, items: list[Item]) -> None:
 
     by_item: dict[uuid.UUID, list[ItemEnrichment]] = {}
     for row in rows:
+        # `data` is written by whatever enrichment module last ran — a module
+        # mid-rewrite once stored a bare string here instead of a dict, which
+        # took the *entire* /items list down with a 500 for every user (a
+        # single malformed row shouldn't be able to do that). Drop it and
+        # keep serving the rest; it'll be corrected next time enrichment
+        # actually runs for that item.
+        if not isinstance(row.data, dict):
+            logger.warning(
+                "Skipping malformed item_enrichment row %s (item=%s, module=%s): data is %s, not a dict",
+                row.id, row.item_id, row.module_name, type(row.data).__name__,
+            )
+            continue
         by_item.setdefault(row.item_id, []).append(row)
 
     for item in items:

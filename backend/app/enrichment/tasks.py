@@ -52,7 +52,7 @@ def run_enrichment_for_item(item_id: uuid.UUID, enrichment_module: str) -> dict:
         item = db.get(Item, item_id)
         module = ENRICHMENT_MODULES[enrichment_module]
         logger.info("Starting enrichment[%s]: %s", enrichment_module, item.id)
-        data = module.run(item)
+        data = module.run(item, db)
 
         existing = db.scalar(
             select(ItemEnrichment).where(

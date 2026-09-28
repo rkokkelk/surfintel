@@ -12,6 +12,7 @@ from typing import Literal
 import instructor
 from pydantic import BaseModel, Field, PositiveInt
 from pydantic_extra_types.country import CountryAlpha2
+from sqlalchemy.orm import Session
 
 from app.enrichment.base import EnrichmentModule
 from app.models.item import Item
@@ -36,7 +37,7 @@ class AiCategorizer(EnrichmentModule):
     name = "ai_categorizer"
     source_toggle = "enrich_ai"
 
-    def run(self, item: Item) -> dict:
+    def run(self, item: Item, db: Session) -> dict:
         client = instructor.from_provider(
             "azure_openai/gpt-5.4-mini",
             api_key=os.environ['AZURE_OPENAI_KEY'],
