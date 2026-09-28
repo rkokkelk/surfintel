@@ -11,21 +11,12 @@ from app.core.encryption import decrypt
 from app.models.alert import AlertChannel, AlertMatch, AlertRule, NotificationStatus
 from app.models.item import Item, ItemStatus
 
-from app.alerting.match_view import MatchView, build_match_view
+from app.alerting.match_view import build_match_view, condition_matches
+from app.alerting.templating import build_template_context, render_message
 from app.enrichment.tasks import ENRICHMENT_MODULES
-from app.models.alert import AlertCondition, AlertField, AlertMatch, AlertRule, AlertRuleStatus
+from app.models.alert import AlertCondition, AlertMatch, AlertRule, AlertRuleStatus
 from app.models.item import Item
 from app.models.source import Source
-
-
-def _condition_matches(condition: AlertCondition, view: MatchView) -> bool:
-    wanted = {v.lower() for v in condition.values}
-
-    if condition.field == AlertField.keyword:
-        haystack = " ".join(view.get("keyword", []))
-        return any(word in haystack for word in wanted)
-
-    return bool(wanted & set(view.get(condition.field.value, [])))
 
 
 @app.task
@@ -51,7 +42,7 @@ def notify(results: list[tuple[str, dict]], item_id: uuid.UUID, source_id: uuid.
 
         for rule in active_rules:
             conditions = db.scalars(select(AlertCondition).where(AlertCondition.alert_rule_id == rule.id)).all()
-            if not conditions or not all(_condition_matches(c, view) for c in conditions):
+            if not conditions or not all(condition_matches(c, view) for c in conditions):
                 continue
 
             already_matched = db.scalar(
@@ -64,12 +55,14 @@ def notify(results: list[tuple[str, dict]], item_id: uuid.UUID, source_id: uuid.
             db.add(match)
             db.flush()
 
-            send_alert_notification(db, rule, item, match)
+            send_alert_notification(db, rule, item, match, view, source)
 
         db.commit()  # the `with` only closes the session: uncommitted matches would be rolled back
 
 
-def send_alert_notification(db: Session, rule: AlertRule, item: Item, match: AlertMatch) -> None:
+def send_alert_notification(
+    db: Session, rule: AlertRule, item: Item, match: AlertMatch, view: dict, source: Source
+) -> None:
     channels = db.scalars(
         select(AlertChannel).where(AlertChannel.alert_rule_id == rule.id, AlertChannel.enabled.is_(True))
     ).all()
@@ -83,7 +76,7 @@ def send_alert_notification(db: Session, rule: AlertRule, item: Item, match: Ale
         notifier.add(decrypt(channel.apprise_url_encrypted))
 
     title = f"SurfIntel alert: {rule.name}"
-    body = f"{item.title or item.url}\n{item.url}"
+    body = render_message(rule.message_template, build_template_context(item, source, rule, view))
 
     # Only backends that render the page (Playwright) produce a screenshot. Apprise
     # refuses to send at all when an attachment can't be read, so attach only if it exists.

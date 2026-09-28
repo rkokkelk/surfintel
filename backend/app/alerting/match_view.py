@@ -10,6 +10,7 @@ cpe_extractor's output) before rules using those fields can match anything.
 """
 
 from app.enrichment.base import EnrichmentModule
+from app.models.alert import AlertCondition, AlertField
 from app.models.item import Item
 from app.models.source import Source
 
@@ -34,3 +35,17 @@ def build_match_view(
             view[field] = sorted(existing | {v.lower() for v in values if v})
 
     return view
+
+
+def condition_matches(condition: AlertCondition, view: MatchView) -> bool:
+    """Shared by both the live alerting pipeline (app/alerting/tasks.py) and
+    the rule "test" endpoint (app/api/routes/alerts.py), so a preview always
+    reflects exactly what would fire for real.
+    """
+    wanted = {v.lower() for v in condition.values}
+
+    if condition.field == AlertField.keyword:
+        haystack = " ".join(view.get("keyword", []))
+        return any(word in haystack for word in wanted)
+
+    return bool(wanted & set(view.get(condition.field.value, [])))

@@ -1,4 +1,4 @@
-from app.alerting.tasks import _condition_matches
+from app.alerting.match_view import condition_matches as _condition_matches
 from app.models.alert import AlertCondition, AlertField
 
 

@@ -10,6 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     LargeBinary,
     String,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -49,6 +50,9 @@ class AlertRule(Base, UUIDPk, TimestampMixin):
         Enum(AlertRuleStatus, name="alert_rule_status"), default=AlertRuleStatus.active
     )
     updated_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Placeholders (see app/alerting/templating.py) rendered against the
+    # item/rule/match-view at notify time. NULL = use the built-in default.
+    message_template: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class AlertCondition(Base, UUIDPk):
