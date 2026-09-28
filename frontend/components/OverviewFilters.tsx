@@ -245,47 +245,6 @@ export function OverviewFilters({
           style={{ ...fieldStyle(Boolean(value.cveId)), width: 180 }}
         />
       </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>CVE-status</span>
-        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: "var(--si-text)" }}>
-          CVSS ≥
-          <input
-            type="number"
-            min={0}
-            max={10}
-            step={0.1}
-            value={cvssDraft}
-            onChange={(e) => setCvssDraft(e.target.value)}
-            placeholder="bv. 7"
-            className="si-mono"
-            style={{ ...fieldStyle(Boolean(value.minCvss)), width: 70 }}
-          />
-        </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: "var(--si-text)" }}>
-          EPSS ≥
-          <input
-            type="number"
-            min={0}
-            max={100}
-            step={1}
-            value={epssDraft}
-            onChange={(e) => setEpssDraft(e.target.value)}
-            placeholder="bv. 10"
-            className="si-mono"
-            style={{ ...fieldStyle(Boolean(value.minEpss)), width: 70 }}
-          />
-          %
-        </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--si-text)" }}>
-          <input
-            type="checkbox"
-            checked={value.kevOnly}
-            onChange={(e) => onChange({ ...value, kevOnly: e.target.checked })}
-          />
-          Alleen CISA KEV
-        </label>
-      </div>
     </div>
   );
 }
