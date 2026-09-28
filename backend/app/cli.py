@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @cli.command()
-def run_ingestion(force: bool = False, failed: bool = False, item_id: uuid.UUID | None = None) -> None:
+def run_ingestion(force: bool = False, failed: bool = False, item_id: uuid.UUID | None = None, source_id: uuid.UUID | None = None) -> None:
     """One ingestion cycle: poll sources, fetch/enrich new items, evaluate alerts."""
 
     if item_id:
@@ -36,7 +36,7 @@ def run_ingestion(force: bool = False, failed: bool = False, item_id: uuid.UUID 
         fetch_discovered_item.s(item.id, item.source.id, fetch_identifier='PLAYWRIGHT').delay()
 
     elif failed:
-        retry_failed_items.s().delay()
+        retry_failed_items.s(source_id=source_id).delay()
 
     else:
         run_ingestion_cycle.s('PLAYWRIGHT', force)

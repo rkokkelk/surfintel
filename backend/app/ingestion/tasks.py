@@ -95,7 +95,7 @@ def retry_failed_items(status: list[ItemStatus] = [ItemStatus.discovered, ItemSt
         stmt = select(Item).where(Item.status.in_(status))
         
         if source_id:
-            stmt = stmt.where(Item.source.id == source_id)
+            stmt = stmt.where(Item.source_id == source_id)
 
         redo_items = db.scalars(stmt).all()
 
