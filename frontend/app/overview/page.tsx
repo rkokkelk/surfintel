@@ -21,6 +21,7 @@ function buildQuery(filters: OverviewFilterState): string {
   return qs ? `?${qs}` : "";
 }
 
+
 export default function OverviewPage() {
   const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
@@ -30,16 +31,27 @@ export default function OverviewPage() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedCveId, setSelectedCveId] = useState<string | null>(null);
 
+  function retrieveItems() {
+    apiFetch<Item[]>(`/items${buildQuery(filters)}`)
+      .then(setItems)
+      .catch(() => setError("Kon het nieuwsoverzicht niet laden."))
+      .finally(() => setLoading(false));
+
+  }
+
   useEffect(() => {
     if (!getToken()) {
       router.push("/login");
       return;
     }
     setLoading(true);
-    apiFetch<Item[]>(`/items${buildQuery(filters)}`)
-      .then(setItems)
-      .catch(() => setError("Kon het nieuwsoverzicht niet laden."))
-      .finally(() => setLoading(false));
+    retrieveItems();
+    const itemInterval = setInterval(retrieveItems, 120000);
+
+    return () => {
+      clearInterval(itemInterval);
+    };
+
   }, [filters, router]);
 
   return (
