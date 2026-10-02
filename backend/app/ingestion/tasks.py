@@ -3,6 +3,7 @@ Source -> discover links -> Item -> fetch -> enrich -> evaluate alerts.
 Invoked by app/cli.py (`surfintel run-ingestion`), e.g. from cron.
 """
 
+import random
 import logging
 import datetime as dt
 
@@ -43,15 +44,34 @@ class FETCH_TYPES(Enum):
 logger = logging.getLogger(__name__)
 
 @app.on_after_finalize.connect
-def setup_source_periodic_tasks(sender: Celery, **kwargs):
+def setup_source(sender: Celery, **kwargs):
+    """ Setup all periodic source tasks 
+    
+    Adds jitter so that not all sources are gathered simultanously
+    """
     with SessionLocal() as db:
         sources = db.scalars(select(Source))
 
         for source in sources:
-            source_signature = run_ingestion_cycle.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
+            poll = source.poll_interval_seconds
+            jitter = random.randint(1, poll)
 
-            logger.info("Setting up periodic tasks: %s - %ds ", source.name, source.poll_interval_seconds)
-            sender.add_periodic_task(source.poll_interval_seconds, source_signature, name=f"periodic_{source.id}")
+            setup_source_signature = setup_source_periodic_task.s(source.id)
+            setup_source_signature.apply_async(countdown=jitter)
+            logger.info("[%s] Starting run of source! jitter: %d; poll: %d", source.name, jitter, poll)
+
+@app.task
+def setup_source_periodic_task(source_id: uuid.UUID) -> None:
+    # outside any request. Open/close a session the same way app/cli.py does.
+    with app.conf['dbSession']() as db:
+        source = db.get(Source, source_id)
+
+        logger.info("Setting up periodic tasks: %s - %ds ", source.name, source.poll_interval_seconds)
+        run_source_ingestion = run_ingestion_cycle.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
+
+        app.add_periodic_task(source.poll_interval_seconds, run_source_ingestion, name=f"periodic_{source.id}")
+        run_source_ingestion()
+
 
 @app.task
 def run_ingestion_cycle(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX, force: bool = False) -> None:
@@ -132,7 +152,7 @@ def poll_source(db: Session, source: Source) -> None:
             )
         )
 
-@app.task
+@app.task(autoretry_for=(Exception,), retry_backoff=60, retry_backoff_max=3600, retry_jitter=False, max_retries=5)
 def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX):
     with app.conf['dbSession']() as db:
         fetch_backend = FETCH_TYPES[fetch_identifier].value()
@@ -161,9 +181,9 @@ def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identi
             # Start enrichment tasks and finally notify
             chord(get_enrichments_tasks(item, source), notify.s(item_id=item.id, source_id=source.id))()
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning("Fetching failed %s [%s] --> %s: %s", source.name, item.id, item.url, e)
             item.status = ItemStatus.error
 
-        finally:
             db.commit()
+            raise e  # noqa: TRY201
