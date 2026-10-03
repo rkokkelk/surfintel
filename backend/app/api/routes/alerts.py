@@ -148,6 +148,8 @@ def update_alert_rule(
 def delete_alert_rule(
     rule_id: uuid.UUID, db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_admin)
 ) -> None:
+    """ Completely delete the Alert specified by rule_id.
+    """
     rule = db.scalar(scoped_to_org(select(AlertRule), AlertRule, current_user).where(AlertRule.id == rule_id))
     if rule is None:
         raise HTTPException(404, "Alert-regel niet gevonden")
@@ -227,6 +229,6 @@ def pause_alert_rule(
         raise HTTPException(404, "Alert-regel niet gevonden")
 
     rule.status = AlertRuleStatus.paused
-    rule.updated_at = dt.datetime.now(dt.timezone.utc)
+    rule.updated_at = dt.datetime.now(dt.UTC)
     db.commit()
     return _to_out(db, rule)
