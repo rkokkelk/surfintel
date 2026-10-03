@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     # explicitly in production — the default only works for local development.
     encryption_key: str = "A" * 43 + "="
 
+    # Default log dir
+    log_dir: str = 'logs'
+
     # CORS is origin-exact (see app/main.py) — "localhost" and "127.0.0.1" are
     # different origins even though they're the same machine, so both are
     # allowed by default to avoid that footgun. Override via CORS_ORIGINS as

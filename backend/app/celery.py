@@ -1,11 +1,8 @@
-import logging
-
 from celery import Celery
-from app.db.session import SessionLocal
 from celery.signals import worker_process_init, worker_process_shutdown
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-logger = logging.getLogger(__name__)
+from app.core import logging
+from app.db.session import SessionLocal
 
 app = Celery(
     __name__,
@@ -22,6 +19,9 @@ app.autodiscover_tasks(["app.ingestion", "app.enrichment", "app.alerting", "app.
 
 @worker_process_init.connect
 def init_worker(**kwargs):
+    with SessionLocal() as db:
+        logging.setup_log_sources(db)
+
     app.conf['dbSession'] = SessionLocal
 
 
