@@ -1,18 +1,25 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, func
+from fastapi.responses import PlainTextResponse
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from datetime import datetime
-
-from app.celery import app
 from app.api.deps import get_current_user, require_platform_admin
-from app.ingestion.tasks import run_ingestion_cycle
+from app.celery import app
+from app.core import logging
 from app.db.session import get_db
-from app.models.source import Source
+from app.ingestion.tasks import run_ingestion_cycle
 from app.models.item import Item, ItemStatus
-from app.schemas.source import SourceCreate, SourceOut, SourceUpdate, SourceIngestion, SourceHealth, SourceHealthDay
+from app.models.source import Source
+from app.schemas.source import (
+    SourceCreate,
+    SourceHealth,
+    SourceHealthDay,
+    SourceIngestion,
+    SourceOut,
+    SourceUpdate,
+)
 
 router = APIRouter(prefix="/sources", tags=["sources"])
 
@@ -128,3 +135,14 @@ def health(
     ]
 
     return SourceHealth(days=days)
+
+@router.get("/{source_id}/logs", response_class=PlainTextResponse)
+def logs(
+    source_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_platform_admin),
+) -> PlainTextResponse:
+    """ Get the logfile for given source
+    """
+    source = db.get(Source, source_id)
+    return logging.fetch_logs(source)

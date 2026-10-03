@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, ApiError, getToken } from "@/lib/api";
+import { apiFetch, ApiError, textFetch, getToken } from "@/lib/api";
 import { isPlatformAdmin } from "@/lib/auth";
 import type { Source, SourceType } from "@/lib/types";
 import { ToastContainer, toast } from 'react-toastify';
 import { Shell } from "@/components/Shell";
 import { SourceHealthChart } from "@/components/SourceHealthChart";
+import { LazyLog } from "@melloware/react-logviewer";
 
 const TYPE_OPTIONS: { value: SourceType; label: string }[] = [
   { value: "rss", label: "RSS/Atom-feed" },
@@ -48,6 +49,7 @@ export default function SourcesPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
+  const [logs, setLogs] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [isPopupOpen, setPopupOpen] = useState(false);
 
@@ -103,7 +105,7 @@ export default function SourcesPage() {
     setFormError(null);
   }
 
-  function startEdit(source: Source) {
+  async function startEdit(source: Source) {
     setEditingId(source.id);
     setForm({
       name: source.name,
@@ -119,6 +121,11 @@ export default function SourcesPage() {
       },
     });
     setFormError(null);
+
+    setLogs(undefined);
+    await textFetch<string>(`/sources/${source.id}/logs`)
+      .then(setLogs)
+      .catch(() => setLogs(undefined));
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -501,6 +508,31 @@ export default function SourcesPage() {
             </button>
           </div>
         </form>
+
+        {editingId && (
+          <div
+            style={{
+              background: "var(--si-surface)",
+              border: "1px solid var(--si-border)",
+              borderRadius: 12,
+              padding: "16px 18px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
+              Logs
+            </div>
+            {logs === undefined ? (
+              <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Logs laden...</div>
+            ) : logs === "" ? (
+              <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Nog geen logregels voor deze bron.</div>
+            ) : (
+              <LazyLog text={logs} height={400} enableSearch enableLineNumbers={false} />
+            )}
+          </div>
+        )}
         </div>
       </div>
       <ToastContainer />
