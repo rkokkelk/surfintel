@@ -99,6 +99,12 @@ export default function SourcesPage() {
     });
   }
 
+  function loadLogs(sourceId: string) {
+    return textFetch<string>(`/sources/${sourceId}/logs`)
+      .then(setLogs)
+      .catch(() => setLogs(undefined));
+  }
+
   function startCreate() {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -123,10 +129,16 @@ export default function SourcesPage() {
     setFormError(null);
 
     setLogs(undefined);
-    await textFetch<string>(`/sources/${source.id}/logs`)
-      .then(setLogs)
-      .catch(() => setLogs(undefined));
+    await loadLogs(source.id);
   }
+  useEffect(() => {
+    if (!editingId) return;
+    const interval = setInterval(() => {
+      loadLogs(editingId);
+    }, 5000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingId]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -529,7 +541,7 @@ export default function SourcesPage() {
             ) : logs === "" ? (
               <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Nog geen logregels voor deze bron.</div>
             ) : (
-              <LazyLog text={logs} height={400} enableSearch enableLineNumbers={false} />
+              <LazyLog text={logs} height={400} enableSearch enableLineNumbers={false} extraLines={1} follow={true} />
             )}
           </div>
         )}
