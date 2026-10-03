@@ -17,7 +17,7 @@ app = Celery(
 # app/enrichment/tasks.py, etc. Your task lives in pipeline.py, not tasks.py,
 # so without this override autodiscover finds nothing in any of these
 # packages (silently — no error, just an empty [tasks] list on the worker).
-app.autodiscover_tasks(["app.ingestion", "app.enrichment", "app.alerting"])
+app.autodiscover_tasks(["app.ingestion", "app.enrichment", "app.alerting", "app.refreshing"])
 
 
 @worker_process_init.connect
