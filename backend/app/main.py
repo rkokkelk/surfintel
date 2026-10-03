@@ -29,7 +29,7 @@ class CatchAllMiddleware(BaseHTTPMiddleware):
         try:
             return await call_next(request)
         except Exception:
-            logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+            logger.exception("Unhandled error on {} {}", request.method, request.url.path)
             return JSONResponse(status_code=500, content={"detail": "Interne serverfout"})
 
 
@@ -49,7 +49,7 @@ async def log_validation_errors(request: Request, exc: RequestValidationError) -
     — this just also puts it in the server log, since that's easy to miss in
     a browser Network tab while a request is failing silently client-side.
     """
-    logger.warning("422 on %s %s: %s", request.method, request.url.path, exc.errors())
+    logger.warning("422 on {} {} {}", request.method, request.url.path, exc.errors())
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
 

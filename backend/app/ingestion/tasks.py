@@ -66,7 +66,7 @@ def setup_source_periodic_task(source_id: uuid.UUID) -> None:
     with app.conf['dbSession']() as db:
         source = db.get(Source, source_id)
 
-        log.success("Setting up periodic tasks: {} - {}", source.poll_interval_seconds)
+        log.success("Setting up periodic tasks: {}", source.poll_interval_seconds)
         run_source_ingestion = run_ingestion_cycle.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
 
         app.add_periodic_task(source.poll_interval_seconds, run_source_ingestion, name=f"periodic_{source.id}")

@@ -3,11 +3,10 @@ Source -> discover links -> Item -> fetch -> enrich -> evaluate alerts.
 Invoked by app/cli.py (`surfintel run-ingestion`), e.g. from cron.
 """
 
-import logging
 import uuid
-from enum import Enum
 
-from celery import Celery, group, chord
+from celery import Celery, chord, group
+from loguru import logger
 from sqlalchemy import select
 
 from app.alerting.tasks import notify
@@ -18,8 +17,6 @@ from app.models.item import Item
 from app.models.source import Source
 
 PERIOD = 1800
-
-logger = logging.getLogger(__name__)
 
 @app.on_after_finalize.connect
 def setup_refresh_tasks(sender: Celery, **kwargs):
@@ -49,7 +46,8 @@ def refresh_item(item_id: uuid.UUID):
     with app.conf['dbSession']() as db:
         item = db.get(Item, item_id)
         source = db.get(Source, item.source_id)
+        log = logger.bind(source=source.id, item=item.id)
 
-        logger.info("[%s] refresh item: %s", source.name, item.id)
+        log.info("refresh item")
         refresh_tasks = [run_enrichment_for_item.s(item.id, 'enrich_cve')]
         chord(refresh_tasks, notify.s(item_id=item.id, source_id=source.id))()

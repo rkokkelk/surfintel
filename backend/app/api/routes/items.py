@@ -1,9 +1,9 @@
 import datetime as dt
-import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
+from loguru import logger
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,6 @@ from app.models.item import Item, ItemStatus
 from app.schemas.item import ItemDetailOut, ItemOut
 
 router = APIRouter(prefix="/items", tags=["items"])
-logger = logging.getLogger(__name__)
 
 
 @router.get("", response_model=list[ItemOut])
@@ -106,7 +105,7 @@ def _attach_enrichments(db: Session, items: list[Item]) -> None:
         # actually runs for that item.
         if not isinstance(row.data, dict):
             logger.warning(
-                "Skipping malformed item_enrichment row %s (item=%s, module=%s): data is %s, not a dict",
+                "Skipping malformed item_enrichment row {} (item={}, module={}): data is {}, not a dict",
                 row.id, row.item_id, row.module_name, type(row.data).__name__,
             )
             continue

@@ -47,13 +47,16 @@ class CveExtractor(EnrichmentModule):
         cvss_scores = [s for s in cvss_scores if s is not None]
         epss_scores = [c.epss_score for c in cves if c.epss_score is not None]
 
-        self.log.info("finished {}: cve[{}], CVSS[{}], EPS[{}], KEV[{}]", self.name, len(cve_ids), max(cvss_scores | 0), max(epss_scores | 0), any(c.in_kev for c in cves))
+        max_cvss = max(cvss_scores) if cvss_scores else None
+        max_epss = max(epss_scores) if cvss_scores else None
+
+        self.log.info("finished {}! (cve={} cvss={} epss={} kev={})", self.name, len(cve_ids), max_cvss, max_epss, any(c.in_kev for c in cves))
 
         return {
             "cve_ids": cve_ids,
-            "max_cvss_score": max(cvss_scores) if cvss_scores else None,
-            "max_epss_score": max(epss_scores) if epss_scores else None,
-            "in_kev": any(c.in_kev for c in cves),
+            "max_cvss_score": max_cvss,
+            "max_epss_score": max_epss,
+            "in_kev": any(c.in_kev for c in cves)
         }
 
     def match_fields(self, data: dict) -> dict:
@@ -94,7 +97,7 @@ class CveExtractor(EnrichmentModule):
 
         try:
             data = response.raise_for_status()
-            self.trace("Received CVE info for: {} - {}b", cve_id, response.num_bytes_downloaded)
+            self.log.trace("Received CVE info for: {} - {}b", cve_id, response.num_bytes_downloaded)
         except httpx.HTTPStatusError as hse:
             self.log.warning("Failed to fetch CVE info for: {} - {}", cve_id, hse.response.text)
         return data

@@ -1,10 +1,8 @@
-import uuid 
-import logging
-
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+import uuid
 
 from celery import signature
+from loguru import logger
+from sqlalchemy import select
 
 from app.celery import app
 from app.enrichment.ai_categorizer import AiCategorizer
@@ -15,8 +13,6 @@ from app.enrichment.kev_checker import KevChecker
 from app.models.enrichment import ItemEnrichment
 from app.models.item import Item
 from app.models.source import Source
-
-logger = logging.getLogger(__name__)
 
 # Fixed execution order: kev_checker depends on cve_extractor having already
 # produced this item's cve_ids in this same pass.
@@ -50,8 +46,9 @@ def run_enrichment_for_item(item_id: uuid.UUID, enrichment_module: str) -> dict:
     with app.conf['dbSession']() as db:
 
         item = db.get(Item, item_id)
+        log = logger.bind(source=item.source_id, item=item.id)
         module = ENRICHMENT_MODULES[enrichment_module]
-        logger.info("Starting enrichment[%s]: %s", enrichment_module, item.id)
+        log.info("Starting enrichment: {}", enrichment_module)
         data = module.run(item, db)
 
         existing = db.scalar(

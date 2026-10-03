@@ -10,12 +10,20 @@ from app.models.source import Source
 
 log_dir: Path = Path(settings.log_dir)
 CHUNK_SIZE = 64 * 1024  # bytes read per seek-step; larger = fewer syscalls
+LOG_FORMAT = (
+    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+    "<level>{level:<4.4}</level> | "
+    "<yellow>{extra[item]!s:<8.8}</yellow> - "
+    "<level>{message}</level>"
+)
 
 def setup_log_sources(db: Session) -> None:
     """ Ensure that each source has appropriate log handlers
 
     :param db: DB connection
     """
+    logger.configure(extra={'source': '', 'item': 'source'})
+
     if not log_dir.exists():
         log_dir.mkdir(parents=True)
 
@@ -27,6 +35,7 @@ def setup_log_sources(db: Session) -> None:
 
         logger.add(
             log_file,
+            format=LOG_FORMAT,
             filter=lambda record, id=source.id: record['extra'].get('source') == id,
             enqueue=True,
             rotation="1 week",
