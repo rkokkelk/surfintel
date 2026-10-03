@@ -24,7 +24,8 @@ dependencies = [
   "redis>=6.4",
   "pydantic_extra_types>=2.11",
   "instructor>=1.17",
-  "pycountry>=26.2"
+  "pycountry>=26.2",
+  "loguru>=0.7"
 ]
 
 [project.optional-dependencies]
