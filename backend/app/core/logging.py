@@ -31,7 +31,8 @@ def setup_log_sources(db: Session) -> None:
             enqueue=True,
             rotation="1 week",
             retention=7,
-            compression='gz'
+            compression='gz',
+            colorize=True
         )
 
 def fetch_logs(source: Source, last: int=500) -> str:
