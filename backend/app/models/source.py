@@ -69,4 +69,14 @@ class Source(Base, UUIDPk, TimestampMixin):
         
         self.favicon = base64.b64encode(icon).decode()
 
+    def clean_name(self) -> str:
+         """ Return clean version of name; used in directory names, etc
+         
+         :return:  clean name
+         """
+         name = self.name.lower()
+         return name.replace(r'[\(\)\\\.\s]+', '_')
+
+
+
 
