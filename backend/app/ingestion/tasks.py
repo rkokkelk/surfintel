@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from celery import group, chord, Celery
 
+from loguru import logger
 from app.celery import app
 from app.db.session import SessionLocal
 from app.ingestion.http_fetch import HttpFetchBackend
@@ -41,8 +42,6 @@ class FETCH_TYPES(Enum):
     HTTPX = HttpFetchBackend
     PLAYWRIGHT = PlaywrightBackend
 
-logger = logging.getLogger(__name__)
-
 @app.on_after_finalize.connect
 def setup_source(sender: Celery, **kwargs):
     """ Setup all periodic source tasks 
@@ -58,15 +57,16 @@ def setup_source(sender: Celery, **kwargs):
 
             setup_source_signature = setup_source_periodic_task.s(source.id)
             setup_source_signature.apply_async(countdown=jitter)
-            logger.info("[%s] Starting run of source! jitter: %d; poll: %d", source.name, jitter, poll)
+            logger.info("Starting run of source! jitter: {}; poll: {}", jitter, poll)
 
 @app.task
 def setup_source_periodic_task(source_id: uuid.UUID) -> None:
+    log = logger.bind(source=source_id)
     # outside any request. Open/close a session the same way app/cli.py does.
     with app.conf['dbSession']() as db:
         source = db.get(Source, source_id)
 
-        logger.info("Setting up periodic tasks: %s - %ds ", source.name, source.poll_interval_seconds)
+        log.success("Setting up periodic tasks: {} - {}", source.poll_interval_seconds)
         run_source_ingestion = run_ingestion_cycle.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
 
         app.add_periodic_task(source.poll_interval_seconds, run_source_ingestion, name=f"periodic_{source.id}")
@@ -111,6 +111,7 @@ def retry_failed_items(status: list[ItemStatus] = [ItemStatus.discovered, ItemSt
     :param status: list of statusses to filter on
     :param source: Source list to filter
     """
+    log = logger.bind(source=source_id)
     with app.conf['dbSession']() as db:
         stmt = select(Item).where(Item.status.in_(status))
         
@@ -129,18 +130,22 @@ def poll_source(db: Session, source: Source) -> None:
     :param Session: DB session
     :param source: Source
     """
+    log = logger.bind(source=source.id)
     connector = CONNECTORS.get(source.type)
     if connector is None:
         return
 
-    logger.info("Starting discovery %s: %s", source.name, source.config)
+    log.info("Starting discovery: {}", source.config)
     links = connector.discover(source.config)
-    logger.debug("Identified %s: %d links", source.name, len(links))
+
+    new = 0
+    total = len(links)
 
     for link in links:
         existing = db.scalar(select(Item).where(Item.url == link.url))
         if existing:
             continue
+        new += 1
         db.add(
             Item(
                 source_id=source.id,
@@ -152,15 +157,18 @@ def poll_source(db: Session, source: Source) -> None:
             )
         )
 
+    log.info("Links: new[{}], existing[{}], total[{}]", new, total-new, total)
+
 @app.task(autoretry_for=(Exception,), retry_backoff=60, retry_backoff_max=3600, retry_jitter=False, max_retries=5)
 def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX):
+    log = logger.bind(source=source_id)
     with app.conf['dbSession']() as db:
         fetch_backend = FETCH_TYPES[fetch_identifier].value()
         item = db.get(Item, item_id)
         source = db.get(Source, source_id)
 
         try:
-            logger.debug("Parsed[%s]: %s", item.id, item.url)
+            log.debug("Parsed[{}]: {}", item.id, item.url)
             result = fetch_backend.fetch(item.id, item.url, item.source.config)
 
             now = dt.datetime.now(dt.UTC)
@@ -182,7 +190,7 @@ def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identi
             chord(get_enrichments_tasks(item, source), notify.s(item_id=item.id, source_id=source.id))()
 
         except Exception as e:
-            logger.warning("Fetching failed %s [%s] --> %s: %s", source.name, item.id, item.url, e)
+            log.warning("Fetching failed[{}] --> {}: {}", item.id, item.url, e)
             item.status = ItemStatus.error
 
             db.commit()
