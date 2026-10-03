@@ -10,6 +10,7 @@ import os
 from typing import Literal
 
 import instructor
+from loguru import logger
 from pydantic import BaseModel, Field, PositiveInt
 from pydantic_extra_types.country import CountryAlpha2
 from sqlalchemy.orm import Session
@@ -38,12 +39,15 @@ class AiCategorizer(EnrichmentModule):
     source_toggle = "enrich_ai"
 
     def run(self, item: Item, db: Session) -> dict:
+        self.log = logger.bind(source=item.source_id, item=item.id)
         client = instructor.from_provider(
             "azure_openai/gpt-5.4-mini",
             api_key=os.environ['AZURE_OPENAI_KEY'],
             azure_endpoint="https://swedencentral.api.cognitive.microsoft.com/",
             api_version="2024-12-01-preview"
         )
+
+        self.log.trace("{}[{}] - starting classification", self.name, item.id)
 
         # Extract structured data from natural language
         classification = client.create(
@@ -53,6 +57,8 @@ class AiCategorizer(EnrichmentModule):
                 {"role": "user", "content": item.extracted_text}
             ],
         )
+
+        self.log.info("finished {}: classification finished", self.name, item.id)
 
         return classification.model_dump()
 

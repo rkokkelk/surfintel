@@ -3,6 +3,7 @@ import os
 import re
 
 import httpx
+from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -28,6 +29,7 @@ class CveExtractor(EnrichmentModule):
         self.headers = {"Authorization": f"Bearer {os.environ.get('OPENCVE_API_KEY')}"}
 
     def run(self, item: Item, db: Session) -> dict:
+        self.log = logger.bind(source=item.source_id, item=item.id)
         text = " ".join(filter(None, [item.title, item.extracted_text]))
         cve_ids = sorted({match.upper() for match in _CVE_PATTERN.findall(text)})
 
@@ -44,6 +46,8 @@ class CveExtractor(EnrichmentModule):
         cvss_scores = [c.cvss_v4_score if c.cvss_v4_score is not None else c.cvss_v3_score for c in cves]
         cvss_scores = [s for s in cvss_scores if s is not None]
         epss_scores = [c.epss_score for c in cves if c.epss_score is not None]
+
+        self.log.info("finished {}: cve[{}], CVSS[{}], EPS[{}], KEV[{}]", self.name, len(cve_ids), max(cvss_scores | 0), max(epss_scores | 0), any(c.in_kev for c in cves))
 
         return {
             "cve_ids": cve_ids,
@@ -65,7 +69,9 @@ class CveExtractor(EnrichmentModule):
     def _sync_cve(self, db: Session, cve_id: str) -> Cve:
         now = dt.datetime.now(dt.timezone.utc)
         existing = db.get(Cve, cve_id)
+
         if existing and existing.fetched_at and now - existing.fetched_at < _REFRESH_INTERVAL:
+            self.log.trace("cached CVE: {} latest {}", cve_id, existing.fetched_at)
             return existing
 
         payload = self._fetch_opencve_info(cve_id)
@@ -80,18 +86,18 @@ class CveExtractor(EnrichmentModule):
         return cve
 
     def _fetch_opencve_info(self, cve_id: str) -> dict:
+        data = {}
         url = f"{self.url}/cves/{cve_id}"
         response = httpx.get(
             url, headers=self.headers, params={"include": "nvd_cpe_configurations,references"}, timeout=20
         )
 
-        if 400 <= response.status_code < 500:
-            return {}
-        if 200 <= response.status_code < 300:
-            return response.json()
-        response.raise_for_status()
-        return {}
-
+        try:
+            data = response.raise_for_status()
+            self.trace("Received CVE info for: {} - {}b", cve_id, response.num_bytes_downloaded)
+        except httpx.HTTPStatusError as hse:
+            self.log.warning("Failed to fetch CVE info for: {} - {}", cve_id, hse.response.text)
+        return data
 
 def _apply_opencve_payload(cve: Cve, payload: dict) -> None:
     metrics = payload.get("metrics", {})

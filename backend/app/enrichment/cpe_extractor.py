@@ -1,5 +1,6 @@
 import re
 
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.enrichment.base import EnrichmentModule
@@ -19,6 +20,8 @@ class CpeExtractor(EnrichmentModule):
     source_toggle = "enrich_cpe"
 
     def run(self, item: Item, db: Session) -> dict:
+        self.log = logger.bind(source=item.source_id, item=item.id)
         text = " ".join(filter(None, [item.title, item.extracted_text]))
         cpe_ids = sorted({match.lower() for match in _CPE_PATTERN.findall(text)})
+        self.log.info("finished {}: cpe[{}]", self.name, len(cpe_ids))
         return {"cpe_ids": cpe_ids}
