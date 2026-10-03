@@ -26,7 +26,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "app.cli",
-      "args": ["run-ingestion"],
+      "args": ["run-ingestion", "--failed"],
       "cwd": "${workspaceFolder}/backend",
       "python": "${workspaceFolder}/backend/.venv/bin/python",
       "envFile": "${workspaceFolder}/backend/.env",
@@ -60,6 +60,13 @@
       "python": "${workspaceFolder}/backend/.venv/bin/python",
       "envFile": "${workspaceFolder}/backend/.env",
       "justMyCode": true
+    },
+    {
+      "name": "Backend: celery flower",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}/backend/.venv/bin/celery -A app.celery.app flower",
+      "cwd": "${workspaceFolder}/backend"
     },
     {
       "name": "Backend: celery beat",
@@ -103,11 +110,12 @@
   "compounds": [
     {
       "name": "SurfIntel: Backend + Frontend",
-      "configurations": ["Backend: FastAPI (debug)", "Backend: celery worker", "Backend: celery beat", "Frontend: Next.js full stack (server + Chrome)"],
+      "configurations": ["Backend: FastAPI (debug)", "Backend: celery flower", "Backend: celery worker", "Backend: celery beat", "Frontend: Next.js full stack (server + Chrome)"],
       "stopAll": true
     }
   ],
   "inputs": [
+    { "id": "itemId", "type": "promptString", "description": "ItemID to lookup again." },
     { "id": "adminEmail", "type": "promptString", "description": "E-mailadres nieuwe platform-admin" },
     { "id": "adminName", "type": "promptString", "description": "Naam nieuwe platform-admin" },
     { "id": "adminPassword", "type": "promptString", "description": "Wachtwoord nieuwe platform-admin", "password": true }
