@@ -28,7 +28,8 @@ def setup_log_sources(db: Session) -> None:
         log_dir.mkdir(parents=True)
 
     sources = db.scalars(select(Source)).all()
-    map(create_source_logs, sources)
+    for source in sources:
+        create_source_logs(source)
 
 def create_source_logs(source: Source):
     """ Setup specific logsource for given Source
