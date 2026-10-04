@@ -25,7 +25,8 @@ dependencies = [
   "pydantic_extra_types>=2.11",
   "instructor>=1.17",
   "pycountry>=26.2",
-  "loguru>=0.7"
+  "loguru>=0.7",
+  "python-multipart>=0.0.9"
 ]
 
 [project.optional-dependencies]

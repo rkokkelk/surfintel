@@ -18,8 +18,13 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
 
 
 def create_access_token(
-    *, user_id: uuid.UUID, organization_id: uuid.UUID, role: str, is_platform_admin: bool
+    *, user_id: uuid.UUID, organization_id: uuid.UUID, role: str, is_platform_admin: bool, expires: bool = True
 ) -> str:
+    """`expires=False` omits the `exp` claim entirely for a long-lived API
+    token — PyJWT's decode() only enforces expiry when `exp` is present, so
+    leaving it out (not setting it far in the future) is what makes the
+    token genuinely non-expiring rather than expiring in, say, 100 years.
+    """
     now = dt.datetime.now(dt.timezone.utc)
     payload = {
         "sub": str(user_id),
@@ -27,8 +32,9 @@ def create_access_token(
         "role": role,
         "is_platform_admin": is_platform_admin,
         "iat": now,
-        "exp": now + dt.timedelta(minutes=settings.jwt_expire_minutes),
     }
+    if expires:
+        payload["exp"] = now + dt.timedelta(minutes=settings.jwt_expire_minutes)
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 

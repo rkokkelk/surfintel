@@ -13,7 +13,7 @@ import uuid
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
 from sqlalchemy import Select
 from sqlalchemy.orm import Session
 
@@ -21,10 +21,23 @@ from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.schemas.auth import CurrentUser
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+# Allow two authorizations schemes
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
+def get_current_user(
+    oauth2_token: str | None = Depends(oauth2_scheme),
+    bearer: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> CurrentUser:
+    token = oauth2_token or (bearer.credentials if bearer else None)
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Niet ingelogd",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     try:
         payload = decode_access_token(token)
     except jwt.PyJWTError as exc:

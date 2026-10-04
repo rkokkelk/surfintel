@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearToken } from "@/lib/api";
 import { isPlatformAdmin } from "@/lib/auth";
+import { ApiInfoModal } from "@/components/ApiInfoModal";
 
 export function Shell({
   active,
@@ -21,6 +22,7 @@ export function Shell({
   // hydration reconciles).
   const [showAdminSection, setShowAdminSection] = useState(false);
   useEffect(() => setShowAdminSection(isPlatformAdmin()), []);
+  const [showApiInfo, setShowApiInfo] = useState(false);
 
   function logout() {
     clearToken();
@@ -45,7 +47,22 @@ export function Shell({
           <span style={{ color: "var(--si-navy)" }}>Surf</span>
           <span style={{ color: "var(--si-blue)" }}>Intel</span>
         </div>
-        <div style={{ marginLeft: "auto" }}>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
+          <button
+            onClick={() => setShowApiInfo(true)}
+            style={{
+              height: 34,
+              padding: "0 14px",
+              border: "1px solid #d8dce3",
+              borderRadius: 8,
+              background: "#fff",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#384152",
+            }}
+          >
+            API
+          </button>
           <button
             onClick={logout}
             style={{
@@ -63,6 +80,8 @@ export function Shell({
           </button>
         </div>
       </header>
+
+      {showApiInfo && <ApiInfoModal onClose={() => setShowApiInfo(false)} />}
 
       <div style={{ flexGrow: 1, display: "flex" }}>
         <nav
