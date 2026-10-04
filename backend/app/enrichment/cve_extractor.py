@@ -3,6 +3,7 @@ import os
 import re
 
 import httpx
+from httpx_retries import Retry, RetryTransport
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -91,15 +92,21 @@ class CveExtractor(EnrichmentModule):
     def _fetch_opencve_info(self, cve_id: str) -> dict:
         data = {}
         url = f"{self.url}/cves/{cve_id}"
-        response = httpx.get(
-            url, headers=self.headers, params={"include": "nvd_cpe_configurations,references"}, timeout=20
-        )
 
-        try:
-            data = response.raise_for_status()
-            self.log.trace("Received CVE info for: {} - {}b", cve_id, response.num_bytes_downloaded)
-        except httpx.HTTPStatusError as hse:
-            self.log.warning("Failed to fetch CVE info for: {} - {}", cve_id, hse.response.text)
+        retry = Retry(total=5, backoff_factor=5)
+        transport = RetryTransport(retry=retry)
+
+        with httpx.Client(transport=transport) as client:
+            response = client.get(
+                url, headers=self.headers, params={"include": "nvd_cpe_configurations,references"}, timeout=20
+            )
+
+            try:
+                data = response.raise_for_status()
+                self.log.trace("Received CVE info for: {} - {}b", cve_id, response.num_bytes_downloaded)
+            except httpx.HTTPStatusError as hse:
+                self.log.warning("Failed to fetch CVE info for: {} - {}", cve_id, hse.response.text)
+
         return data
 
 def _apply_opencve_payload(cve: Cve, payload: dict) -> None:
