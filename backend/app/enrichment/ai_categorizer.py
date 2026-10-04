@@ -24,7 +24,7 @@ class ItemClassification(BaseModel):
     victim_industry: Literal[
         'government', 'defense', 'finance', 'healthcare', 'energy', 'utilities',
         'telecom', 'technology', 'manufacturing', 'transportation',
-        'retail', 'media', 'education', 'ngo'
+        'retail', 'media', 'education', 'ngo', 'commercial', 'sport'
     ] | None = Field(description="The industry that is the vicim within the article.")
     actor: str | None = Field(description="The name of the malicious group or actor.")
     severity: Literal['critical', 'high', 'medium', 'low'] = Field(description="The risk associated with the content.")
