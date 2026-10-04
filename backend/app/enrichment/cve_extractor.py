@@ -102,7 +102,8 @@ class CveExtractor(EnrichmentModule):
             )
 
             try:
-                data = response.raise_for_status()
+                response.raise_for_status()
+                data = response.json()
                 self.log.trace("Received CVE info for: {} - {}b", cve_id, response.num_bytes_downloaded)
             except httpx.HTTPStatusError as hse:
                 self.log.warning("Failed to fetch CVE info for: {} - {}", cve_id, hse.response.text)
