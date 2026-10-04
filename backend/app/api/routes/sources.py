@@ -47,6 +47,7 @@ def create_source(
     )
 
     source.get_favicon()
+    logging.create_source_logs(source)
 
     db.add(source)
     db.commit()

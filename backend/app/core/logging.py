@@ -28,21 +28,26 @@ def setup_log_sources(db: Session) -> None:
         log_dir.mkdir(parents=True)
 
     sources = db.scalars(select(Source)).all()
+    map(create_source_logs, sources)
 
-    for source in sources:
-        name = source.clean_name()
-        log_file = log_dir / f"source_{name}.log"
+def create_source_logs(source: Source):
+    """ Setup specific logsource for given Source
+    
+    :param source: Source to generate filelog for
+    """
+    name = source.clean_name()
+    log_file = log_dir / f"source_{name}.log"
 
-        logger.add(
-            log_file,
-            format=LOG_FORMAT,
-            filter=lambda record, id=source.id: record['extra'].get('source') == id,
-            enqueue=True,
-            rotation="1 week",
-            retention=7,
-            compression='gz',
-            colorize=True
-        )
+    logger.add(
+        log_file,
+        format=LOG_FORMAT,
+        filter=lambda record, id=source.id: record['extra'].get('source') == id,
+        enqueue=True,
+        rotation="1 week",
+        retention=7,
+        compression='gz',
+        colorize=True
+    )
 
 def fetch_logs(source: Source, last: int=500) -> str:
     """ Get logs for a given source
