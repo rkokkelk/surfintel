@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, ApiError, getToken } from "@/lib/api";
+import { apiFetch, apiURL, ApiError, getToken } from "@/lib/api";
 import type { AlertField, AlertRule, AlertTestMatch } from "@/lib/types";
 import { Shell } from "@/components/Shell";
 
@@ -254,6 +254,13 @@ export default function AlertsPage() {
     } finally {
       setDeleting(false);
     }
+  }
+
+  async function handleRss() {
+    if (!selectedRuleId) return;
+
+    const url =  apiURL(`/alerts/${selectedRuleId}/rss`)
+    window.open(url, '_blank')?.focus();
   }
 
   async function handleTest() {
@@ -589,6 +596,25 @@ export default function AlertsPage() {
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
             {selectedRuleId && (
               <>
+                <button
+                  type="button"
+                  onClick={handleRss}
+                  disabled={testing}
+                  style={{
+                    height: 36,
+                    padding: "0 16px",
+                    border: "1px solid var(--si-yellow)",
+                    borderRadius: 8,
+                    background: "var(--si-yellow-bg)",
+                    color: "var(--si-text)",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    marginRight: "auto",
+                  }}
+                >
+                  {testing ? "RSS..." : <><FaRss /> RSS</>}
+                </button>
                 <button
                   type="button"
                   onClick={handleTest}
