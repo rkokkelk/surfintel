@@ -1,11 +1,11 @@
+import base64
 import datetime as dt
 import enum
-import httpx
-import base64
+import re
 from urllib.parse import urlparse
 
+import httpx
 from bs4 import BeautifulSoup
-
 from sqlalchemy import JSON, Boolean, DateTime, Enum, Integer, String, Text, true
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -71,11 +71,11 @@ class Source(Base, UUIDPk, TimestampMixin):
 
     def clean_name(self) -> str:
          """ Return clean version of name; used in directory names, etc
-         
+
          :return:  clean name
          """
          name = self.name.lower()
-         return name.replace(r'[\(\)\\\.\s]+', '_')
+         return re.sub(r'[\(\)\\.\s]+', '_', name)
 
 
 
