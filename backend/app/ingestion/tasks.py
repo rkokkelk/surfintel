@@ -93,10 +93,12 @@ def run_ingestion(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYP
         source.last_polled_at = dt.datetime.now(dt.UTC)
         db.commit()
 
-        if force:
-            pending_items = db.scalars(select(Item)).all()
-        else:
-            pending_items = db.scalars(select(Item).where(Item.status == ItemStatus.discovered)).all()
+        stmt = select(Item).where(Item.source_id == source.id)
+
+        if not force:
+            stmt = stmt.where(Item.status == ItemStatus.discovered)
+
+        pending_items = db.scalars(stmt).all()
 
         log.info("items pending={}", len(pending_items))
 
