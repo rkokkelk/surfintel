@@ -22,9 +22,10 @@ PERIOD = 1800
 def setup_refresh_tasks(sender: Celery, **kwargs):
     """ Setup periodic refresh items task
     """
+    logger.info("Setting up periodic refresh tasks")
     periodic_refereshment_task = periodic_refresh_items.s()
-    sender.add_periodic_task(PERIOD, periodic_refereshment_task, name=f"periodic_refresh")
-    periodic_refereshment_task.delay()
+    #sender.add_periodic_task(PERIOD, periodic_refereshment_task, name=f"periodic_refresh")
+    # TODO fix: periodic_refereshment_task.delay()
 
 @app.task
 def periodic_refresh_items() -> None:
