@@ -3,29 +3,26 @@ Source -> discover links -> Item -> fetch -> enrich -> evaluate alerts.
 Invoked by app/cli.py (`surfintel run-ingestion`), e.g. from cron.
 """
 
-import random
-import logging
 import datetime as dt
-
+import random
 import uuid
 from enum import Enum
 
+from celery import Celery, chord, group
+from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from celery import group, chord, Celery
-
-from loguru import logger
+from app.alerting.tasks import notify
 from app.celery import app
 from app.db.session import SessionLocal
+from app.enrichment.tasks import get_enrichments_tasks
+from app.ingestion.base import SourceConnector
+from app.ingestion.github_source import GithubSource
+from app.ingestion.html_source import HTMLSourceConnector
 from app.ingestion.http_fetch import HttpFetchBackend
 from app.ingestion.playwright import PlaywrightBackend
-from app.alerting.tasks import notify
-from app.enrichment.tasks import get_enrichments_tasks
-from app.ingestion.base import FetchBackend, SourceConnector
 from app.ingestion.rss_source import RssSourceConnector
-from app.ingestion.html_source import HTMLSourceConnector
-from app.ingestion.github_source import GithubSource
 from app.models.item import Item, ItemStatus
 from app.models.source import Source, SourceType
 
@@ -134,11 +131,11 @@ def poll_source(db: Session, source: Source) -> None:
     :param source: Source
     """
     log = logger.bind(source=source.id)
+    # outside any request. Open/close a session the same way app/cli.py does.
     connector = CONNECTORS.get(source.type)
     if connector is None:
         return
 
-    log.info("Starting discovery: {}", source.config)
     links = connector.discover(source.config)
 
     new = 0
