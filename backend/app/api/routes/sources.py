@@ -9,7 +9,7 @@ from app.api.deps import get_current_user, require_platform_admin
 from app.celery import app
 from app.core import logging
 from app.db.session import get_db
-from app.ingestion.tasks import run_ingestion_cycle
+from app.ingestion.tasks import run_ingestion
 from app.models.item import Item, ItemStatus
 from app.models.source import Source
 from app.schemas.source import (
@@ -78,7 +78,7 @@ def update_source(
         setattr(source, field, value)
 
     # Update periodic task
-    source_signature = run_ingestion_cycle.s(source.id, fetch_identifier='PLAYWRIGHT')
+    source_signature = run_ingestion.s(source.id, fetch_identifier='PLAYWRIGHT')
     app.add_periodic_task(source.poll_interval_seconds, source_signature, name=f"periodic_{source.id}")  #TODO: fix updating periodic tasks
 
     source.get_favicon()

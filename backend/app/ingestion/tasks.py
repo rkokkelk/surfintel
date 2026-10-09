@@ -67,14 +67,14 @@ def setup_source_periodic_task(source_id: uuid.UUID) -> None:
         source = db.get(Source, source_id)
 
         log.success("Setting up periodic tasks: {}", source.poll_interval_seconds)
-        run_source_ingestion = run_ingestion_cycle.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
+        run_source_ingestion = run_ingestion.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
 
         app.add_periodic_task(source.poll_interval_seconds, run_source_ingestion, name=f"periodic_{source.id}")
         run_source_ingestion()
 
 
 @app.task
-def run_ingestion_cycle(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX, force: bool = False) -> None:
+def run_ingestion(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX, force: bool = False) -> None:
     """ Start Ingestion cycle
     
     :param Session: DB session
@@ -87,22 +87,25 @@ def run_ingestion_cycle(source_id: uuid.UUID, fetch_identifier: str | None = FET
     # Depends(), which doesn't apply here since this runs in a Celery worker,
     # outside any request. Open/close a session the same way app/cli.py does.
     with app.conf['dbSession']() as db:
-        source = db.get(Source, source_id) if source_id else None
-        sources = [source] if source else db.scalars(select(Source).where(Source.enabled.is_(True))).all()
+        log = logger.bind(source=source_id)
+        source = db.get(Source, source_id)
 
-        for entry in sources:
-            poll_source(db, entry)
-            entry.last_polled_at = dt.datetime.now(dt.UTC)
-            db.commit()
+        log.info("Starting discovery: {}", source.config)
+
+        poll_source(db, source)
+        source.last_polled_at = dt.datetime.now(dt.UTC)
+        db.commit()
 
         if force:
             pending_items = db.scalars(select(Item)).all()
         else:
             pending_items = db.scalars(select(Item).where(Item.status == ItemStatus.discovered)).all()
 
+        log.info("items pending={}", len(pending_items))
+
         # Start paralell fetching tasks
         group_task = group(fetch_discovered_item.s(item.id, source.id, fetch_identifier=fetch_identifier) for item in pending_items)
-        group_task()  
+        group_task.skew(start=1, step=25)()  
 
 @app.task
 def retry_failed_items(status: list[ItemStatus] = [ItemStatus.discovered, ItemStatus.error, ItemStatus.fetched], source_id: uuid.UUID | None = None) -> None:
