@@ -96,7 +96,16 @@ export function FeedCard({
             </Badge>
           )}
           <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--si-text-muted)" }}>
+
             {item.source?.name} • {item.published_at ? timeFormat.format(new Date(item.published_at)) : ""}
+
+            <img 
+              src={`data:image/png;base64,${item.source.favicon}`} 
+              height="20px"
+              width="20px"
+              style={{marginLeft: "8px"}}
+              hidden={item.source.favicon == null}
+              />
           </span>
         </div>
         <a
