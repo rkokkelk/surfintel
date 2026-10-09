@@ -9,11 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@melloware/react-logviewer": "^6.6.0",
     "next": "^15.0.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "react-toastify": "^11.1.0",
-    "@melloware/react-logviewer": "^6.6.0"
+    "react-icons": "^5.7.0",
+    "react-toastify": "^11.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

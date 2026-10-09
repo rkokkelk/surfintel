@@ -6,6 +6,9 @@ import { apiFetch, ApiError, getToken } from "@/lib/api";
 import type { AlertField, AlertRule, AlertTestMatch } from "@/lib/types";
 import { Shell } from "@/components/Shell";
 
+import { FaRss } from "react-icons/fa6";
+import { FaRegTrashCan } from "react-icons/fa6";
+
 const FIELD_OPTIONS: { value: AlertField; label: string }[] = [
   { value: "vendor", label: "Vendor" },
   { value: "product", label: "Product" },
@@ -620,7 +623,7 @@ export default function AlertsPage() {
                     cursor: "pointer",
                   }}
                 >
-                  {deleting ? "Verwijderen..." : "Verwijderen"}
+                  {deleting ? "Verwijderen..." : <><FaRegTrashCan /> Verwijderen</>}
                 </button>
               </>
             )}
