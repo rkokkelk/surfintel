@@ -1,7 +1,8 @@
 import datetime as dt
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, Request
+from feedgen.feed import FeedGenerator
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -232,3 +233,31 @@ def pause_alert_rule(
     rule.updated_at = dt.datetime.now(dt.UTC)
     db.commit()
     return _to_out(db, rule)
+
+
+@router.get("/{rule_id}/rss", response_class=Response)
+def get_rss_feed(
+    rule_id: uuid.UUID, request: Request, db: Session = Depends(get_db)
+) -> AlertRuleOut:
+    """ Generate an RSS feed for the given alert
+    """
+    rule: AlertRule = db.get(AlertRule, rule_id)
+
+    if rule is None:
+        raise HTTPException(404, "Alert-regel niet gevonden")
+
+    fg = FeedGenerator()
+    fg.title('SURFintel Alert')
+    fg.link( href=str(request.url), rel='alternate' )
+    fg.subtitle(rule.name)
+    fg.language('en')
+
+    matched_items = db.scalars(select(Item).join(AlertMatch, AlertMatch.item_id == Item.id).where(AlertMatch.alert_rule_id == rule.id).limit(25))
+
+    for item in matched_items:
+        fe = fg.add_entry()
+        fe.id(str(item.id))
+        fe.title(item.title)
+        fe.link(href=item.url)
+
+    return Response(content=fg.rss_str(), media_type="text/xml")
