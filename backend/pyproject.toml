@@ -39,6 +39,12 @@ dev = [
 [tool.ruff]
 line-length = 100
 
+[tool.ruff.lint]
+ignore = ["PLE1205"]
+
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends", "fastapi.Query", "fastapi.params.Query"]
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
