@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.alerting.tasks import notify
 from app.celery import app
+from app.core.singleton_task import UuidSafeSingleton
 from app.db.session import SessionLocal
 from app.enrichment.tasks import get_enrichments_tasks
 from app.ingestion.base import SourceConnector
@@ -56,7 +57,7 @@ def setup_source(sender: Celery, **kwargs):
             setup_source_signature.apply_async(countdown=jitter)
             logger.info("Starting run of source! jitter: {}; poll: {}", jitter, poll)
 
-@app.task
+@app.task(base=UuidSafeSingleton)
 def setup_source_periodic_task(source_id: uuid.UUID) -> None:
     log = logger.bind(source=source_id)
     # outside any request. Open/close a session the same way app/cli.py does.
@@ -70,7 +71,7 @@ def setup_source_periodic_task(source_id: uuid.UUID) -> None:
         run_source_ingestion()
 
 
-@app.task
+@app.task(base=UuidSafeSingleton)
 def run_ingestion(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX, force: bool = False) -> None:
     """ Start Ingestion cycle
     
@@ -161,7 +162,7 @@ def poll_source(db: Session, source: Source) -> None:
 
     log.info("Links: new[{}], existing[{}], total[{}]", new, total-new, total)
 
-@app.task(autoretry_for=(Exception,), retry_backoff=60, retry_backoff_max=3600, retry_jitter=False, max_retries=5)
+@app.task(base=UuidSafeSingleton, autoretry_for=(Exception,), retry_backoff=60, retry_backoff_max=3600, retry_jitter=False, max_retries=5)
 def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX):
     log = logger.bind(source=source_id)
     with app.conf['dbSession']() as db:

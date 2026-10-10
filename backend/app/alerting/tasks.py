@@ -13,13 +13,14 @@ from app.models.item import Item, ItemStatus
 
 from app.alerting.match_view import build_match_view, condition_matches
 from app.alerting.templating import build_template_context, render_message
+from app.core.singleton_task import UuidSafeSingleton
 from app.enrichment.tasks import ENRICHMENT_MODULES
 from app.models.alert import AlertCondition, AlertMatch, AlertRule, AlertRuleStatus
 from app.models.item import Item
 from app.models.source import Source
 
 
-@app.task
+@app.task(base=UuidSafeSingleton)
 def notify(results: list[tuple[str, dict]], item_id: uuid.UUID, source_id: uuid.UUID) -> None:
     """Chord callback. A chord passes the header tasks' return values (a list in header
     order, each `(module_name, data)`) as the FIRST positional argument, ahead of the

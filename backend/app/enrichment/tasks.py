@@ -5,6 +5,7 @@ from loguru import logger
 from sqlalchemy import select
 
 from app.celery import app
+from app.core.singleton_task import UuidSafeSingleton
 from app.enrichment.ai_categorizer import AiCategorizer
 from app.enrichment.base import EnrichmentModule
 from app.enrichment.cpe_extractor import CpeExtractor
@@ -33,7 +34,7 @@ def get_enrichments_tasks(item: Item, source: Source) -> list[signature]:
     return tasks
 
 
-@app.task
+@app.task(base=UuidSafeSingleton)
 def run_enrichment_for_item(item_id: uuid.UUID, enrichment_module: str) -> dict:
     """Run every registered module that is enabled for the item's source,
     upserting its item_enrichment row. Returns {module_name: data} for use by
