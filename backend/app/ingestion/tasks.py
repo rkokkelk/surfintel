@@ -164,14 +164,14 @@ def poll_source(db: Session, source: Source) -> None:
 
 @app.task(base=UuidSafeSingleton, autoretry_for=(Exception,), retry_backoff=60, retry_backoff_max=3600, retry_jitter=False, max_retries=5)
 def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX):
-    log = logger.bind(source=source_id)
+    log = logger.bind(source=source_id, item=item_id)
     with app.conf['dbSession']() as db:
         fetch_backend = FETCH_TYPES[fetch_identifier].value()
         item = db.get(Item, item_id)
         source = db.get(Source, source_id)
 
         try:
-            log.debug("Parsed[{}]: {}", item.id, item.url)
+            log.success("Parsed: {}", item.url)
             result = fetch_backend.fetch(item.id, item.url, item.source.config)
 
             now = dt.datetime.now(dt.UTC)
@@ -193,7 +193,7 @@ def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identi
             chord(get_enrichments_tasks(item, source), notify.s(item_id=item.id, source_id=source.id))()
 
         except Exception as e:
-            log.warning("Fetching failed[{}] --> {}: {}", item.id, item.url, e)
+            log.warning("Fetching failed: {} --> {}", e, item.url)
             item.status = ItemStatus.error
 
             db.commit()
