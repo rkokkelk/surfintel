@@ -7,6 +7,13 @@ import { clearToken } from "@/lib/api";
 import { isPlatformAdmin } from "@/lib/auth";
 import { ApiInfoModal } from "@/components/ApiInfoModal";
 
+// Icons
+import { GrVulnerability } from "react-icons/gr";
+import { GrOverview } from "react-icons/gr";
+import { GrResources } from "react-icons/gr";
+import { AiFillAlert } from "react-icons/ai";
+
+
 export function Shell({
   active,
   children,
@@ -96,9 +103,9 @@ export function Shell({
             gap: 2,
           }}
         >
-          <NavItem href="/overview" label="Overzicht" activeItem={active === "overzicht"} />
-          <NavItem href="/alerts" label="Alerts" activeItem={active === "alerts"} />
-          <NavItem href="/cve" label="CVE database" activeItem={active === "cve"} />
+          <NavItem href="/overview" label=<><GrOverview /> Overzicht</> activeItem={active === "overzicht"} />
+          <NavItem href="/alerts" label=<><AiFillAlert /> Alerts</> activeItem={active === "alerts"} />
+          <NavItem href="/cve" label=<><GrVulnerability /> CVE database</> activeItem={active === "cve"} />
 
           {showAdminSection && (
             <>
@@ -114,7 +121,7 @@ export function Shell({
               >
                 BEHEER
               </div>
-              <NavItem href="/sources" label="Bronnen" activeItem={active === "sources"} />
+              <NavItem href="/sources" label=<><GrResources /> Bronnen</> activeItem={active === "sources"} />
             </>
           )}
         </nav>
