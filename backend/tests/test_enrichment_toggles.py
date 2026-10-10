@@ -14,16 +14,16 @@ def _module_keys(**toggles) -> set[str]:
 
 
 def test_all_modules_run_when_all_toggles_on():
-    keys = _module_keys(enrich_cve=True, enrich_cpe=True, enrich_kev=True, enrich_ai=True)
+    keys = _module_keys(enrich_cve=True, enrich_cpe=True, enrich_mitre=True, enrich_ai=True)
 
-    assert keys == {"enrich_cve", "enrich_cpe", "enrich_kev", "enrich_ai"}
+    assert keys == {"enrich_cve", "enrich_cpe", "enrich_mitre", "enrich_ai"}
 
 
 def test_disabled_modules_are_left_out_of_the_chord_header():
-    keys = _module_keys(enrich_cve=True, enrich_cpe=False, enrich_kev=False, enrich_ai=True)
+    keys = _module_keys(enrich_cve=True, enrich_cpe=False, enrich_mitre=False, enrich_ai=True)
 
     assert keys == {"enrich_cve", "enrich_ai"}
 
 
 def test_all_toggles_off_gives_an_empty_header():
-    assert _module_keys(enrich_cve=False, enrich_cpe=False, enrich_kev=False, enrich_ai=False) == set()
+    assert _module_keys(enrich_cve=False, enrich_cpe=False, enrich_mitre=False, enrich_ai=False) == set()

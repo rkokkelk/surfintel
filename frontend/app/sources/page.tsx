@@ -17,13 +17,13 @@ const TYPE_OPTIONS: { value: SourceType; label: string }[] = [
   { value: "custom_module", label: "Custom module" },
 ];
 
-type EnrichKey = "enrich_cve" | "enrich_cpe" | "enrich_kev" | "enrich_ai";
+type EnrichKey = "enrich_cve" | "enrich_cpe" | "enrich_mitre" | "enrich_ai";
 
 const ENRICHMENT_OPTIONS: { key: EnrichKey; label: string }[] = [
   { key: "enrich_cve", label: "CVE-extractie" },
   { key: "enrich_cpe", label: "CPE-extractie" },
-  { key: "enrich_kev", label: "CISA KEV-check (heeft CVE-extractie nodig)" },
   { key: "enrich_ai", label: "AI-/categorisatie (severity & categorie)" },
+  { key: "enrich_mitre", label: "Mitre ATT&CK classification" }
 ];
 
 interface SourceFormState {
@@ -41,7 +41,7 @@ const EMPTY_FORM: SourceFormState = {
   configText: '{\n  "feed_url": ""\n}',
   poll_interval_seconds: 3600,
   enabled: true,
-  enrichment: { enrich_cve: true, enrich_cpe: true, enrich_kev: true, enrich_ai: true },
+  enrichment: { enrich_cve: true, enrich_cpe: true, enrich_mitre: false, enrich_ai: true },
 };
 
 export default function SourcesPage() {
@@ -122,7 +122,7 @@ export default function SourcesPage() {
       enrichment: {
         enrich_cve: source.enrich_cve,
         enrich_cpe: source.enrich_cpe,
-        enrich_kev: source.enrich_kev,
+        enrich_mitre: source.enrich_mitre,
         enrich_ai: source.enrich_ai,
       },
     });

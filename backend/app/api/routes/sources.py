@@ -42,7 +42,7 @@ def create_source(
         poll_interval_seconds=body.poll_interval_seconds,
         enrich_cve=body.enrich_cve,
         enrich_cpe=body.enrich_cpe,
-        enrich_kev=body.enrich_kev,
+        enrich_mitre=body.enrich_mitre,
         enrich_ai=body.enrich_ai,
     )
 

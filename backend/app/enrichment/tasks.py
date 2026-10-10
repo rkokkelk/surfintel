@@ -9,7 +9,7 @@ from app.enrichment.ai_categorizer import AiCategorizer
 from app.enrichment.base import EnrichmentModule
 from app.enrichment.cpe_extractor import CpeExtractor
 from app.enrichment.cve_extractor import CveExtractor
-from app.enrichment.kev_checker import KevChecker
+from app.enrichment.mitre_categorizer import MitreCategorizer
 from app.models.enrichment import ItemEnrichment
 from app.models.item import Item
 from app.models.source import Source
@@ -19,7 +19,7 @@ from app.models.source import Source
 ENRICHMENT_MODULES: dict[str, EnrichmentModule] = {
     'enrich_cve': CveExtractor(),
     'enrich_cpe': CpeExtractor(),
-    'enrich_kev': KevChecker(),
+    'enrich_mitre': MitreCategorizer(),
     'enrich_ai': AiCategorizer()
 }
 

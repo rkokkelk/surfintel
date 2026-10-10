@@ -13,7 +13,7 @@ class SourceCreate(BaseModel):
     poll_interval_seconds: int = 3600
     enrich_cve: bool = True
     enrich_cpe: bool = True
-    enrich_kev: bool = True
+    enrich_mitre: bool = False
     enrich_ai: bool = True
 
 
@@ -45,7 +45,7 @@ class SourceUpdate(BaseModel):
     poll_interval_seconds: int | None = None
     enrich_cve: bool | None = None
     enrich_cpe: bool | None = None
-    enrich_kev: bool | None = None
+    enrich_mitre: bool | None = None
     enrich_ai: bool | None = None
 
 
@@ -59,7 +59,7 @@ class SourceOut(BaseModel):
     enabled: bool
     enrich_cve: bool
     enrich_cpe: bool
-    enrich_kev: bool
+    enrich_mitre: bool
     enrich_ai: bool
     favicon: str | None = None
     poll_interval_seconds: int
