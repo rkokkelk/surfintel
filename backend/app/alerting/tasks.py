@@ -1,22 +1,26 @@
 import datetime as dt
-
 import uuid
+
 import apprise
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.celery import app
-from app.core.media import screenshot_path
-from app.core.encryption import decrypt
-from app.models.alert import AlertChannel, AlertMatch, AlertRule, NotificationStatus
-from app.models.item import Item, ItemStatus
-
 from app.alerting.match_view import build_match_view, condition_matches
 from app.alerting.templating import build_template_context, render_message
+from app.celery import app
+from app.core.encryption import decrypt
+from app.core.media import screenshot_path
 from app.core.singleton_task import UuidSafeSingleton
 from app.enrichment.tasks import ENRICHMENT_MODULES
-from app.models.alert import AlertCondition, AlertMatch, AlertRule, AlertRuleStatus
-from app.models.item import Item
+from app.models.alert import (
+    AlertChannel,
+    AlertCondition,
+    AlertMatch,
+    AlertRule,
+    AlertRuleStatus,
+    NotificationStatus,
+)
+from app.models.item import Item, ItemStatus
 from app.models.source import Source
 
 
@@ -52,7 +56,7 @@ def notify(results: list[tuple[str, dict]], item_id: uuid.UUID, source_id: uuid.
             if already_matched:
                 continue
 
-            match = AlertMatch(alert_rule_id=rule.id, item_id=item.id, matched_at=dt.datetime.now(dt.timezone.utc))
+            match = AlertMatch(alert_rule_id=rule.id, item_id=item.id, matched_at=dt.datetime.now(dt.UTC))
             db.add(match)
             db.flush()
 
@@ -84,5 +88,5 @@ def send_alert_notification(
     screenshot = screenshot_path(item.id)
     sent = notifier.notify(title=title, body=body, attach=str(screenshot) if screenshot.is_file() else None)
 
-    match.notified_at = dt.datetime.now(dt.timezone.utc)
+    match.notified_at = dt.datetime.now(dt.UTC)
     match.notification_status = NotificationStatus.sent if sent else NotificationStatus.failed
