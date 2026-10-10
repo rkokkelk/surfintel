@@ -3,11 +3,14 @@ import {
   ACTOR_STYLE,
   AiClassification,
   ENTITY_STYLE,
+  MitreClassification,
   SEVERITY_STYLE,
   VICTIM_STYLE,
   countryLabel,
   enrichmentData,
   industryLabel,
+  mitreTechniqueColor,
+  mitreTechniqueUrl,
 } from "@/lib/enrichment";
 import { CVSS_SEVERITY_STYLE, cvssSeverity } from "@/lib/cvss";
 import { ItemScreenshot } from "@/components/ItemScreenshot";
@@ -41,6 +44,8 @@ export function FeedCard({
   const classification = enrichmentData(item, "ai_categorizer") as AiClassification | undefined;
   const cve = enrichmentData(item, "cve_extractor");
   const cveIds = (cve?.cve_ids as string[]) ?? [];
+  const mitre = enrichmentData(item, "mitre_categorizer") as MitreClassification | undefined;
+  const ttps = mitre?.ttps ?? [];
 
   const severity = classification?.severity ?? null;
   const severityStyle = severity ? SEVERITY_STYLE[severity] : null;
@@ -137,6 +142,30 @@ export function FeedCard({
               {id}
             </button>
           ))}
+          {Array.from(new Set(ttps.map((ttp) => ttp.technique_id))).map((techniqueId) => {
+            const techniqueColor = mitreTechniqueColor(techniqueId);
+            return (
+              <a
+                key={techniqueId}
+                href={mitreTechniqueUrl(techniqueId)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="si-mono"
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  color: techniqueColor.color,
+                  background: techniqueColor.bg,
+                  borderRadius: 6,
+                  padding: "3px 8px",
+                  textDecoration: "none",
+                }}
+              >
+                {techniqueId}
+              </a>
+            );
+          })}
           {actor && <Badge color={ACTOR_STYLE.color} bg={ACTOR_STYLE.bg}>{actor}</Badge>}
           {entities.map((name) => (
             <Badge key={name} color={ENTITY_STYLE.color} bg={ENTITY_STYLE.bg}>

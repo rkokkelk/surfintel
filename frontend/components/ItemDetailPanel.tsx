@@ -7,11 +7,14 @@ import {
   ACTOR_STYLE,
   AiClassification,
   ENTITY_STYLE,
+  MitreClassification,
   SEVERITY_STYLE,
   VICTIM_STYLE,
   countryLabel,
   enrichmentData,
   industryLabel,
+  mitreTechniqueColor,
+  mitreTechniqueUrl,
 } from "@/lib/enrichment";
 import { ItemScreenshot } from "@/components/ItemScreenshot";
 
@@ -34,7 +37,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-const KNOWN_MODULES = new Set(["ai_categorizer", "cve_extractor", "cpe_extractor", "kev_checker"]);
+const KNOWN_MODULES = new Set(["ai_categorizer", "cve_extractor", "cpe_extractor", "mitre_categorizer"]);
 
 export function ItemDetailPanel({
   itemId,
@@ -74,9 +77,10 @@ export function ItemDetailPanel({
   const classification = item ? (enrichmentData(item, "ai_categorizer") as AiClassification | undefined) : undefined;
   const cve = item ? enrichmentData(item, "cve_extractor") : undefined;
   const cpe = item ? enrichmentData(item, "cpe_extractor") : undefined;
-  const kev = item ? enrichmentData(item, "kev_checker") : undefined;
+  const mitre = item ? (enrichmentData(item, "mitre_categorizer") as MitreClassification | undefined) : undefined;
   const cveIds = (cve?.cve_ids as string[]) ?? [];
   const cpeIds = (cpe?.cpe_ids as string[]) ?? [];
+  const ttps = mitre?.ttps ?? [];
   const otherEnrichments = item?.enrichments?.filter((e) => !KNOWN_MODULES.has(e.module_name)) ?? [];
 
   return (
@@ -216,7 +220,7 @@ export function ItemDetailPanel({
                 </Section>
               )}
 
-              {(cveIds.length > 0 || cpeIds.length > 0 || kev) && (
+              {(cveIds.length > 0 || cpeIds.length > 0) && (
                 <Section title="Kwetsbaarheden">
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {cveIds.map((id) => (
@@ -239,11 +243,63 @@ export function ItemDetailPanel({
                         {id}
                       </span>
                     ))}
-                    {kev?.in_kev === true && (
+                    {cve?.in_kev === true && (
                       <Badge color="var(--si-red)" bg="var(--si-red-bg)">
                         In CISA KEV-catalogus
                       </Badge>
                     )}
+                  </div>
+                </Section>
+              )}
+
+              {ttps.length > 0 && (
+                <Section title="MITRE ATT&CK">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {ttps.map((ttp, index) => {
+                      const techniqueColor = mitreTechniqueColor(ttp.technique_id);
+                      return (
+                      <div
+                        key={`${ttp.technique_id}-${index}`}
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 5,
+                          border: "1px solid var(--si-border)",
+                          borderRadius: 8,
+                          padding: "8px 10px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <Badge color="var(--si-indigo)" bg="var(--si-indigo-bg)">
+                            {ttp.tactic_name}
+                          </Badge>
+                          <a
+                            href={mitreTechniqueUrl(ttp.technique_id)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="si-mono"
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: techniqueColor.color,
+                              background: techniqueColor.bg,
+                              borderRadius: 6,
+                              padding: "4px 9px",
+                              textDecoration: "none",
+                            }}
+                          >
+                            {ttp.technique_id}
+                          </a>
+                          <span style={{ fontSize: 12.5, color: "var(--si-text)" }}>{ttp.technique_name}</span>
+                        </div>
+                        {ttp.quote && (
+                          <div style={{ fontSize: 12, color: "var(--si-text-muted)", fontStyle: "italic" }}>
+                            &quot;{ttp.quote}&quot;
+                          </div>
+                        )}
+                      </div>
+                      );
+                    })}
                   </div>
                 </Section>
               )}
