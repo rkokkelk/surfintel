@@ -1,43 +1,45 @@
+"use client";
+
+import { PieChart } from "@mui/x-charts/PieChart";
 import type { AlertDashboardSourceCount } from "@/lib/types";
 import { CATEGORICAL_PALETTE, OTHER_COLOR } from "@/lib/charts";
 
-const SIZE = 220;
-const R = 100;
-const CX = SIZE / 2;
-const CY = SIZE / 2;
-
-function arcPoint(angle: number): [number, number] {
-  return [CX + R * Math.cos(angle), CY + R * Math.sin(angle)];
-}
+const SIZE = 150;
 
 export function SourcePieChart({ data }: { data: AlertDashboardSourceCount[] }) {
   const total = data.reduce((sum, d) => sum + d.count, 0) || 1;
 
-  let angle = -Math.PI / 2; // start at 12 o'clock
-  const slices = data.map((d, i) => {
-    const fraction = d.count / total;
-    const startAngle = angle;
-    const endAngle = angle + fraction * Math.PI * 2;
-    angle = endAngle;
-    const [x1, y1] = arcPoint(startAngle);
-    const [x2, y2] = arcPoint(endAngle);
-    const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
-    const path = `M ${CX} ${CY} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${R} ${R} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
-    const color = d.source_name === "Overig" ? OTHER_COLOR : CATEGORICAL_PALETTE[i % CATEGORICAL_PALETTE.length];
-    return { ...d, path, color, pct: Math.round(fraction * 100) };
-  });
+  const slices = data.map((d, i) => ({
+    ...d,
+    color: d.source_name === "Overig" ? OTHER_COLOR : CATEGORICAL_PALETTE[i % CATEGORICAL_PALETTE.length],
+    pct: Math.round((d.count / total) * 100),
+  }));
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE} role="img" aria-label="Items per bron">
-        {slices.map((s) => (
-          <path key={s.source_name} d={s.path} fill={s.color} stroke="var(--si-surface)" strokeWidth={2}>
-            <title>
-              {s.source_name}: {s.count} ({s.pct}%)
-            </title>
-          </path>
-        ))}
-      </svg>
+      <PieChart
+        series={[
+          {
+            data: slices.map((s) => ({ id: s.source_name, value: s.count, label: s.source_name, color: s.color })),
+            innerRadius: 30,
+            paddingAngle: 2,
+            cornerRadius: 3,
+            arcLabel: "value",
+            arcLabelMinAngle: 20,
+            valueFormatter: (item) => `${item.value} (${Math.round((item.value / total) * 100)}%)`,
+          },
+        ]}
+        width={SIZE}
+        height={SIZE}
+        hideLegend
+        sx={{
+          "& .MuiPieArcLabel-root": {
+            fill: "#fff",
+            fontSize: 12,
+            fontWeight: 600,
+          },
+        }}
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
         {slices.map((s) => (
