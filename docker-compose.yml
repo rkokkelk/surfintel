@@ -1,3 +1,18 @@
+x-backend-build: &backend-build
+  context: ./backend
+  dockerfile: ../docker/backend.Dockerfile
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg://surfintel:surfintel@db:5432/surfintel
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+
+x-backend-depends-on: &backend-depends-on
+  db:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+
 services:
   db:
     image: postgres:16-alpine
@@ -15,21 +30,57 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - surfintel-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   backend:
-    build: ./backend
+    build: *backend-build
     env_file:
       - .env
-    environment:
-      DATABASE_URL: postgresql+psycopg://surfintel:surfintel@db:5432/surfintel
+    environment: *backend-env
     ports:
       - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
+    depends_on: *backend-depends-on
+
+  celery-worker:
+    build: *backend-build
+    command: celery -A app.celery.app worker --loglevel=info
+    env_file:
+      - .env
+    environment: *backend-env
+    depends_on: *backend-depends-on
+
+  celery-beat:
+    build: *backend-build
+    command: celery -A app.celery.app beat --loglevel=info
+    env_file:
+      - .env
+    environment: *backend-env
+    depends_on: *backend-depends-on
+
+  celery-flower:
+    build: *backend-build
+    command: celery -A app.celery.app flower --port=5555
+    env_file:
+      - .env
+    environment: *backend-env
+    ports:
+      - "5555:5555"
+    depends_on: *backend-depends-on
 
   frontend:
     build:
       context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8000
     ports:
@@ -39,3 +90,4 @@ services:
 
 volumes:
   surfintel-db:
+  surfintel-redis:
