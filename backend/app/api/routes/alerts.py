@@ -1,7 +1,7 @@
 import datetime as dt
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from feedgen.feed import FeedGenerator
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -15,14 +15,9 @@ from app.enrichment.tasks import ENRICHMENT_MODULES
 from app.models.alert import AlertChannel, AlertCondition, AlertMatch, AlertRule, AlertRuleStatus
 from app.models.enrichment import ItemEnrichment
 from app.models.item import Item, ItemStatus
-from app.models.source import Source
 from app.schemas.alert import (
     AlertChannelOut,
     AlertConditionOut,
-    AlertDashboardDayCount,
-    AlertDashboardItemOut,
-    AlertDashboardOut,
-    AlertDashboardSourceCount,
     AlertRuleCreate,
     AlertRuleOut,
     AlertRuleTestRequest,
@@ -30,6 +25,7 @@ from app.schemas.alert import (
     AlertTestMatchOut,
 )
 from app.schemas.auth import CurrentUser
+from app.schemas.item import ItemOut
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -38,28 +34,6 @@ router = APIRouter(prefix="/alerts", tags=["alerts"])
 # and a very narrow rule doesn't turn a preview into a full table scan.
 TEST_SCAN_LIMIT = 500
 TEST_RESULT_LIMIT = 10
-
-# The TV dashboard: how many of the most recent real matches (AlertMatch rows,
-# written by the live app/alerting/tasks.py:notify() path — not a re-scan) to
-# show, how far back the two charts look, and how many distinct sources the
-# pie chart seats before folding the tail into "Overig" (see the dataviz
-# skill's series-count ladder — past ~7-8 a categorical palette stops helping).
-DASHBOARD_ITEM_LIMIT = 25
-DASHBOARD_WINDOW_DAYS = 14
-DASHBOARD_SOURCE_CAP = 7
-DASHBOARD_DESCRIPTION_MAX_CHARS = 320
-
-
-def _truncate_description(text: str | None) -> str | None:
-    """Caps a description to roughly one paragraph, breaking on a word
-    boundary rather than mid-word. The TV dashboard has no room (or reader
-    time) for more.
-    """
-    if text is None or len(text) <= DASHBOARD_DESCRIPTION_MAX_CHARS:
-        return text
-    cut = text[:DASHBOARD_DESCRIPTION_MAX_CHARS].rsplit(" ", 1)[0]
-    return cut + "…"
-
 
 def _to_out(db: Session, rule: AlertRule) -> AlertRuleOut:
     conditions = db.scalars(select(AlertCondition).where(AlertCondition.alert_rule_id == rule.id)).all()
@@ -89,6 +63,17 @@ def list_alert_rules(
     rules = db.scalars(scoped_to_org(select(AlertRule), AlertRule, current_user)).all()
     return [_to_out(db, rule) for rule in rules]
 
+@router.get("/{rule_id}", response_model=AlertRuleOut)
+def get_alert_rule(
+    rule_id: uuid.UUID,
+    db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_admin)
+) -> list[AlertRuleOut]:
+    rule = db.scalar(scoped_to_org(select(AlertRule), AlertRule, current_user).where(AlertRule.id == rule_id))
+
+    if rule is None:
+        raise HTTPException(404, "Alert-regel niet gevonden")
+
+    return _to_out(db, rule)
 
 @router.post("", response_model=AlertRuleOut, status_code=201)
 def create_alert_rule(
@@ -133,7 +118,7 @@ def update_alert_rule(
     rule.name = body.name
     rule.status = body.status
     rule.message_template = body.message_template
-    rule.updated_at = dt.datetime.now(dt.timezone.utc)
+    rule.updated_at = dt.datetime.now(dt.UTC)
 
     db.execute(delete(AlertCondition).where(AlertCondition.alert_rule_id == rule.id))
     for condition in body.conditions:
@@ -247,82 +232,28 @@ def test_alert_rule(
     return results
 
 
-@router.get("/{rule_id}/dashboard", response_model=AlertDashboardOut)
-def get_alert_dashboard(
-    rule_id: uuid.UUID, db: Session = Depends(get_db), current_user: CurrentUser = Depends(get_current_user)
-) -> AlertDashboardOut:
-    """Feeds the big-screen/TV view: the most recent real matches for this
-    rule (from AlertMatch — the live-fired history, not a re-scan) plus two
-    aggregates for its charts. Any authenticated org member can view this
-    (not admin-only like the edit/test endpoints) — it's meant to run
-    unattended on a shared screen.
-    """
+@router.get("/{rule_id}/items", response_model=list[ItemOut])
+def get_alert_items(
+    rule_id: uuid.UUID,
+    limit: int = Query(25, gt=0, le=100),
+    db: Session = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+) -> list[ItemOut]:
+
     rule = db.scalar(scoped_to_org(select(AlertRule), AlertRule, current_user).where(AlertRule.id == rule_id))
+
     if rule is None:
         raise HTTPException(404, "Alert-regel niet gevonden")
 
-    display_rows = db.execute(
-        select(AlertMatch, Item, Source)
+    items = db.execute(
+        select(AlertMatch, Item)
         .join(Item, Item.id == AlertMatch.item_id)
-        .join(Source, Source.id == Item.source_id)
         .where(AlertMatch.alert_rule_id == rule.id)
         .order_by(AlertMatch.matched_at.desc())
-        .limit(DASHBOARD_ITEM_LIMIT)
+        .limit(limit)
     ).all()
 
-    items_out = [
-        AlertDashboardItemOut(
-            item_id=item.id,
-            title=item.title,
-            description=_truncate_description(item.description),
-            published_at=item.published_at,
-            matched_at=match.matched_at,
-            source_name=source.name,
-            source_favicon=source.favicon,
-        )
-        for match, item, source in display_rows
-    ]
-
-    # Separate, wider (but unlimited-count) window for the two charts, so a
-    # rule that fires rarely still shows its real last-25 items above even
-    # when none of them fall inside the chart window.
-    window_start = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=DASHBOARD_WINDOW_DAYS)
-    window_rows = db.execute(
-        select(AlertMatch.matched_at, Source.name, Source.favicon)
-        .select_from(AlertMatch)
-        .join(Item, Item.id == AlertMatch.item_id)
-        .join(Source, Source.id == Item.source_id)
-        .where(AlertMatch.alert_rule_id == rule.id, AlertMatch.matched_at >= window_start)
-    ).all()
-
-    today = dt.datetime.now(dt.timezone.utc).date()
-    day_counts: dict[dt.date, int] = {today - dt.timedelta(days=offset): 0 for offset in range(DASHBOARD_WINDOW_DAYS)}
-    source_tally: dict[str, dict] = {}
-    for matched_at, source_name, source_favicon in window_rows:
-        day = matched_at.date()
-        if day in day_counts:
-            day_counts[day] += 1
-        entry = source_tally.setdefault(source_name, {"favicon": source_favicon, "count": 0})
-        entry["count"] += 1
-
-    daily_counts = [AlertDashboardDayCount(date=day, count=count) for day, count in sorted(day_counts.items())]
-
-    ranked = sorted(source_tally.items(), key=lambda kv: kv[1]["count"], reverse=True)
-    source_counts = [
-        AlertDashboardSourceCount(source_name=name, source_favicon=data["favicon"], count=data["count"])
-        for name, data in ranked[:DASHBOARD_SOURCE_CAP]
-    ]
-    rest_count = sum(data["count"] for _, data in ranked[DASHBOARD_SOURCE_CAP:])
-    if rest_count:
-        source_counts.append(AlertDashboardSourceCount(source_name="Overig", source_favicon=None, count=rest_count))
-
-    return AlertDashboardOut(
-        rule_id=rule.id,
-        rule_name=rule.name,
-        items=items_out,
-        daily_counts=daily_counts,
-        source_counts=source_counts,
-    )
+    return [item for (_, item) in items]
 
 
 @router.post("/{rule_id}/pause", response_model=AlertRuleOut)
@@ -339,10 +270,10 @@ def pause_alert_rule(
     return _to_out(db, rule)
 
 
-@router.get("/{rule_id}/rss", response_class=Response)
+@router.get("/{rule_id}/rss")
 def get_rss_feed(
     rule_id: uuid.UUID, request: Request, db: Session = Depends(get_db)
-) -> AlertRuleOut:
+) -> Response:
     """ Generate an RSS feed for the given alert
     """
     rule: AlertRule = db.get(AlertRule, rule_id)
