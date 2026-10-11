@@ -2,12 +2,13 @@ from celery import Celery
 from celery.signals import worker_process_init, worker_process_shutdown
 
 from app.core import logging
+from app.core.config import settings
 from app.db.session import SessionLocal, engine
 
 app = Celery(
     __name__,
-    broker_url="redis://127.0.0.1:6379/0",
-    result_backend="redis://127.0.0.1:6379/0",
+    broker_url=settings.celery_broker_url,
+    result_backend=settings.celery_result_backend,
     timezone="Europe/Amsterdam",
     enable_utc=True,
     task_acks_late=False,

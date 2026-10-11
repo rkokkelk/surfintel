@@ -7,6 +7,13 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://surfintel:surfintel@localhost:5432/surfintel"
 
+    # Broker/result-backend for Celery (ingestion, enrichment, alerting tasks).
+    # Defaults match local dev (redis running on the host); in docker-compose
+    # these are overridden to point at the "redis" service by name, since
+    # 127.0.0.1 inside a container doesn't reach another container.
+    celery_broker_url: str = "redis://127.0.0.1:6379/0"
+    celery_result_backend: str = "redis://127.0.0.1:6379/0"
+
     jwt_secret: str = "change-me-in-.env"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 12
