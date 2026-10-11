@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { imgFetch } from "@/lib/api";
 
-export function ItemScreenshot({ itemId, width, height }: { itemId: string; width: number; height: number }) {
+export function ItemScreenshot({
+  itemId,
+  width,
+  height,
+}: {
+  itemId: string;
+  width: number | string;
+  height: number;
+}) {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [open, setOpen] = useState(false);

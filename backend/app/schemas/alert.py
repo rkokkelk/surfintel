@@ -87,3 +87,32 @@ class AlertTestMatchOut(BaseModel):
     source_name: str
     published_at: dt.datetime | None
     message_preview: str
+
+
+class AlertDashboardItemOut(BaseModel):
+    item_id: uuid.UUID
+    title: str | None
+    description: str | None
+    published_at: dt.datetime | None
+    matched_at: dt.datetime
+    source_name: str
+    source_favicon: str | None
+
+
+class AlertDashboardDayCount(BaseModel):
+    date: dt.date
+    count: int
+
+
+class AlertDashboardSourceCount(BaseModel):
+    source_name: str
+    source_favicon: str | None
+    count: int
+
+
+class AlertDashboardOut(BaseModel):
+    rule_id: uuid.UUID
+    rule_name: str
+    items: list[AlertDashboardItemOut]
+    daily_counts: list[AlertDashboardDayCount]
+    source_counts: list[AlertDashboardSourceCount]

@@ -8,6 +8,7 @@ import { Shell } from "@/components/Shell";
 
 import { FaRss } from "react-icons/fa6";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { FaTv } from "react-icons/fa6";
 
 const FIELD_OPTIONS: { value: AlertField; label: string }[] = [
   { value: "vendor", label: "Vendor" },
@@ -610,11 +611,32 @@ export default function AlertsPage() {
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
-                    marginRight: "auto",
                   }}
                 >
                   {testing ? "RSS..." : <><FaRss /> RSS</>}
                 </button>
+                <a
+                  href={`/alerts/${selectedRuleId}/dashboard`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    height: 36,
+                    padding: "0 16px",
+                    border: "1px solid var(--si-blue)",
+                    borderRadius: 8,
+                    background: "var(--si-blue-bg)",
+                    color: "var(--si-text)",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    textDecoration: "none",
+                    marginRight: "auto",
+                  }}
+                >
+                  <FaTv /> TV-dashboard
+                </a>
                 <button
                   type="button"
                   onClick={handleTest}
