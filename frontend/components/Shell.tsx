@@ -132,7 +132,7 @@ export function Shell({
   );
 }
 
-function NavItem({ href, label, activeItem }: { href: string; label: string; activeItem: boolean }) {
+function NavItem({ href, label, activeItem }: { href: string; label: React.ReactNode; activeItem: boolean }) {
   return (
     <Link
       href={href}
