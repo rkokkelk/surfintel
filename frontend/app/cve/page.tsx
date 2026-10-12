@@ -20,12 +20,12 @@ const SORT_OPTIONS: { value: Sort; label: string }[] = [
 function fieldStyle(active: boolean): React.CSSProperties {
   return {
     height: 36,
-    border: `1px solid ${active ? "var(--si-blue)" : "#d8dce3"}`,
+    border: `1px solid ${active ? "var(--si-blue)" : "var(--si-border)"}`,
     borderRadius: 8,
     padding: "0 10px",
     fontSize: 13,
     color: "var(--si-text)",
-    background: active ? "#f7fbfe" : "#fff",
+    background: active ? "var(--si-blue-bg)" : "var(--si-surface)",
   };
 }
 

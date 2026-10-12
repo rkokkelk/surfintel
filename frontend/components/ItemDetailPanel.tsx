@@ -179,7 +179,7 @@ export function ItemDetailPanel({
                   <span style={{ fontSize: 13.5, fontWeight: 600 }}>{item.source.name}</span>
                   <span
                     className="si-mono"
-                    style={{ fontSize: 11, color: "#425066", background: "#eef1f5", borderRadius: 6, padding: "2px 8px" }}
+                    style={{ fontSize: 11, color: "var(--si-text-secondary)", background: "var(--si-neutral-bg)", borderRadius: 6, padding: "2px 8px" }}
                   >
                     {item.source.type}
                   </span>

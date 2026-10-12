@@ -240,7 +240,7 @@ export default function SourcesPage() {
                 onClick={() => startEdit(source)}
                 style={{
                   textAlign: "left",
-                  background: editingId === source.id ? "#eaf2fb" : "var(--si-surface)",
+                  background: editingId === source.id ? "var(--si-blue-bg)" : "var(--si-surface)",
                   border: editingId === source.id ? "1px solid var(--si-blue)" : "1px solid var(--si-border)",
                   borderRadius: 10,
                   padding: "14px 16px",
@@ -262,7 +262,7 @@ export default function SourcesPage() {
                   <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--si-text)" }}>{source.name}</span>
                   <span
                     className="si-mono"
-                    style={{ fontSize: 11, color: "#425066", background: "#eef1f5", borderRadius: 6, padding: "2px 8px" }}
+                    style={{ fontSize: 11, color: "var(--si-text-secondary)", background: "var(--si-neutral-bg)", borderRadius: 6, padding: "2px 8px" }}
                   >
                     {source.type}
                   </span>
@@ -272,7 +272,7 @@ export default function SourcesPage() {
                       fontSize: 11,
                       fontWeight: 600,
                       color: source.enabled ? "var(--si-green)" : "var(--si-text-muted)",
-                      background: source.enabled ? "var(--si-green-bg)" : "#f1f3f6",
+                      background: source.enabled ? "var(--si-green-bg)" : "var(--si-neutral-bg)",
                       borderRadius: 9,
                       padding: "2px 9px",
                     }}
@@ -321,7 +321,7 @@ export default function SourcesPage() {
                 width: "100%",
                 height: 36,
                 marginTop: 6,
-                border: "1px solid #d8dce3",
+                border: "1px solid var(--si-border)",
                 borderRadius: 8,
                 padding: "0 12px",
                 fontSize: 13.5,
@@ -339,7 +339,7 @@ export default function SourcesPage() {
                 width: "100%",
                 height: 36,
                 marginTop: 6,
-                border: "1px solid #d8dce3",
+                border: "1px solid var(--si-border)",
                 borderRadius: 8,
                 padding: "0 10px",
                 fontSize: 13.5,
@@ -366,7 +366,7 @@ export default function SourcesPage() {
                 display: "block",
                 width: "100%",
                 marginTop: 6,
-                border: "1px solid #d8dce3",
+                border: "1px solid var(--si-border)",
                 borderRadius: 8,
                 padding: "10px 12px",
                 fontSize: 12.5,
@@ -395,7 +395,7 @@ export default function SourcesPage() {
                 width: "100%",
                 height: 36,
                 marginTop: 6,
-                border: "1px solid #d8dce3",
+                border: "1px solid var(--si-border)",
                 borderRadius: 8,
                 padding: "0 12px",
                 fontSize: 13.5,
@@ -455,10 +455,10 @@ export default function SourcesPage() {
                 style={{
                   height: 36,
                   padding: "0 16px",
-                  border: "1px solid #d8dce3",
+                  border: "1px solid var(--si-border)",
                   borderRadius: 8,
-                  background: "#fff",
-                  color: "#384152",
+                  background: "var(--si-surface)",
+                  color: "var(--si-text-secondary)",
                   fontSize: 13,
                   fontWeight: 500,
                 }}

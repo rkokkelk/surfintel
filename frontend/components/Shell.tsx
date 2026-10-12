@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { clearToken } from "@/lib/api";
 import { isPlatformAdmin } from "@/lib/auth";
 import { ApiInfoModal } from "@/components/ApiInfoModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Icons
 import { GrVulnerability } from "react-icons/gr";
@@ -55,17 +56,18 @@ export function Shell({
           <span style={{ color: "var(--si-blue)" }}>Intel</span>
         </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
+          <ThemeToggle />
           <button
             onClick={() => setShowApiInfo(true)}
             style={{
               height: 34,
               padding: "0 14px",
-              border: "1px solid #d8dce3",
+              border: "1px solid var(--si-border)",
               borderRadius: 8,
-              background: "#fff",
+              background: "var(--si-surface)",
               fontSize: 13,
               fontWeight: 500,
-              color: "#384152",
+              color: "var(--si-text-secondary)",
             }}
           >
             API
@@ -75,12 +77,12 @@ export function Shell({
             style={{
               height: 34,
               padding: "0 14px",
-              border: "1px solid #d8dce3",
+              border: "1px solid var(--si-border)",
               borderRadius: 8,
-              background: "#fff",
+              background: "var(--si-surface)",
               fontSize: 13,
               fontWeight: 500,
-              color: "#384152",
+              color: "var(--si-text-secondary)",
             }}
           >
             Uitloggen
@@ -109,12 +111,12 @@ export function Shell({
 
           {showAdminSection && (
             <>
-              <div style={{ height: 1, background: "#eef0f3", margin: "12px 4px" }} />
+              <div style={{ height: 1, background: "var(--si-border)", margin: "12px 4px" }} />
               <div
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
-                  color: "#9aa3b2",
+                  color: "var(--si-text-muted)",
                   letterSpacing: "0.06em",
                   padding: "0 12px 4px",
                 }}
@@ -144,8 +146,8 @@ function NavItem({ href, label, activeItem }: { href: string; label: React.React
         padding: "0 12px",
         fontSize: 14,
         fontWeight: 500,
-        color: activeItem ? "var(--si-navy)" : "#384152",
-        background: activeItem ? "#eaf2fb" : "transparent",
+        color: activeItem ? "var(--si-navy)" : "var(--si-text-secondary)",
+        background: activeItem ? "var(--si-blue-bg)" : "transparent",
         textDecoration: "none",
       }}
     >

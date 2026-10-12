@@ -96,7 +96,7 @@ export function FeedCard({
             </Badge>
           )}
           {item.max_epss_score !== null && item.max_epss_score >= 0.1 && (
-            <Badge color="var(--si-text-muted)" bg="#f1f3f6">
+            <Badge color="var(--si-text-muted)" bg="var(--si-neutral-bg)">
               EPSS {(item.max_epss_score * 100).toFixed(1)}%
             </Badge>
           )}

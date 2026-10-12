@@ -96,7 +96,10 @@ export function CvssRadarChart({ axes, color, size = 260 }: { axes: CvssAxis[]; 
             left: tooltip.x + 12,
             top: tooltip.y + 12,
             zIndex: 60,
-            background: "var(--si-text)",
+            // Fixed dark surface regardless of theme — var(--si-text) flips
+            // to a light color in dark mode, which would make this tooltip
+            // invisible (light bg, white text).
+            background: "rgba(17, 24, 39, 0.92)",
             color: "#fff",
             borderRadius: 8,
             padding: "6px 10px",

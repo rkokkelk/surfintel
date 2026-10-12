@@ -35,24 +35,24 @@ export function mitreTechniqueUrl(techniqueId: string): string {
   return sub ? `https://attack.mitre.org/techniques/${base}/${sub}/` : `https://attack.mitre.org/techniques/${base}/`;
 }
 
-// The 8-hue categorical theme from the dataviz skill's validated reference
-// palette (references/palette.md) — passes the CVD/contrast gates as an
-// ordered set, so picking from it (rather than inventing hues) keeps these
-// badges accessible. There are far more MITRE technique IDs than 8, so this
-// is a hash, not a 1:1 assignment — collisions are possible, but the ID text
-// is always shown alongside the color, so color is never the sole identity
-// cue (the one case this skill's "never cycle for an open-ended category
-// count" rule doesn't forbid: a tag chip with its own text label, not an
-// unlabeled chart series).
+// The same 8-hue categorical theme as frontend/lib/charts.ts (dataviz
+// skill's validated reference palette, references/palette.md), resolved via
+// the CSS custom properties app/globals.css defines for it so these badges
+// stay accessible in both themes. There are far more MITRE technique IDs
+// than 8, so this is a hash, not a 1:1 assignment — collisions are possible,
+// but the ID text is always shown alongside the color, so color is never the
+// sole identity cue (the one case this skill's "never cycle for an
+// open-ended category count" rule doesn't forbid: a tag chip with its own
+// text label, not an unlabeled chart series).
 const MITRE_PALETTE = [
-  "#2a78d6", // blue
-  "#eb6834", // orange
-  "#1baf7a", // aqua
-  "#eda100", // yellow
-  "#e87ba4", // magenta
-  "#008300", // green
-  "#4a3aa7", // violet
-  "#e34948", // red
+  "var(--si-cat-1)", // blue
+  "var(--si-cat-2)", // orange
+  "var(--si-cat-3)", // aqua
+  "var(--si-cat-4)", // yellow
+  "var(--si-cat-5)", // magenta
+  "var(--si-cat-6)", // green
+  "var(--si-cat-7)", // violet
+  "var(--si-cat-8)", // red
 ];
 
 export function mitreTechniqueColor(techniqueId: string): { color: string; bg: string } {
@@ -61,7 +61,10 @@ export function mitreTechniqueColor(techniqueId: string): { color: string; bg: s
     hash = (hash * 31 + techniqueId.charCodeAt(i)) >>> 0;
   }
   const hue = MITRE_PALETTE[hash % MITRE_PALETTE.length];
-  return { color: hue, bg: `color-mix(in srgb, ${hue} 14%, white)` };
+  // Mixed toward the current surface (not a literal "white") so the tint
+  // lands as a light pastel in light mode and a dark, muted tint in dark
+  // mode, without needing separate per-theme bg values.
+  return { color: hue, bg: `color-mix(in srgb, ${hue} 14%, var(--si-surface))` };
 }
 
 export const SEVERITY_STYLE: Record<string, { color: string; bg: string; label: string }> = {

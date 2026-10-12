@@ -108,7 +108,7 @@ function formFromRule(rule: AlertRule): FormState {
 function fieldStyle(): React.CSSProperties {
   return {
     height: 32,
-    border: "1px solid #d8dce3",
+    border: "1px solid var(--si-border)",
     borderRadius: 7,
     padding: "0 10px",
     fontSize: 12.5,
@@ -297,7 +297,7 @@ export default function AlertsPage() {
               style={{
                 marginLeft: "auto",
                 border: "1px solid var(--si-border)",
-                background: selectedRuleId === null ? "var(--si-navy)" : "#fff",
+                background: selectedRuleId === null ? "var(--si-navy)" : "var(--si-surface)",
                 color: selectedRuleId === null ? "#fff" : "var(--si-text)",
                 borderRadius: 7,
                 fontSize: 12,
@@ -341,7 +341,7 @@ export default function AlertsPage() {
                     fontSize: 11,
                     fontWeight: 600,
                     color: rule.status === "active" ? "var(--si-green)" : "var(--si-text-muted)",
-                    background: rule.status === "active" ? "var(--si-green-bg)" : "#f1f3f6",
+                    background: rule.status === "active" ? "var(--si-green-bg)" : "var(--si-neutral-bg)",
                     borderRadius: 9,
                     padding: "2px 9px",
                   }}
@@ -354,7 +354,7 @@ export default function AlertsPage() {
                   <span
                     key={c.id}
                     className="si-mono"
-                    style={{ fontSize: 11.5, color: "#374151", background: "#f5f6f8", borderRadius: 6, padding: "2px 8px" }}
+                    style={{ fontSize: 11.5, color: "var(--si-text-secondary)", background: "var(--si-bg)", borderRadius: 6, padding: "2px 8px" }}
                   >
                     {c.field === "kev"
                       ? "moet in KEV staan"
@@ -404,7 +404,7 @@ export default function AlertsPage() {
                 width: "100%",
                 height: 36,
                 marginTop: 6,
-                border: "1px solid #d8dce3",
+                border: "1px solid var(--si-border)",
                 borderRadius: 8,
                 padding: "0 12px",
                 fontSize: 13.5,
@@ -513,7 +513,7 @@ export default function AlertsPage() {
               Notificatiekanalen (Apprise-URL)
             </div>
             {form.channels.map((channel, index) => (
-              <div key={index} style={{ display: "flex", flexDirection: "column", gap: 4, border: "1px solid #eceff3", borderRadius: 8, padding: 8 }}>
+              <div key={index} style={{ display: "flex", flexDirection: "column", gap: 4, border: "1px solid var(--si-border)", borderRadius: 8, padding: 8 }}>
                 <div style={{ display: "flex", gap: 6 }}>
                   <input
                     value={channel.label}
@@ -562,7 +562,7 @@ export default function AlertsPage() {
             </button>
           </div>
 
-          <details style={{ border: "1px solid #eceff3", borderRadius: 8, padding: "8px 10px" }}>
+          <details style={{ border: "1px solid var(--si-border)", borderRadius: 8, padding: "8px 10px" }}>
             <summary style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)", cursor: "pointer" }}>
               Advanced: berichtsjabloon
             </summary>
@@ -575,7 +575,7 @@ export default function AlertsPage() {
                 onChange={(e) => setForm((prev) => ({ ...prev, messageTemplate: e.target.value }))}
                 placeholder={"{title}\n{url}"}
                 rows={4}
-                style={{ border: "1px solid #d8dce3", borderRadius: 7, padding: "8px 10px", fontSize: 12.5, fontFamily: "var(--si-mono, monospace)", resize: "vertical" }}
+                style={{ border: "1px solid var(--si-border)", borderRadius: 7, padding: "8px 10px", fontSize: 12.5, fontFamily: "var(--si-mono, monospace)", resize: "vertical" }}
               />
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                 {TEMPLATE_PLACEHOLDERS.map((p) => (
@@ -583,7 +583,7 @@ export default function AlertsPage() {
                     key={p.token}
                     className="si-mono"
                     title={p.desc}
-                    style={{ fontSize: 10.5, color: "#374151", background: "#f5f6f8", borderRadius: 5, padding: "2px 6px" }}
+                    style={{ fontSize: 10.5, color: "var(--si-text-secondary)", background: "var(--si-bg)", borderRadius: 5, padding: "2px 6px" }}
                   >
                     {p.token}
                   </span>
@@ -646,7 +646,7 @@ export default function AlertsPage() {
                     padding: "0 16px",
                     border: "1px solid var(--si-border)",
                     borderRadius: 8,
-                    background: "#fff",
+                    background: "var(--si-surface)",
                     color: "var(--si-text)",
                     fontSize: 13,
                     fontWeight: 600,
@@ -664,7 +664,7 @@ export default function AlertsPage() {
                     padding: "0 16px",
                     border: "1px solid var(--si-red)",
                     borderRadius: 8,
-                    background: "#fff",
+                    background: "var(--si-surface)",
                     color: "var(--si-red)",
                     fontSize: 13,
                     fontWeight: 600,
@@ -708,7 +708,7 @@ export default function AlertsPage() {
               {testResults?.map((match) => (
                 <div
                   key={match.item_id}
-                  style={{ border: "1px solid #eceff3", borderRadius: 8, padding: "9px 11px", display: "flex", flexDirection: "column", gap: 5 }}
+                  style={{ border: "1px solid var(--si-border)", borderRadius: 8, padding: "9px 11px", display: "flex", flexDirection: "column", gap: 5 }}
                 >
                   <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
                     <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--si-text)", flexGrow: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

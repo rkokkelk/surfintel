@@ -159,7 +159,7 @@ export function ApiInfoModal({ onClose }: { onClose: () => void }) {
                     onClick={(e) => (e.target as HTMLTextAreaElement).select()}
                     style={{
                       flexGrow: 1,
-                      border: "1px solid #d8dce3",
+                      border: "1px solid var(--si-border)",
                       borderRadius: 8,
                       padding: "8px 10px",
                       fontSize: 11.5,
@@ -176,10 +176,10 @@ export function ApiInfoModal({ onClose }: { onClose: () => void }) {
                     style={{
                       height: 32,
                       padding: "0 14px",
-                      border: "1px solid #d8dce3",
+                      border: "1px solid var(--si-border)",
                       borderRadius: 8,
-                      background: "#fff",
-                      color: "#384152",
+                      background: "var(--si-surface)",
+                      color: "var(--si-text-secondary)",
                       fontSize: 12.5,
                       fontWeight: 500,
                       cursor: "pointer",
@@ -194,10 +194,10 @@ export function ApiInfoModal({ onClose }: { onClose: () => void }) {
                     style={{
                       height: 32,
                       padding: "0 14px",
-                      border: "1px solid #d8dce3",
+                      border: "1px solid var(--si-border)",
                       borderRadius: 8,
-                      background: "#fff",
-                      color: "#384152",
+                      background: "var(--si-surface)",
+                      color: "var(--si-text-secondary)",
                       fontSize: 12.5,
                       fontWeight: 500,
                       cursor: "pointer",

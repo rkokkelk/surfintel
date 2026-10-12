@@ -1,4 +1,60 @@
+/* Dark is the default appearance (:root, unscoped) — the viewer's explicit
+   choice is stamped as data-theme="light"/"dark" on <html> (see
+   components/ThemeToggle.tsx) and always wins; there's no OS-preference
+   fallback, by design. Badge "-bg" tints for dark mode are computed from the
+   dark hue + the dark surface via color-mix(), rather than hand-picked, so
+   they stay consistent with whatever surface they render on; the light "-bg"
+   values are the original hand-tuned hex and are left untouched. */
 :root {
+  color-scheme: dark;
+
+  --si-navy: #5b8ff0;
+  --si-blue: #4ba8e8;
+  --si-teal: #3ecdd1;
+  --si-green: #4ad17e;
+  --si-purple: #c893d6;
+  --si-red: #ff6b7a;
+  --si-amber: #e8974a;
+  --si-indigo: #8b9eef;
+  --si-neutral: #aab0bb;
+  --si-yellow: #ffd637;
+
+  --si-navy-bg: color-mix(in srgb, var(--si-navy) 18%, var(--si-surface));
+  --si-blue-bg: color-mix(in srgb, var(--si-blue) 18%, var(--si-surface));
+  --si-teal-bg: color-mix(in srgb, var(--si-teal) 18%, var(--si-surface));
+  --si-green-bg: color-mix(in srgb, var(--si-green) 18%, var(--si-surface));
+  --si-purple-bg: color-mix(in srgb, var(--si-purple) 18%, var(--si-surface));
+  --si-red-bg: color-mix(in srgb, var(--si-red) 18%, var(--si-surface));
+  --si-amber-bg: color-mix(in srgb, var(--si-amber) 18%, var(--si-surface));
+  --si-indigo-bg: color-mix(in srgb, var(--si-indigo) 18%, var(--si-surface));
+  --si-neutral-bg: color-mix(in srgb, var(--si-neutral) 18%, var(--si-surface));
+  --si-yellow-bg: color-mix(in srgb, var(--si-yellow) 18%, var(--si-surface));
+
+  --si-bg: #0d1117;
+  --si-surface: #161b22;
+  --si-border: #2d333b;
+  --si-text: #e6edf3;
+  --si-text-secondary: #adbac7;
+  --si-text-muted: #8b949e;
+
+  /* The dataviz skill's validated 8-hue categorical theme (see
+     frontend/lib/charts.ts) — dark is its own stepped set, not an automatic
+     flip (references/palette.md). Slot 9 ("Overig"/de-emphasis) isn't part
+     of the validated set; chosen only to recede against each surface. */
+  --si-cat-1: #3987e5;
+  --si-cat-2: #d95926;
+  --si-cat-3: #199e70;
+  --si-cat-4: #c98500;
+  --si-cat-5: #d55181;
+  --si-cat-6: #008300;
+  --si-cat-7: #9085e9;
+  --si-cat-8: #e66767;
+  --si-cat-other: #545b66;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
   --si-navy: #003da5;
   --si-blue: #0077c8;
   --si-teal: #00707a;
@@ -26,6 +82,16 @@
   --si-text: #12172a;
   --si-text-secondary: #4b5563;
   --si-text-muted: #6b7280;
+
+  --si-cat-1: #2a78d6;
+  --si-cat-2: #eb6834;
+  --si-cat-3: #1baf7a;
+  --si-cat-4: #eda100;
+  --si-cat-5: #e87ba4;
+  --si-cat-6: #008300;
+  --si-cat-7: #6250d6;
+  --si-cat-8: #e34948;
+  --si-cat-other: #9aa3b2;
 }
 
 * {
@@ -66,6 +132,11 @@ button {
   cursor: pointer;
 }
 
-input {
+input,
+select,
+textarea {
   font-family: inherit;
+  background: var(--si-surface);
+  color: var(--si-text);
+  border-color: var(--si-border);
 }

@@ -40,12 +40,12 @@ function isoDate(d: Date): string {
 function fieldStyle(active: boolean): React.CSSProperties {
   return {
     height: 36,
-    border: `1px solid ${active ? "var(--si-blue)" : "#d8dce3"}`,
+    border: `1px solid ${active ? "var(--si-blue)" : "var(--si-border)"}`,
     borderRadius: 8,
     padding: "0 10px",
     fontSize: 13,
     color: "var(--si-text)",
-    background: active ? "#f7fbfe" : "#fff",
+    background: active ? "var(--si-blue-bg)" : "var(--si-surface)",
   };
 }
 
@@ -149,9 +149,9 @@ export function OverviewFilters({
               height: 28,
               padding: "0 12px",
               borderRadius: 14,
-              border: activePreset === p.label ? "none" : "1px solid #d8dce3",
-              background: activePreset === p.label ? "var(--si-navy)" : "#fff",
-              color: activePreset === p.label ? "#fff" : "#384152",
+              border: activePreset === p.label ? "none" : "1px solid var(--si-border)",
+              background: activePreset === p.label ? "var(--si-navy)" : "var(--si-surface)",
+              color: activePreset === p.label ? "#fff" : "var(--si-text-secondary)",
               fontSize: 12.5,
               fontWeight: 500,
               cursor: "pointer",
@@ -209,7 +209,7 @@ export function OverviewFilters({
             height="14"
             viewBox="0 0 20 20"
             fill="none"
-            stroke="#9aa3b2"
+            stroke="var(--si-text-muted)"
             strokeWidth="1.8"
             style={{ position: "absolute", left: 10, top: 11 }}
           >
