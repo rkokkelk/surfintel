@@ -1,4 +1,17 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL;
+declare global {
+  interface Window {
+    __ENV__?: { API_URL?: string };
+  }
+}
+
+// Read at call time, not module load — window.__ENV__ is injected by a
+// server-rendered <script> in app/layout.tsx so the API URL can be set per
+// deployment (env var) rather than baked into the build.
+export function getApiUrl(): string {
+  if (typeof window !== "undefined" && window.__ENV__?.API_URL) return window.__ENV__.API_URL;
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+}
+
 const TOKEN_KEY = "surfintel_token";
 
 export function getToken(): string | null {
@@ -21,7 +34,7 @@ export class ApiError extends Error {
 }
 
 export function apiURL(path: string): string {
-  return `${API_URL}${path}`
+  return `${getApiUrl()}${path}`
 }
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -32,7 +45,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const response = await fetch(`${getApiUrl()}${path}`, { ...options, headers });
 
   if (!response.ok) {
     if (response.status === 401) clearToken();
@@ -52,7 +65,7 @@ export async function imgFetch<T>(path: string, options: RequestInit ={}): Promi
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const response = await fetch(`${getApiUrl()}${path}`, { ...options, headers });
 
   if (!response.ok) {
     if (response.status === 401) clearToken();
@@ -70,7 +83,7 @@ export async function textFetch<T>(path: string, options: RequestInit={}): Promi
     ...(options.headers as Record<string, string> | undefined),
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const response = await fetch(`${getApiUrl()}${path}`, { ...options, headers });
 
   return (await response.text()) as T;
 }

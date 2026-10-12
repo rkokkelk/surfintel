@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch, ApiError, API_URL } from "@/lib/api";
+import { apiFetch, ApiError, getApiUrl } from "@/lib/api";
 
 export function ApiInfoModal({ onClose }: { onClose: () => void }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const API_URL = getApiUrl();
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
