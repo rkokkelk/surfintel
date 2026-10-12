@@ -1,4 +1,4 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const TOKEN_KEY = "surfintel_token";
 
 export function getToken(): string | null {
