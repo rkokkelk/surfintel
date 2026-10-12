@@ -1,0 +1,14 @@
+frontend
+.git
+
+backend/.venv
+backend/__pycache__
+backend/**/__pycache__
+backend/*.pyc
+backend/.pytest_cache
+backend/.ruff_cache
+backend/logs
+backend/media
+backend/celerybeat-schedule
+backend/.env
+backend/tests

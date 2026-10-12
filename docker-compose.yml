@@ -1,6 +1,6 @@
 x-backend-build: &backend-build
-  context: ./backend
-  dockerfile: ../docker/backend.Dockerfile
+  context: .
+  dockerfile: docker/backend.Dockerfile
 
 x-backend-env: &backend-env
   DATABASE_URL: postgresql+psycopg://surfintel:surfintel@db:5432/surfintel
@@ -79,8 +79,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: ../docker/frontend.Dockerfile
+      context: .
+      dockerfile: docker/frontend.Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8000
     ports:
