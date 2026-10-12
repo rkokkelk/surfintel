@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { apiFetch, getToken } from "@/lib/api";
+import { useParams, useSearchParams } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 import type { AlertRule, Item } from "@/lib/types";
 import { computeDailyCounts, computeSourceCounts } from "@/lib/dashboard-stats";
 import { ItemScreenshot } from "@/components/ItemScreenshot";
@@ -56,7 +56,6 @@ function groupByDay(items: Item[]): { label: string; items: Item[] }[] {
 
 export default function AlertDashboardPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const chartsParam = searchParams.get("charts");
   const showCharts = chartsParam !== "false" && chartsParam !== "0";
@@ -78,20 +77,17 @@ export default function AlertDashboardPage() {
   }, [params.id]);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.push("/login");
-      return;
-    }
+    // Public page, no login required — meant for an unattended TV display.
     apiFetch<AlertRule>(`/alerts/${params.id}`)
       .then(setRule)
       .catch(() => {
-        /* Non-fatal: admin-only, so a non-admin viewer just gets a generic header. */
+        /* Non-fatal: a missing/unreadable rule just gets a generic header. */
       });
 
     load();
     const interval = setInterval(load, REFRESH_MS);
     return () => clearInterval(interval);
-  }, [load, router]);
+  }, [load]);
 
   // A visible, slowly-ticking clock — a TV wall display is unattended, so
   // "is this thing still alive" has to be answerable at a glance, not by

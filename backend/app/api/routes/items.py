@@ -76,7 +76,7 @@ def get_item(item_id: uuid.UUID, db: Session = Depends(get_db), _user=Depends(ge
     return item
 
 @router.get("/{item_id}/screenshot")
-def get_screenshot(item_id: uuid.UUID, _user=Depends(get_current_user)) -> FileResponse:
+def get_screenshot(item_id: uuid.UUID) -> FileResponse:
     path = screenshot_path(item_id)
 
     if not path.is_file():

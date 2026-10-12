@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.alerting.match_view import build_match_view, condition_matches
 from app.alerting.templating import build_template_context, render_message
-from app.api.deps import get_current_user, require_admin, scoped_to_org
+from app.api.deps import require_admin, scoped_to_org
 from app.core.encryption import decrypt, encrypt, mask
 from app.db.session import get_db
 from app.enrichment.tasks import ENRICHMENT_MODULES
@@ -64,11 +64,8 @@ def list_alert_rules(
     return [_to_out(db, rule) for rule in rules]
 
 @router.get("/{rule_id}", response_model=AlertRuleOut)
-def get_alert_rule(
-    rule_id: uuid.UUID,
-    db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_admin)
-) -> list[AlertRuleOut]:
-    rule = db.scalar(scoped_to_org(select(AlertRule), AlertRule, current_user).where(AlertRule.id == rule_id))
+def get_alert_rule(rule_id: uuid.UUID, db: Session = Depends(get_db)) -> AlertRuleOut:
+    rule = db.get(AlertRule, rule_id)
 
     if rule is None:
         raise HTTPException(404, "Alert-regel niet gevonden")
@@ -237,10 +234,8 @@ def get_alert_items(
     rule_id: uuid.UUID,
     limit: int = Query(25, gt=0, le=100),
     db: Session = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
 ) -> list[ItemOut]:
-
-    rule = db.scalar(scoped_to_org(select(AlertRule), AlertRule, current_user).where(AlertRule.id == rule_id))
+    rule = db.get(AlertRule, rule_id)
 
     if rule is None:
         raise HTTPException(404, "Alert-regel niet gevonden")
@@ -258,9 +253,9 @@ def get_alert_items(
 
 @router.post("/{rule_id}/pause", response_model=AlertRuleOut)
 def pause_alert_rule(
-    rule_id: uuid.UUID, db: Session = Depends(get_db)
+    rule_id: uuid.UUID, db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_admin)
 ) -> AlertRuleOut:
-    rule: AlertRule = db.get(AlertRule, rule_id)
+    rule = db.scalar(scoped_to_org(select(AlertRule), AlertRule, current_user).where(AlertRule.id == rule_id))
     if rule is None:
         raise HTTPException(404, "Alert-regel niet gevonden")
 
