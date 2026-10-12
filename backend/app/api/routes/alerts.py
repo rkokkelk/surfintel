@@ -258,9 +258,9 @@ def get_alert_items(
 
 @router.post("/{rule_id}/pause", response_model=AlertRuleOut)
 def pause_alert_rule(
-    rule_id: uuid.UUID, db: Session = Depends(get_db), current_user: CurrentUser = Depends(require_admin)
+    rule_id: uuid.UUID, db: Session = Depends(get_db)
 ) -> AlertRuleOut:
-    rule = db.scalar(scoped_to_org(select(AlertRule), AlertRule, current_user).where(AlertRule.id == rule_id))
+    rule: AlertRule = db.get(AlertRule, rule_id)
     if rule is None:
         raise HTTPException(404, "Alert-regel niet gevonden")
 
