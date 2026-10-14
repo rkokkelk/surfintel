@@ -27,6 +27,16 @@ services:
       timeout: 5s
       retries: 3
 
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.64.0-resolute
+    init: true
+    user: pwuser
+    working_dir: /home/pwuser
+    ports:
+      - 3001:3000
+    command: /bin/sh -c "npx -y playwright@1.64.0 run-server --port 3000 --host 0.0.0.0"
+
 volumes:
   surfintel-db:
   surfintel-redis:

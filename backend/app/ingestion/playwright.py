@@ -1,8 +1,9 @@
 import hashlib
 
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright, Playwright
+from playwright.sync_api import Playwright, sync_playwright
 
+from app.core.config import settings
 from app.core.media import SCREENSHOT_DIR, screenshot_path
 from app.ingestion.base import FetchBackend, FetchResult
 
@@ -39,7 +40,7 @@ class PlaywrightBackend(FetchBackend):
         SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.connect(settings.playwright_url)
             page = browser.new_page()
             page.goto(url, timeout=self._timeout * 1000)
 

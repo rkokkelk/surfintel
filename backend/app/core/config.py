@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # explicitly in production — the default only works for local development.
     encryption_key: str = "A" * 43 + "="
 
+    # Playwright URL for remote playwright WS connection
+    playwright_url: str = "ws://localhost:3000"
+
     # Default log dir
     log_dir: str = 'logs'
 
