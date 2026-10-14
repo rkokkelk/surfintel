@@ -4,30 +4,27 @@
     python -m app.cli create-platform-admin --email a@surf.nl --name "Roy" --password ...
     python -m app.cli add-source --name "Security.NL" --feed-url https://www.security.nl/rss/headlines.xml
 """
-
 import uuid
+
 import typer
-import logging
+from loguru import logger
 from sqlalchemy import select
 
 from app.celery import app
 from app.core.security import hash_password
 from app.db.session import SessionLocal
-from app.ingestion.tasks import run_ingestion_cycle, fetch_discovered_item, retry_failed_items
+from app.ingestion.playwright import PlaywrightBackend
+from app.ingestion.tasks import fetch_discovered_item, retry_failed_items, run_ingestion
+from app.models.item import Item
 from app.models.organization import Organization
 from app.models.source import Source, SourceType
 from app.models.user import AppUser, UserRole
-from app.models.item import Item
-from app.ingestion.playwright import PlaywrightBackend
 
 cli = typer.Typer()
 
-logging.basicConfig(level=logging.DEBUG)
-
-
 
 @cli.command()
-def run_ingestion(force: bool = False, failed: bool = False, item_id: uuid.UUID | None = None, source_id: uuid.UUID | None = None) -> None:
+def ingest(force: bool = False, failed: bool = False, item_id: uuid.UUID | None = None, source_id: uuid.UUID | None = None) -> None:
     """One ingestion cycle: poll sources, fetch/enrich new items, evaluate alerts."""
 
     if item_id:
@@ -39,7 +36,7 @@ def run_ingestion(force: bool = False, failed: bool = False, item_id: uuid.UUID 
         retry_failed_items.s(source_id=source_id).delay()
 
     else:
-        run_ingestion_cycle.s('PLAYWRIGHT', force)
+        run_ingestion.s('PLAYWRIGHT', force)
 
 
 @cli.command()
