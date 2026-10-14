@@ -55,7 +55,7 @@ def setup_source(sender: Celery, **kwargs):
 
             setup_source_signature = setup_source_periodic_task.s(source.id)
             setup_source_signature.apply_async(countdown=jitter)
-            logger.info("Starting run of source! jitter: {}; poll: {}", jitter, poll)
+            logger.info("Starting run of source! (jitter={}, poll={})", jitter, poll)
 
 @app.task(base=UuidSafeSingleton)
 def setup_source_periodic_task(source_id: uuid.UUID) -> None:
@@ -101,7 +101,7 @@ def run_ingestion(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYP
 
         pending_items = db.scalars(stmt).all()
 
-        log.info("items pending={}", len(pending_items))
+        log.info("pending items (pending={})", len(pending_items))
 
         # Start paralell fetching tasks
         group_task = group(fetch_discovered_item.s(item.id, source.id, fetch_identifier=fetch_identifier) for item in pending_items)
@@ -171,8 +171,8 @@ def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identi
         source = db.get(Source, source_id)
 
         try:
-            log.success("Parsed: {}", item.url)
             result = fetch_backend.fetch(item.id, item.url, item.source.config)
+            log.success("fetched: {}", item.url)
 
             now = dt.datetime.now(dt.UTC)
             if item.content_hash != result.content_hash:
@@ -193,7 +193,7 @@ def fetch_discovered_item(item_id: uuid.UUID, source_id: uuid.UUID, fetch_identi
             chord(get_enrichments_tasks(item, source), notify.s(item_id=item.id, source_id=source.id))()
 
         except Exception as e:
-            log.warning("Fetching failed: {} --> {}", e, item.url)
+            log.warning("Fetching failed: {} ({})", e, item.url)
             item.status = ItemStatus.error
 
             db.commit()
