@@ -16,6 +16,7 @@ import {
   mitreTechniqueColor,
   mitreTechniqueUrl,
 } from "@/lib/enrichment";
+import Markdown from 'react-markdown'
 import { ItemScreenshot } from "@/components/ItemScreenshot";
 
 function Badge({ color, bg, children }: { color: string; bg: string; children: React.ReactNode }) {
@@ -339,7 +340,7 @@ export function ItemDetailPanel({
                       padding: 10,
                     }}
                   >
-                    {item.extracted_text}
+                    <Markdown>{item.extracted_text}</Markdown>
                   </div>
                 </Section>
               )}

@@ -1,10 +1,11 @@
 import hashlib
 
 from bs4 import BeautifulSoup
+from markdownify import MarkdownConverter
 from playwright.sync_api import Playwright, sync_playwright
 
 from app.core.config import settings
-from app.core.media import SCREENSHOT_DIR, screenshot_path
+from app.core.media import screenshot_path
 from app.ingestion.base import FetchBackend, FetchResult
 
 _USER_AGENT = "SurfIntelBot/0.1 (+https://github.com/surf/surfintel)"
@@ -37,8 +38,6 @@ class PlaywrightBackend(FetchBackend):
         context.close()
 
     def fetch(self, item_id: str, url: str, config: dict) -> FetchResult:
-        SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
-
         with sync_playwright() as p:
             browser = p.chromium.connect(settings.playwright_url)
             page = browser.new_page()
@@ -58,9 +57,7 @@ class PlaywrightBackend(FetchBackend):
         if config.get('content-selector'):
             soup = soup.select(config['content-selector'])[0]
 
-        for tag in soup(["script", "style", "nav", "footer"]):
-            tag.decompose()
-        extracted_text = " ".join(soup.get_text(separator=" ").split())
+        extracted_text = MarkdownConverter(strip=['img']).convert_soup(soup)
         content_hash = hashlib.sha256(extracted_text.encode()).hexdigest()
 
         return FetchResult(raw_html=raw_html, extracted_text=extracted_text, content_hash=content_hash, screenshot=True)

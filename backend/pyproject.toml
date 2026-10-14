@@ -30,7 +30,8 @@ dependencies = [
   "httpx-retries>=0.6",
   "feedgen>=1.0",
   "celery-singleton>=0.3",
-  "flower>=2.2"
+  "flower>=2.2",
+  "markdownify>=1.2"
 ]
 
 [project.optional-dependencies]
