@@ -41,7 +41,7 @@ class HTMLSourceConnector(SourceConnector):
 
             title = entry.select_one(config['item']['title-selector']).text
             link = entry.select_one(config['item']['link-selector']).attrs['href']
-            description = entry.select_one(config['item']['description-selector']).text
+            description = self._clean_description(entry.select_one(config['item']['description-selector']).text)
 
             if not link:
                 continue

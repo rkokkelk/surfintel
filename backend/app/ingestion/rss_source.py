@@ -12,20 +12,24 @@ class RssSourceConnector(SourceConnector):
         feed_url = config["feed_url"]
         parsed = feedparser.parse(feed_url)
 
+
+
         links: list[DiscoveredLink] = []
         for entry in parsed.entries:
             url = entry.get("link")
             if not url:
                 continue
+
             links.append(
                 DiscoveredLink(
                     url=url,
                     title=entry.get("title"),
-                    description=entry.get("description"),
+                    description=self._clean_description(entry.get("description")),
                     published_at=_parse_published(entry),
                 )
             )
         return links
+
 
 
 def _parse_published(entry) -> dt.datetime | None:

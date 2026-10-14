@@ -14,7 +14,8 @@ from __future__ import annotations
 import datetime as dt
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from pathlib import Path
+
+from bs4 import BeautifulSoup
 
 
 @dataclass
@@ -37,6 +38,21 @@ class SourceConnector(ABC):
     def discover(self, config: dict) -> list[DiscoveredLink]:
         raise NotImplementedError
 
+
+    def _clean_description(self, description: str | None) -> str:
+        """ Sometimes the description contains HTML or long text. Ensure that HTML is stripped and max length is used.
+        """
+        if not str:
+            return ""
+
+        soup = BeautifulSoup(description)
+
+        # kill all script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()    # rip it out
+
+        clean_description = soup.get_text()
+        return clean_description[0:200]
 
 class FetchBackend(ABC):
     @abstractmethod
