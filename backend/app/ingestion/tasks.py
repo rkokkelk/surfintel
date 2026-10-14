@@ -19,11 +19,9 @@ from app.core.singleton_task import UuidSafeSingleton
 from app.db.session import SessionLocal
 from app.enrichment.tasks import get_enrichments_tasks
 from app.ingestion.base import SourceConnector
-from app.ingestion.github_source import GithubSource
-from app.ingestion.html_source import HTMLSourceConnector
 from app.ingestion.http_fetch import HttpFetchBackend
 from app.ingestion.playwright import PlaywrightBackend
-from app.ingestion.rss_source import RssSourceConnector
+from app.ingestion.source import GithubSource, HTMLSourceConnector, RssSourceConnector
 from app.models.item import Item, ItemStatus
 from app.models.source import Source, SourceType
 

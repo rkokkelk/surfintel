@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 from app.ingestion.base import DiscoveredLink, SourceConnector
 
 
-class HTMLSourceConnector(SourceConnector):
+class HTMLSource(SourceConnector):
     """config = {"feed_url": "https://example.com/feed.xml", "row_identifier":""}"""
     def __init__(self, timeout_seconds: float = 15.0) -> None:
         self._timeout = timeout_seconds

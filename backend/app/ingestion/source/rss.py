@@ -5,7 +5,7 @@ import feedparser
 from app.ingestion.base import DiscoveredLink, SourceConnector
 
 
-class RssSourceConnector(SourceConnector):
+class RssSource(SourceConnector):
     """config = {"feed_url": "https://example.com/feed.xml"}"""
 
     def discover(self, config: dict) -> list[DiscoveredLink]:
