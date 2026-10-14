@@ -1,5 +1,6 @@
 from celery import Celery
 from celery.signals import worker_process_init, worker_process_shutdown
+from celery_singleton import clear_locks
 
 from app.core import logging
 from app.core.config import settings
@@ -14,7 +15,7 @@ app = Celery(
     task_acks_late=False,
     prefetch_multiplier=1,
     task_time_limit=300,
-    singleton_lock_expiry=3600,
+    singleton_lock_expiry=330,
 )
 
 app.autodiscover_tasks(["app.ingestion", "app.enrichment", "app.alerting", "app.refreshing"])
@@ -24,6 +25,9 @@ app.autodiscover_tasks(["app.ingestion", "app.enrichment", "app.alerting", "app.
 def init_worker(**kwargs):
     # Disposing forces each child to open its own fresh connections instead of reusing the parent's.
     engine.dispose()
+
+    # Clear all 'old' existing Celery singleton locks
+    clear_locks(app)
 
     # Set this before the (less essential) logging setup below, so a future
     # hiccup there can't silently leave every task on this worker permanently
