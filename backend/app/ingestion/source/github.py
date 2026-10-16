@@ -2,7 +2,7 @@ import datetime as dt
 
 import httpx
 
-from app.ingestion.base import DiscoveredLink, SourceConnector
+from app.ingestion.source.base import DiscoveredLink, SourceConnector
 
 
 class GithubSource(SourceConnector):

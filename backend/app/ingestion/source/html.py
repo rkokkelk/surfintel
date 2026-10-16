@@ -1,10 +1,9 @@
 import datetime as dt
 
 from bs4 import BeautifulSoup
-
 from playwright.sync_api import sync_playwright
 
-from app.ingestion.base import DiscoveredLink, SourceConnector
+from app.ingestion.source.base import DiscoveredLink, SourceConnector
 
 
 class HTMLSource(SourceConnector):

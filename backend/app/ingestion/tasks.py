@@ -20,14 +20,14 @@ from app.db.session import SessionLocal
 from app.enrichment.tasks import get_enrichments_tasks
 from app.ingestion.http_fetch import HttpFetchBackend
 from app.ingestion.playwright import PlaywrightBackend
-from app.ingestion.source import GithubSource, HTMLSourceConnector, RssSourceConnector
+from app.ingestion.source import GithubSource, HTMLSource, RssSource
 from app.ingestion.source.base import SourceConnector
 from app.models.item import Item, ItemStatus
 from app.models.source import Source, SourceType
 
 CONNECTORS: dict[SourceType, SourceConnector] = {
-    SourceType.rss: RssSourceConnector(),
-    SourceType.html: HTMLSourceConnector(),
+    SourceType.rss: RssSource(),
+    SourceType.html: HTMLSource(),
     SourceType.gh: GithubSource(),
     # SourceType.custom_module: resolved per-source via config["module"] once
     # the first custom module (e.g. a changedetection.io-backed connector) is
