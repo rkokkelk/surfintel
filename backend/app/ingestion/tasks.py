@@ -18,10 +18,10 @@ from app.celery import app
 from app.core.singleton_task import UuidSafeSingleton
 from app.db.session import SessionLocal
 from app.enrichment.tasks import get_enrichments_tasks
-from app.ingestion.source.base import SourceConnector
 from app.ingestion.http_fetch import HttpFetchBackend
 from app.ingestion.playwright import PlaywrightBackend
 from app.ingestion.source import GithubSource, HTMLSourceConnector, RssSourceConnector
+from app.ingestion.source.base import SourceConnector
 from app.models.item import Item, ItemStatus
 from app.models.source import Source, SourceType
 
@@ -69,7 +69,7 @@ def setup_source_periodic_task(source_id: uuid.UUID) -> None:
         run_source_ingestion()
 
 
-@app.task(base=UuidSafeSingleton)
+@app.task
 def run_ingestion(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX, force: bool = False) -> None:
     """ Start Ingestion cycle
     
