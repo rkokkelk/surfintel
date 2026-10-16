@@ -18,7 +18,7 @@ from app.celery import app
 from app.core.singleton_task import UuidSafeSingleton
 from app.db.session import SessionLocal
 from app.enrichment.tasks import get_enrichments_tasks
-from app.ingestion.base import SourceConnector
+from app.ingestion.source.base import SourceConnector
 from app.ingestion.http_fetch import HttpFetchBackend
 from app.ingestion.playwright import PlaywrightBackend
 from app.ingestion.source import GithubSource, HTMLSourceConnector, RssSourceConnector
