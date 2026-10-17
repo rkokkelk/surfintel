@@ -31,6 +31,13 @@ class ItemOut(BaseModel):
     # Populated by the route (batched, not a lazy relationship) — the feed
     # view needs severity/category/CVE badges without a request per item.
     enrichments: list[ItemEnrichmentOut] = []
+    # Mirrors the cve_extractor enrichment's own fields (its data dict already
+    # computes these as the worst-case across every CVE mentioned) — surfaced
+    # at the top level so the feed/overview UI doesn't need to know module
+    # names just to render a CVSS/KEV/EPSS badge.
+    max_cvss_score: float | None = None
+    max_epss_score: float | None = None
+    in_kev: bool = False
 
 
 class ItemDetailOut(ItemOut):

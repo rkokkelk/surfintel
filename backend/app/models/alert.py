@@ -38,6 +38,12 @@ class AlertField(str, enum.Enum):
     epss_score = "epss_score"
     # Boolean membership field: `values` is ["true"] to mean "must be in KEV".
     kev = "kev"
+    # MITRE ATT&CK technique ID(s), e.g. "T1566" (app/enrichment/mitre_categorizer.py).
+    ttp = "ttp"
+    # victim_industry/victim_country/actor (app/enrichment/ai_categorizer.py).
+    victim_category = "victim_category"
+    victim_country = "victim_country"
+    actor = "actor"
 
 
 class NotificationStatus(str, enum.Enum):

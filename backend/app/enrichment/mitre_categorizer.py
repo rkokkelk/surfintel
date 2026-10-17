@@ -51,9 +51,5 @@ class MitreCategorizer(EnrichmentModule):
         return classification.model_dump()
 
     def match_fields(self, data: dict) -> dict:
-        fields: dict[str, list[str]] = {}
-        if data.get("tachtiquemitre "):
-            fields["severity"] = [data["severity"]]
-        if data.get("category"):
-            fields["category"] = [data["category"]]
-        return fields
+        technique_ids = sorted({ttp["technique_id"] for ttp in (data.get("ttps") or []) if ttp.get("technique_id")})
+        return {"ttp": technique_ids} if technique_ids else {}

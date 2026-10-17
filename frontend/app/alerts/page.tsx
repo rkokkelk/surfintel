@@ -22,6 +22,10 @@ const FIELD_OPTIONS: { value: AlertField; label: string }[] = [
   { value: "cvss_score", label: "CVSS-score (hoger dan)" },
   { value: "epss_score", label: "EPSS-score % (hoger dan)" },
   { value: "kev", label: "CISA KEV" },
+  { value: "ttp", label: "TTP (MITRE-techniek)" },
+  { value: "victim_category", label: "Slachtoffersector" },
+  { value: "victim_country", label: "Slachtofferland" },
+  { value: "actor", label: "Actor" },
 ];
 
 // Matched with >= against the item's max CVSS/EPSS across all its CVEs
@@ -44,6 +48,10 @@ const TEMPLATE_PLACEHOLDERS = [
   { token: "{cvss_score}", desc: "Hoogste CVSS-score onder de gekoppelde CVE's" },
   { token: "{epss_score}", desc: "Hoogste EPSS-score onder de gekoppelde CVE's (fractie 0-1)" },
   { token: "{kev}", desc: "\"true\" als een gekoppelde CVE in de CISA KEV-catalogus staat" },
+  { token: "{ttp}", desc: "MITRE ATT&CK techniek-ID('s), indien herkend" },
+  { token: "{victim_category}", desc: "Slachtoffersector, indien herkend" },
+  { token: "{victim_country}", desc: "Slachtofferland, indien herkend" },
+  { token: "{actor}", desc: "Actor/groepering, indien herkend" },
 ];
 
 interface ConditionDraft {

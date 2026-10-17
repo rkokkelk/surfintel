@@ -113,3 +113,10 @@ def _attach_enrichments(db: Session, items: list[Item]) -> None:
 
     for item in items:
         item.enrichments = by_item.get(item.id, [])
+
+        # Mirrored onto the item for ItemOut (see schemas/item.py) — these
+        # are exactly what cve_extractor.run() already computed and stored.
+        cve_data = next((row.data for row in item.enrichments if row.module_name == "cve_extractor"), None)
+        item.max_cvss_score = (cve_data or {}).get("max_cvss_score")
+        item.max_epss_score = (cve_data or {}).get("max_epss_score")
+        item.in_kev = bool((cve_data or {}).get("in_kev"))

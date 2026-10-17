@@ -68,4 +68,10 @@ class AiCategorizer(EnrichmentModule):
             fields["severity"] = [data["severity"]]
         if data.get("category"):
             fields["category"] = [data["category"]]
+        if data.get("victim_industry"):
+            fields["victim_category"] = [data["victim_industry"]]
+        if data.get("victim_country"):
+            fields["victim_country"] = [data["victim_country"]]
+        if data.get("actor"):
+            fields["actor"] = [data["actor"]]
         return fields

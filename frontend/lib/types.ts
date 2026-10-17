@@ -86,7 +86,11 @@ export type AlertField =
   | "keyword"
   | "cvss_score"
   | "epss_score"
-  | "kev";
+  | "kev"
+  | "ttp"
+  | "victim_category"
+  | "victim_country"
+  | "actor";
 
 export interface AlertCondition {
   id: string;
