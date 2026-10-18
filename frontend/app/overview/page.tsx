@@ -54,43 +54,77 @@ export default function OverviewPage() {
 
   }, [filters, router]);
 
+  // Mobile layout
+  const mobileLayout = (
+    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
+          Laatste updates
+        </div>
+        <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{items.length} items</div>
+      </div>
+
+      <OverviewFilters value={filters} onChange={setFilters} />
+
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+      {!loading && !error && items.length === 0 && (
+        <div style={{ color: "var(--si-text-muted)" }}>
+          {filters.q || filters.sourceId || filters.cveId || filters.from || filters.to
+            ? "Geen items gevonden voor deze filters."
+            : "Nog geen items. Voeg een bron toe en draai de ingestion-pipeline."}
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {items.map((item) => (
+          <FeedCard key={item.id} item={item} onOpenDetail={setSelectedItemId} onOpenCve={setSelectedCveId} />
+        ))}
+      </div>
+    </div>
+  );
+
+  // Desktop layout
+  const desktopLayout = (
+    <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+        <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
+          Laatste updates
+        </div>
+        <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{items.length} items</div>
+      </div>
+
+      <OverviewFilters value={filters} onChange={setFilters} />
+
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+      {!loading && !error && items.length === 0 && (
+        <div style={{ color: "var(--si-text-muted)" }}>
+          {filters.q || filters.sourceId || filters.cveId || filters.from || filters.to
+            ? "Geen items gevonden voor deze filters."
+            : "Nog geen items. Voeg een bron toe en draai de ingestion-pipeline."}
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 1000 }}>
+        {items.map((item) => (
+          <FeedCard key={item.id} item={item} onOpenDetail={setSelectedItemId} onOpenCve={setSelectedCveId} />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <Shell active="overzicht">
-      <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-          <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
-            Laatste updates
-          </div>
-          <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{items.length} items</div>
-        </div>
-
-        <OverviewFilters value={filters} onChange={setFilters} />
-
-        {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
-        {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
-        {!loading && !error && items.length === 0 && (
-          <div style={{ color: "var(--si-text-muted)" }}>
-            {filters.q || filters.sourceId || filters.cveId || filters.from || filters.to
-              ? "Geen items gevonden voor deze filters."
-              : "Nog geen items. Voeg een bron toe en draai de ingestion-pipeline."}
-          </div>
-        )}
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 1000 }}>
-          {items.map((item) => (
-            <FeedCard key={item.id} item={item} onOpenDetail={setSelectedItemId} onOpenCve={setSelectedCveId} />
-          ))}
-        </div>
-      </div>
+      <>
+        <div className="mobile-only">{mobileLayout}</div>
+        <div className="desktop-only">{desktopLayout}</div>
+      </>
       <ItemDetailPanel itemId={selectedItemId} onClose={() => setSelectedItemId(null)} onOpenCve={setSelectedCveId} />
       <CveDetailPanel
         cveId={selectedCveId}
         onClose={() => setSelectedCveId(null)}
         onOpenItem={(id) => {
-          // CveDetailPanel renders after (on top of) ItemDetailPanel, so
-          // without closing it here, opening an item from a CVE's reference
-          // list would update the right state invisibly behind the still-
-          // open CVE panel.
           setSelectedCveId(null);
           setSelectedItemId(id);
         }}

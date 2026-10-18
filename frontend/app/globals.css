@@ -140,3 +140,162 @@ textarea {
   color: var(--si-text);
   border-color: var(--si-border);
 }
+
+/* Base styles for mobile-first approach */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: flex;
+}
+
+.mobile-menu-toggle {
+  display: none;
+}
+
+.desktop-nav {
+  display: flex;
+}
+
+.desktop-sidebar {
+  display: flex;
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  /* Ensure touch targets are large enough */
+  button,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent zooming on input focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  
+  /* Show mobile menu toggle */
+  .mobile-menu-toggle {
+    display: block !important;
+  }
+  
+  /* Hide desktop navigation */
+  .desktop-nav {
+    display: none !important;
+  }
+  
+  /* Hide desktop sidebar */
+  .desktop-sidebar {
+    display: none !important;
+  }
+  
+  /* Show mobile-only elements */
+  .mobile-only {
+    display: block !important;
+  }
+  
+  /* Hide desktop-only elements */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Mobile header adjustments */
+  header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  /* Main content should account for fixed header */
+  main {
+    margin-top: 72px;
+  }
+  
+  /* Full-width main content on mobile */
+  .mobile-main {
+    width: 100%;
+  }
+}
+
+/* Tablet viewport */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Adjust for medium screens */
+  .desktop-sidebar {
+    width: 200px;
+  }
+  
+  .mobile-only {
+    display: none !important;
+  }
+  
+  .desktop-only {
+    display: block !important;
+  }
+  
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+  
+  .desktop-nav {
+    display: flex !important;
+  }
+}
+
+/* Desktop and larger */
+@media (min-width: 1025px) {
+  /* Desktop-specific styles can override mobile defaults */
+  .mobile-only {
+    display: none !important;
+  }
+  
+  .desktop-only {
+    display: block !important;
+  }
+  
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+  
+  .desktop-nav {
+    display: flex !important;
+  }
+}
+
+/* Additional responsive styles */
+@media (max-width: 768px) {
+  /* Make tables scrollable horizontally */
+  table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  /* Prevent horizontal overflow */
+  html, body {
+    overflow-x: hidden;
+  }
+  
+  /* Better spacing for mobile */
+  .mobile-only > * {
+    width: 100%;
+  }
+  
+  /* Responsive images */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}

@@ -49,6 +49,22 @@ function fieldStyle(active: boolean): React.CSSProperties {
   };
 }
 
+function presetButtonStyle(active: boolean): React.CSSProperties {
+  return {
+    height: 36,
+    padding: "0 16px",
+    borderRadius: 18,
+    border: active ? "none" : "1px solid var(--si-border)",
+    background: active ? "var(--si-navy)" : "var(--si-surface)",
+    color: active ? "#fff" : "var(--si-text-secondary)",
+    fontSize: 12.5,
+    fontWeight: 500,
+    cursor: "pointer",
+    flex: "1 1 auto",
+    minWidth: "100px",
+  };
+}
+
 export function OverviewFilters({
   value,
   onChange,
@@ -126,7 +142,128 @@ export function OverviewFilters({
     value.q || value.sourceId || value.cveId || value.from || value.to || value.minCvss || value.minEpss || value.kevOnly
   );
 
-  return (
+  // Mobile layout: stacked filters
+  const mobileLayout = (
+    <div
+      style={{
+        background: "var(--si-surface)",
+        border: "1px solid var(--si-border)",
+        borderRadius: 12,
+        padding: "12px 16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
+      {/* Period presets */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>Periode</span>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {PRESETS.map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => applyPreset(p.days)}
+              style={presetButtonStyle(activePreset === p.label)}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        
+        {/* Date range */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            type="date"
+            value={value.from}
+            onChange={(e) => onChange({ ...value, from: e.target.value })}
+            style={{ ...fieldStyle(Boolean(value.from)), flex: "1 1 120px" }}
+            aria-label="Van datum"
+          />
+          <span style={{ fontSize: 12, color: "var(--si-text-muted)" }}>t/m</span>
+          <input
+            type="date"
+            value={value.to}
+            onChange={(e) => onChange({ ...value, to: e.target.value })}
+            style={{ ...fieldStyle(Boolean(value.to)), flex: "1 1 120px" }}
+            aria-label="Tot datum"
+          />
+        </div>
+      </div>
+
+      {/* Search and filters */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ position: "relative" }}>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="var(--si-text-muted)"
+            strokeWidth="1.8"
+            style={{ position: "absolute", left: 10, top: 11 }}
+          >
+            <circle cx="9" cy="9" r="6" />
+            <path d="M17 17l-4-4" strokeLinecap="round" />
+          </svg>
+          <input
+            value={qDraft}
+            onChange={(e) => setQDraft(e.target.value)}
+            placeholder="Zoek op trefwoord..."
+            style={{ ...fieldStyle(Boolean(value.q)), width: "100%", paddingLeft: 30 }}
+          />
+        </div>
+
+        <select
+          value={value.sourceId ?? ""}
+          onChange={(e) => onChange({ ...value, sourceId: e.target.value || null })}
+          style={{ ...fieldStyle(Boolean(value.sourceId)), width: "100%" }}
+        >
+          <option value="">Alle bronnen</option>
+          {sources.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          value={cveDraft}
+          onChange={(e) => setCveDraft(e.target.value)}
+          placeholder="CVE-ID, bv. 2026-1234"
+          className="si-mono"
+          style={{ ...fieldStyle(Boolean(value.cveId)), width: "100%" }}
+        />
+      </div>
+
+      {hasActiveFilters && (
+        <button
+          type="button"
+          onClick={() => {
+            setQDraft("");
+            setCveDraft("");
+            setCvssDraft("");
+            setEpssDraft("");
+            onChange(EMPTY_FILTERS);
+          }}
+          style={{
+            alignSelf: "flex-start",
+            border: "none",
+            background: "none",
+            color: "var(--si-blue)",
+            fontSize: 12.5,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Wis filters
+        </button>
+      )}
+    </div>
+  );
+
+  // Desktop layout: single row with all filters
+  const desktopLayout = (
     <div
       style={{
         background: "var(--si-surface)",
@@ -246,5 +383,12 @@ export function OverviewFilters({
         />
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <div className="mobile-only">{mobileLayout}</div>
+      <div className="desktop-only">{desktopLayout}</div>
+    </>
   );
 }

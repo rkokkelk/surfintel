@@ -123,6 +123,16 @@ function fieldStyle(): React.CSSProperties {
   };
 }
 
+function mobileFieldStyle(): React.CSSProperties {
+  return {
+    height: 40,
+    border: "1px solid var(--si-border)",
+    borderRadius: 7,
+    padding: "0 12px",
+    fontSize: 14,
+  };
+}
+
 export default function AlertsPage() {
   const router = useRouter();
   const [rules, setRules] = useState<AlertRule[]>([]);
@@ -291,446 +301,923 @@ export default function AlertsPage() {
     }
   }
 
-  return (
-    <Shell active="alerts">
-      <div style={{ padding: "22px 24px", display: "flex", gap: 20 }}>
-        <div style={{ flex: 1.05, minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
-              Bestaande alert-regels
-            </div>
-            <button
-              type="button"
-              onClick={startNewRule}
-              style={{
-                marginLeft: "auto",
-                border: "1px solid var(--si-border)",
-                background: selectedRuleId === null ? "var(--si-navy)" : "var(--si-surface)",
-                color: selectedRuleId === null ? "#fff" : "var(--si-text)",
-                borderRadius: 7,
-                fontSize: 12,
-                fontWeight: 600,
-                padding: "5px 10px",
-                cursor: "pointer",
-              }}
-            >
-              + Nieuwe regel
-            </button>
-          </div>
-
-          {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
-          {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
-          {!loading && rules.length === 0 && (
-            <div style={{ color: "var(--si-text-muted)" }}>Nog geen alert-regels voor deze instelling.</div>
-          )}
-
-          {rules.map((rule) => (
-            <button
-              key={rule.id}
-              type="button"
-              onClick={() => startEditRule(rule)}
-              style={{
-                textAlign: "left",
-                cursor: "pointer",
-                background: "var(--si-surface)",
-                border: `1px solid ${selectedRuleId === rule.id ? "var(--si-blue)" : "var(--si-border)"}`,
-                borderRadius: 10,
-                padding: "14px 16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 9,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--si-text)" }}>{rule.name}</span>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: rule.status === "active" ? "var(--si-green)" : "var(--si-text-muted)",
-                    background: rule.status === "active" ? "var(--si-green-bg)" : "var(--si-neutral-bg)",
-                    borderRadius: 9,
-                    padding: "2px 9px",
-                  }}
-                >
-                  {rule.status === "active" ? "Actief" : "Gepauzeerd"}
-                </span>
-              </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {rule.conditions.map((c) => (
-                  <span
-                    key={c.id}
-                    className="si-mono"
-                    style={{ fontSize: 11.5, color: "var(--si-text-secondary)", background: "var(--si-bg)", borderRadius: 6, padding: "2px 8px" }}
-                  >
-                    {c.field === "kev"
-                      ? "moet in KEV staan"
-                      : c.field === "cvss_score"
-                        ? `CVSS ≥ ${c.values[0]}`
-                        : c.field === "epss_score"
-                          ? `EPSS ≥ ${(Number(c.values[0]) * 100).toFixed(0)}%`
-                          : `${c.field}: ${c.values.join(", ")}`}
-                  </span>
-                ))}
-              </div>
-              <div style={{ fontSize: 11.5, color: "var(--si-text-muted)" }}>
-                {rule.channels.map((ch) => ch.apprise_url_masked).join(", ") || "Geen notificatiekanalen"}
-              </div>
-            </button>
-          ))}
+  // Mobile layout for rules list
+  const mobileRulesLayout = (
+    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" }}>
+        <div className="si-display" style={{ fontSize: 16, fontWeight: 600 }}>
+          Bestaande alert-regels
         </div>
-
-        <form
-          onSubmit={handleSubmit}
+        <button
+          type="button"
+          onClick={startNewRule}
           style={{
-            flex: 1,
-            minWidth: 0,
-            background: "var(--si-surface)",
             border: "1px solid var(--si-border)",
-            borderRadius: 12,
-            padding: "20px 22px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
-            alignSelf: "flex-start",
+            background: selectedRuleId === null ? "var(--si-navy)" : "var(--si-surface)",
+            color: selectedRuleId === null ? "#fff" : "var(--si-text)",
+            borderRadius: 7,
+            fontSize: 13,
+            fontWeight: 600,
+            padding: "6px 12px",
+            cursor: "pointer",
+            minHeight: "40px",
           }}
         >
-          <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
-            {selectedRuleId ? "Alert-regel bewerken" : "Nieuwe alert-regel"}
-          </div>
+          + Nieuwe regel
+        </button>
+      </div>
 
-          <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-            Naam
-            <input
-              required
-              value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="bv. Kritieke kwetsbaarheden in VPN-appliances"
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+      {!loading && rules.length === 0 && (
+        <div style={{ color: "var(--si-text-muted)" }}>Nog geen alert-regels voor deze instelling.</div>
+      )}
+
+      {rules.map((rule) => (
+        <button
+          key={rule.id}
+          type="button"
+          onClick={() => startEditRule(rule)}
+          style={{
+            textAlign: "left",
+            cursor: "pointer",
+            background: "var(--si-surface)",
+            border: `1px solid ${selectedRuleId === rule.id ? "var(--si-blue)" : "var(--si-border)"}`,
+            borderRadius: 10,
+            padding: "14px 16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 9,
+            minHeight: "100px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--si-text)" }}>{rule.name}</span>
+            <span
               style={{
-                display: "block",
-                width: "100%",
-                height: 36,
-                marginTop: 6,
-                border: "1px solid var(--si-border)",
-                borderRadius: 8,
-                padding: "0 12px",
-                fontSize: 13.5,
+                marginLeft: "auto",
+                fontSize: 12,
+                fontWeight: 600,
+                color: rule.status === "active" ? "var(--si-green)" : "var(--si-text-muted)",
+                background: rule.status === "active" ? "var(--si-green-bg)" : "var(--si-neutral-bg)",
+                borderRadius: 9,
+                padding: "2px 9px",
               }}
-            />
-          </label>
-
-          {selectedRuleId && (
-            <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-              Status
-              <select
-                value={form.status}
-                onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value as "active" | "paused" }))}
-                style={{ display: "block", marginTop: 6, ...fieldStyle(), height: 34, width: 180 }}
+            >
+              {rule.status === "active" ? "Actief" : "Gepauzeerd"}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {rule.conditions.map((c) => (
+              <span
+                key={c.id}
+                className="si-mono"
+                style={{ fontSize: 12, color: "var(--si-text-secondary)", background: "var(--si-bg)", borderRadius: 6, padding: "2px 8px" }}
               >
-                <option value="active">Actief</option>
-                <option value="paused">Gepauzeerd</option>
-              </select>
-            </label>
-          )}
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-              Voorwaarden (AND; komma-gescheiden waarden = OR)
-            </div>
-            {form.conditions.map((condition, index) => (
-              <div key={index} style={{ display: "flex", gap: 6 }}>
-                <select
-                  value={condition.field}
-                  onChange={(e) => updateCondition(index, { field: e.target.value as AlertField, values: "" })}
-                  style={fieldStyle()}
-                >
-                  {FIELD_OPTIONS.map((f) => (
-                    <option key={f.value} value={f.value}>
-                      {f.label}
-                    </option>
-                  ))}
-                </select>
-                {condition.field === "kev" ? (
-                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--si-text)", flexGrow: 1 }}>
-                    <input
-                      type="checkbox"
-                      checked={condition.values === "true"}
-                      onChange={(e) => updateCondition(index, { values: e.target.checked ? "true" : "" })}
-                    />
-                    Moet in KEV staan
-                  </label>
-                ) : condition.field === "cvss_score" ? (
-                  <input
-                    type="number"
-                    min={0}
-                    max={10}
-                    step={0.1}
-                    value={condition.values}
-                    onChange={(e) => updateCondition(index, { values: e.target.value })}
-                    placeholder="bv. 7"
-                    className="si-mono"
-                    style={{ ...fieldStyle(), width: 100 }}
-                  />
-                ) : condition.field === "epss_score" ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={condition.values}
-                      onChange={(e) => updateCondition(index, { values: e.target.value })}
-                      placeholder="bv. 10"
-                      className="si-mono"
-                      style={{ ...fieldStyle(), width: 100 }}
-                    />
-                    <span style={{ fontSize: 12.5, color: "var(--si-text-muted)" }}>%</span>
-                  </div>
-                ) : (
-                  <input
-                    value={condition.values}
-                    onChange={(e) => updateCondition(index, { values: e.target.value })}
-                    placeholder="bv. Ivanti, Fortinet"
-                    style={{ ...fieldStyle(), flexGrow: 1 }}
-                  />
-                )}
-                {form.conditions.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeCondition(index)}
-                    title="Voorwaarde verwijderen"
-                    style={{ border: "none", background: "none", color: "var(--si-text-muted)", fontSize: 15, cursor: "pointer" }}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
+                {c.field === "kev"
+                  ? "moet in KEV staan"
+                  : c.field === "cvss_score"
+                    ? `CVSS ≥ ${c.values[0]}`
+                    : c.field === "epss_score"
+                      ? `EPSS ≥ ${(Number(c.values[0]) * 100).toFixed(0)}%`
+                      : `${c.field}: ${c.values.join(", ")}`}
+              </span>
             ))}
-            <button
-              type="button"
-              onClick={() => setForm((prev) => ({ ...prev, conditions: [...prev.conditions, { field: "severity", values: "" }] }))}
-              style={{ alignSelf: "flex-start", border: "none", background: "none", color: "var(--si-blue)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}
-            >
-              + Voorwaarde toevoegen
-            </button>
           </div>
+          <div style={{ fontSize: 12, color: "var(--si-text-muted)" }}>
+            {rule.channels.map((ch) => ch.apprise_url_masked).join(", ") || "Geen notificatiekanalen"}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-              Notificatiekanalen (Apprise-URL)
+  // Desktop layout for rules list
+  const desktopRulesLayout = (
+    <div style={{ padding: "22px 24px", display: "flex", gap: 20 }}>
+      <div style={{ flex: 1.05, minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
+            Bestaande alert-regels
+          </div>
+          <button
+            type="button"
+            onClick={startNewRule}
+            style={{
+              marginLeft: "auto",
+              border: "1px solid var(--si-border)",
+              background: selectedRuleId === null ? "var(--si-navy)" : "var(--si-surface)",
+              color: selectedRuleId === null ? "#fff" : "var(--si-text)",
+              borderRadius: 7,
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "5px 10px",
+              cursor: "pointer",
+            }}
+          >
+            + Nieuwe regel
+          </button>
+        </div>
+
+        {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+        {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+        {!loading && rules.length === 0 && (
+          <div style={{ color: "var(--si-text-muted)" }}>Nog geen alert-regels voor deze instelling.</div>
+        )}
+
+        {rules.map((rule) => (
+          <button
+            key={rule.id}
+            type="button"
+            onClick={() => startEditRule(rule)}
+            style={{
+              textAlign: "left",
+              cursor: "pointer",
+              background: "var(--si-surface)",
+              border: `1px solid ${selectedRuleId === rule.id ? "var(--si-blue)" : "var(--si-border)"}`,
+              borderRadius: 10,
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 9,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--si-text)" }}>{rule.name}</span>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: rule.status === "active" ? "var(--si-green)" : "var(--si-text-muted)",
+                  background: rule.status === "active" ? "var(--si-green-bg)" : "var(--si-neutral-bg)",
+                  borderRadius: 9,
+                  padding: "2px 9px",
+                }}
+              >
+                {rule.status === "active" ? "Actief" : "Gepauzeerd"}
+              </span>
             </div>
-            {form.channels.map((channel, index) => (
-              <div key={index} style={{ display: "flex", flexDirection: "column", gap: 4, border: "1px solid var(--si-border)", borderRadius: 8, padding: 8 }}>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <input
-                    value={channel.label}
-                    onChange={(e) => updateChannel(index, { label: e.target.value })}
-                    placeholder="Label, bv. SOC-team Slack"
-                    style={{ ...fieldStyle(), flexGrow: 1 }}
-                  />
-                  <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, color: "var(--si-text-muted)" }}>
-                    <input type="checkbox" checked={channel.enabled} onChange={(e) => updateChannel(index, { enabled: e.target.checked })} />
-                    Aan
-                  </label>
-                  {form.channels.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeChannel(index)}
-                      title="Kanaal verwijderen"
-                      style={{ border: "none", background: "none", color: "var(--si-text-muted)", fontSize: 15, cursor: "pointer" }}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {rule.conditions.map((c) => (
+                <span
+                  key={c.id}
+                  className="si-mono"
+                  style={{ fontSize: 11.5, color: "var(--si-text-secondary)", background: "var(--si-bg)", borderRadius: 6, padding: "2px 8px" }}
+                >
+                  {c.field === "kev"
+                    ? "moet in KEV staan"
+                    : c.field === "cvss_score"
+                      ? `CVSS ≥ ${c.values[0]}`
+                      : c.field === "epss_score"
+                        ? `EPSS ≥ ${(Number(c.values[0]) * 100).toFixed(0)}%`
+                        : `${c.field}: ${c.values.join(", ")}`}
+                </span>
+              ))}
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--si-text-muted)" }}>
+              {rule.channels.map((ch) => ch.apprise_url_masked).join(", ") || "Geen notificatiekanalen"}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Mobile form layout
+  const mobileFormLayout = (
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        padding: "16px 18px",
+        background: "var(--si-surface)",
+        border: "1px solid var(--si-border)",
+        borderRadius: 12,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        margin: "16px 18px",
+      }}
+    >
+      <div className="si-display" style={{ fontSize: 16, fontWeight: 600 }}>
+        {selectedRuleId ? "Alert-regel bewerken" : "Nieuwe alert-regel"}
+      </div>
+
+      <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+        Naam
+        <input
+          required
+          value={form.name}
+          onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+          placeholder="bv. Kritieke kwetsbaarheden in VPN-appliances"
+          style={{
+            display: "block",
+            width: "100%",
+            height: 40,
+            marginTop: 6,
+            border: "1px solid var(--si-border)",
+            borderRadius: 8,
+            padding: "0 12px",
+            fontSize: 14,
+          }}
+        />
+      </label>
+
+      {selectedRuleId && (
+        <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Status
+          <select
+            value={form.status}
+            onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value as "active" | "paused" }))}
+            style={{ display: "block", marginTop: 6, ...mobileFieldStyle(), height: 40, width: "100%" }}
+          >
+            <option value="active">Actief</option>
+            <option value="paused">Gepauzeerd</option>
+          </select>
+        </label>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Voorwaarden (AND; komma-gescheiden waarden = OR)
+        </div>
+        {form.conditions.map((condition, index) => (
+          <div key={index} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <select
+              value={condition.field}
+              onChange={(e) => updateCondition(index, { field: e.target.value as AlertField, values: "" })}
+              style={{ ...mobileFieldStyle(), width: "100%" }}
+            >
+              {FIELD_OPTIONS.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+            {condition.field === "kev" ? (
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--si-text)", flexGrow: 1 }}>
                 <input
-                  value={channel.apprise_url}
-                  onChange={(e) => updateChannel(index, { apprise_url: e.target.value })}
-                  placeholder={
-                    channel.apprise_url_masked
-                      ? `Laat leeg om te behouden (${channel.apprise_url_masked})`
-                      : "bv. slack://TokenA/TokenB/TokenC/kanaal"
-                  }
-                  style={fieldStyle()}
+                  type="checkbox"
+                  checked={condition.values === "true"}
+                  onChange={(e) => updateCondition(index, { values: e.target.checked ? "true" : "" })}
                 />
+                Moet in KEV staan
+              </label>
+            ) : condition.field === "cvss_score" ? (
+              <input
+                type="number"
+                min={0}
+                max={10}
+                step={0.1}
+                value={condition.values}
+                onChange={(e) => updateCondition(index, { values: e.target.value })}
+                placeholder="bv. 7"
+                className="si-mono"
+                style={{ ...mobileFieldStyle(), width: "100%" }}
+              />
+            ) : condition.field === "epss_score" ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={condition.values}
+                  onChange={(e) => updateCondition(index, { values: e.target.value })}
+                  placeholder="bv. 10"
+                  className="si-mono"
+                  style={{ ...mobileFieldStyle(), flex: "1" }}
+                />
+                <span style={{ fontSize: 13, color: "var(--si-text-muted)" }}>%</span>
               </div>
+            ) : (
+              <input
+                value={condition.values}
+                onChange={(e) => updateCondition(index, { values: e.target.value })}
+                placeholder="bv. Ivanti, Fortinet"
+                style={{ ...mobileFieldStyle(), width: "100%" }}
+              />
+            )}
+            {form.conditions.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeCondition(index)}
+                title="Voorwaarde verwijderen"
+                style={{ border: "none", background: "none", color: "var(--si-text-muted)", fontSize: 18, cursor: "pointer", alignSelf: "flex-end", padding: "4px" }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => setForm((prev) => ({ ...prev, conditions: [...prev.conditions, { field: "severity", values: "" }] }))}
+          style={{ alignSelf: "flex-start", border: "none", background: "none", color: "var(--si-blue)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+        >
+          + Voorwaarde toevoegen
+        </button>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Notificatiekanalen (Apprise-URL)
+        </div>
+        {form.channels.map((channel, index) => (
+          <div key={index} style={{ display: "flex", flexDirection: "column", gap: 8, border: "1px solid var(--si-border)", borderRadius: 8, padding: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <input
+                value={channel.label}
+                onChange={(e) => updateChannel(index, { label: e.target.value })}
+                placeholder="Label, bv. SOC-team Slack"
+                style={{ ...mobileFieldStyle(), width: "100%" }}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--si-text-muted)" }}>
+                <input type="checkbox" checked={channel.enabled} onChange={(e) => updateChannel(index, { enabled: e.target.checked })} />
+                Aanzetten
+              </label>
+            </div>
+            <input
+              value={channel.apprise_url}
+              onChange={(e) => updateChannel(index, { apprise_url: e.target.value })}
+              placeholder={
+                channel.apprise_url_masked
+                  ? `Laat leeg om te behouden (${channel.apprise_url_masked})`
+                  : "bv. slack://TokenA/TokenB/TokenC/kanaal"
+              }
+              style={{ ...mobileFieldStyle(), width: "100%" }}
+            />
+            {form.channels.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeChannel(index)}
+                title="Kanaal verwijderen"
+                style={{ border: "none", background: "none", color: "var(--si-text-muted)", fontSize: 18, cursor: "pointer", alignSelf: "flex-end", padding: "4px" }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() =>
+            setForm((prev) => ({
+              ...prev,
+              channels: [...prev.channels, { id: null, label: "", apprise_url: "", apprise_url_masked: null, enabled: true }],
+            }))
+          }
+          style={{ alignSelf: "flex-start", border: "none", background: "none", color: "var(--si-blue)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+        >
+          + Kanaal toevoegen
+        </button>
+      </div>
+
+      <details style={{ border: "1px solid var(--si-border)", borderRadius: 8, padding: "12px" }}>
+        <summary style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)", cursor: "pointer" }}>
+          Advanced: berichtsjabloon
+        </summary>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+          <div style={{ fontSize: 12, color: "var(--si-text-muted)" }}>
+            Pas de tekst van de notificatie aan. Leeg = standaardbericht (titel + link).
+          </div>
+          <textarea
+            value={form.messageTemplate}
+            onChange={(e) => setForm((prev) => ({ ...prev, messageTemplate: e.target.value }))}
+            placeholder={"{title}\n{url}"}
+            rows={4}
+            style={{ border: "1px solid var(--si-border)", borderRadius: 7, padding: "8px 10px", fontSize: 13, fontFamily: "var(--si-mono, monospace)", resize: "vertical", width: "100%" }}
+          />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            {TEMPLATE_PLACEHOLDERS.map((p) => (
+              <span
+                key={p.token}
+                className="si-mono"
+                title={p.desc}
+                style={{ fontSize: 11, color: "var(--si-text-secondary)", background: "var(--si-bg)", borderRadius: 5, padding: "2px 6px" }}
+              >
+                {p.token}
+              </span>
             ))}
+          </div>
+        </div>
+      </details>
+
+      {formError && <div style={{ fontSize: 13, color: "var(--si-red)" }}>{formError}</div>}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
+        {selectedRuleId && (
+          <>
             <button
               type="button"
-              onClick={() =>
-                setForm((prev) => ({
-                  ...prev,
-                  channels: [...prev.channels, { id: null, label: "", apprise_url: "", apprise_url_masked: null, enabled: true }],
-                }))
-              }
-              style={{ alignSelf: "flex-start", border: "none", background: "none", color: "var(--si-blue)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}
-            >
-              + Kanaal toevoegen
-            </button>
-          </div>
-
-          <details style={{ border: "1px solid var(--si-border)", borderRadius: 8, padding: "8px 10px" }}>
-            <summary style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)", cursor: "pointer" }}>
-              Advanced: berichtsjabloon
-            </summary>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
-              <div style={{ fontSize: 11.5, color: "var(--si-text-muted)" }}>
-                Pas de tekst van de notificatie aan. Leeg = standaardbericht (titel + link).
-              </div>
-              <textarea
-                value={form.messageTemplate}
-                onChange={(e) => setForm((prev) => ({ ...prev, messageTemplate: e.target.value }))}
-                placeholder={"{title}\n{url}"}
-                rows={4}
-                style={{ border: "1px solid var(--si-border)", borderRadius: 7, padding: "8px 10px", fontSize: 12.5, fontFamily: "var(--si-mono, monospace)", resize: "vertical" }}
-              />
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {TEMPLATE_PLACEHOLDERS.map((p) => (
-                  <span
-                    key={p.token}
-                    className="si-mono"
-                    title={p.desc}
-                    style={{ fontSize: 10.5, color: "var(--si-text-secondary)", background: "var(--si-bg)", borderRadius: 5, padding: "2px 6px" }}
-                  >
-                    {p.token}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </details>
-
-          {formError && <div style={{ fontSize: 12, color: "var(--si-red)" }}>{formError}</div>}
-
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-            {selectedRuleId && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleRss}
-                  disabled={testing}
-                  style={{
-                    height: 36,
-                    padding: "0 16px",
-                    border: "1px solid var(--si-yellow)",
-                    borderRadius: 8,
-                    background: "var(--si-yellow-bg)",
-                    color: "var(--si-text)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  {testing ? "RSS..." : <><FaRss /> RSS</>}
-                </button>
-                <a
-                  href={`/alerts/${selectedRuleId}/dashboard`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    height: 36,
-                    padding: "0 16px",
-                    border: "1px solid var(--si-blue)",
-                    borderRadius: 8,
-                    background: "var(--si-blue-bg)",
-                    color: "var(--si-text)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    textDecoration: "none",
-                    marginRight: "auto",
-                  }}
-                >
-                  <FaTv /> TV-dashboard
-                </a>
-                <button
-                  type="button"
-                  onClick={handleTest}
-                  disabled={testing}
-                  style={{
-                    height: 36,
-                    padding: "0 16px",
-                    border: "1px solid var(--si-border)",
-                    borderRadius: 8,
-                    background: "var(--si-surface)",
-                    color: "var(--si-text)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  {testing ? "Testen..." : "Testen"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  style={{
-                    height: 36,
-                    padding: "0 16px",
-                    border: "1px solid var(--si-red)",
-                    borderRadius: 8,
-                    background: "var(--si-surface)",
-                    color: "var(--si-red)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  {deleting ? "Verwijderen..." : <><FaRegTrashCan /> Verwijderen</>}
-                </button>
-              </>
-            )}
-            <button
-              type="submit"
-              disabled={saving}
+              onClick={handleRss}
+              disabled={testing}
               style={{
-                height: 36,
-                padding: "0 18px",
-                border: "none",
+                height: 40,
+                padding: "0 16px",
+                border: "1px solid var(--si-yellow)",
                 borderRadius: 8,
-                background: "var(--si-navy)",
-                color: "#fff",
+                background: "var(--si-yellow-bg)",
+                color: "var(--si-text)",
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: "pointer",
               }}
             >
-              {saving ? "Opslaan..." : selectedRuleId ? "Wijzigingen opslaan" : "Alert-regel opslaan"}
+              {testing ? "RSS..." : <><FaRss /> RSS</>}
             </button>
-          </div>
+            <a
+              href={`/alerts/${selectedRuleId}/dashboard`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                height: 40,
+                padding: "0 16px",
+                border: "1px solid var(--si-blue)",
+                borderRadius: 8,
+                background: "var(--si-blue-bg)",
+                color: "var(--si-text)",
+                fontSize: 13,
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+              }}
+            >
+              <FaTv /> TV-dashboard
+            </a>
+            <button
+              type="button"
+              onClick={handleTest}
+              disabled={testing}
+              style={{
+                height: 40,
+                padding: "0 16px",
+                border: "1px solid var(--si-border)",
+                borderRadius: 8,
+                background: "var(--si-surface)",
+                color: "var(--si-text)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                flex: "1 1 100px",
+              }}
+            >
+              {testing ? "Testen..." : "Testen"}
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              style={{
+                height: 40,
+                padding: "0 16px",
+                border: "1px solid var(--si-red)",
+                borderRadius: 8,
+                background: "var(--si-surface)",
+                color: "var(--si-red)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {deleting ? "Verwijderen..." : <><FaRegTrashCan /> Verwijderen</>}
+            </button>
+          </>
+        )}
+        <button
+          type="submit"
+          disabled={saving}
+          style={{
+            height: 40,
+            padding: "0 18px",
+            border: "none",
+            borderRadius: 8,
+            background: "var(--si-navy)",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            minWidth: "140px",
+          }}
+        >
+          {saving ? "Opslaan..." : selectedRuleId ? "Wijzigingen opslaan" : "Alert-regel opslaan"}
+        </button>
+      </div>
 
-          {(testError || testResults) && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, borderTop: "1px solid var(--si-border)", paddingTop: 14 }}>
-              <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-                Meest recente hits {testResults ? `(${testResults.length})` : ""}
-              </div>
-              {testError && <div style={{ fontSize: 12, color: "var(--si-red)" }}>{testError}</div>}
-              {testResults && testResults.length === 0 && (
-                <div style={{ fontSize: 12.5, color: "var(--si-text-muted)" }}>
-                  Geen recente items komen overeen met deze voorwaarden.
-                </div>
-              )}
-              {testResults?.map((match) => (
-                <div
-                  key={match.item_id}
-                  style={{ border: "1px solid var(--si-border)", borderRadius: 8, padding: "9px 11px", display: "flex", flexDirection: "column", gap: 5 }}
-                >
-                  <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--si-text)", flexGrow: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {match.title ?? match.url}
-                    </span>
-                    <span style={{ fontSize: 11, color: "var(--si-text-muted)", flexShrink: 0 }}>{match.source_name}</span>
-                  </div>
-                  <div style={{ fontSize: 11.5, color: "var(--si-text-muted)", whiteSpace: "pre-wrap" }}>{match.message_preview}</div>
-                </div>
-              ))}
+      {(testError || testResults) && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, borderTop: "1px solid var(--si-border)", paddingTop: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+            Meest recente hits {testResults ? `(${testResults.length})` : ""}
+          </div>
+          {testError && <div style={{ fontSize: 13, color: "var(--si-red)" }}>{testError}</div>}
+          {testResults && testResults.length === 0 && (
+            <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>
+              Geen recente items komen overeen met deze voorwaarden.
             </div>
           )}
-        </form>
+          {testResults?.map((match) => (
+            <div
+              key={match.item_id}
+              style={{ border: "1px solid var(--si-border)", borderRadius: 8, padding: "12px", display: "flex", flexDirection: "column", gap: 8 }}
+            >
+              <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--si-text)", flexGrow: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {match.title ?? match.url}
+                </span>
+                <span style={{ fontSize: 12, color: "var(--si-text-muted)", flexShrink: 0 }}>{match.source_name}</span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--si-text-muted)", whiteSpace: "pre-wrap" }}>{match.message_preview}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </form>
+  );
+
+  // Desktop form layout
+  const desktopFormLayout = (
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        flex: 1,
+        minWidth: 0,
+        background: "var(--si-surface)",
+        border: "1px solid var(--si-border)",
+        borderRadius: 12,
+        padding: "20px 22px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        alignSelf: "flex-start",
+      }}
+    >
+      <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
+        {selectedRuleId ? "Alert-regel bewerken" : "Nieuwe alert-regel"}
       </div>
+
+      <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+        Naam
+        <input
+          required
+          value={form.name}
+          onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+          placeholder="bv. Kritieke kwetsbaarheden in VPN-appliances"
+          style={{
+            display: "block",
+            width: "100%",
+            height: 36,
+            marginTop: 6,
+            border: "1px solid var(--si-border)",
+            borderRadius: 8,
+            padding: "0 12px",
+            fontSize: 13.5,
+          }}
+        />
+      </label>
+
+      {selectedRuleId && (
+        <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Status
+          <select
+            value={form.status}
+            onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value as "active" | "paused" }))}
+            style={{ display: "block", marginTop: 6, ...fieldStyle(), height: 34, width: 180 }}
+          >
+            <option value="active">Actief</option>
+            <option value="paused">Gepauzeerd</option>
+          </select>
+        </label>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Voorwaarden (AND; komma-gescheiden waarden = OR)
+        </div>
+        {form.conditions.map((condition, index) => (
+          <div key={index} style={{ display: "flex", gap: 6 }}>
+            <select
+              value={condition.field}
+              onChange={(e) => updateCondition(index, { field: e.target.value as AlertField, values: "" })}
+              style={fieldStyle()}
+            >
+              {FIELD_OPTIONS.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+            {condition.field === "kev" ? (
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--si-text)", flexGrow: 1 }}>
+                <input
+                  type="checkbox"
+                  checked={condition.values === "true"}
+                  onChange={(e) => updateCondition(index, { values: e.target.checked ? "true" : "" })}
+                />
+                Moet in KEV staan
+              </label>
+            ) : condition.field === "cvss_score" ? (
+              <input
+                type="number"
+                min={0}
+                max={10}
+                step={0.1}
+                value={condition.values}
+                onChange={(e) => updateCondition(index, { values: e.target.value })}
+                placeholder="bv. 7"
+                className="si-mono"
+                style={{ ...fieldStyle(), width: 100 }}
+              />
+            ) : condition.field === "epss_score" ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={condition.values}
+                  onChange={(e) => updateCondition(index, { values: e.target.value })}
+                  placeholder="bv. 10"
+                  className="si-mono"
+                  style={{ ...fieldStyle(), width: 100 }}
+                />
+                <span style={{ fontSize: 12.5, color: "var(--si-text-muted)" }}>%</span>
+              </div>
+            ) : (
+              <input
+                value={condition.values}
+                onChange={(e) => updateCondition(index, { values: e.target.value })}
+                placeholder="bv. Ivanti, Fortinet"
+                style={{ ...fieldStyle(), flexGrow: 1 }}
+              />
+            )}
+            {form.conditions.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeCondition(index)}
+                title="Voorwaarde verwijderen"
+                style={{ border: "none", background: "none", color: "var(--si-text-muted)", fontSize: 15, cursor: "pointer" }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => setForm((prev) => ({ ...prev, conditions: [...prev.conditions, { field: "severity", values: "" }] }))}
+          style={{ alignSelf: "flex-start", border: "none", background: "none", color: "var(--si-blue)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}
+        >
+          + Voorwaarde toevoegen
+        </button>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Notificatiekanalen (Apprise-URL)
+        </div>
+        {form.channels.map((channel, index) => (
+          <div key={index} style={{ display: "flex", flexDirection: "column", gap: 4, border: "1px solid var(--si-border)", borderRadius: 8, padding: 8 }}>
+            <div style={{ display: "flex", gap: 6 }}>
+              <input
+                value={channel.label}
+                onChange={(e) => updateChannel(index, { label: e.target.value })}
+                placeholder="Label, bv. SOC-team Slack"
+                style={{ ...fieldStyle(), flexGrow: 1 }}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, color: "var(--si-text-muted)" }}>
+                <input type="checkbox" checked={channel.enabled} onChange={(e) => updateChannel(index, { enabled: e.target.checked })} />
+                Aan
+              </label>
+              {form.channels.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeChannel(index)}
+                  title="Kanaal verwijderen"
+                  style={{ border: "none", background: "none", color: "var(--si-text-muted)", fontSize: 15, cursor: "pointer" }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            <input
+              value={channel.apprise_url}
+              onChange={(e) => updateChannel(index, { apprise_url: e.target.value })}
+              placeholder={
+                channel.apprise_url_masked
+                  ? `Laat leeg om te behouden (${channel.apprise_url_masked})`
+                  : "bv. slack://TokenA/TokenB/TokenC/kanaal"
+              }
+              style={fieldStyle()}
+            />
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() =>
+            setForm((prev) => ({
+              ...prev,
+              channels: [...prev.channels, { id: null, label: "", apprise_url: "", apprise_url_masked: null, enabled: true }],
+            }))
+          }
+          style={{ alignSelf: "flex-start", border: "none", background: "none", color: "var(--si-blue)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}
+        >
+          + Kanaal toevoegen
+        </button>
+      </div>
+
+      <details style={{ border: "1px solid var(--si-border)", borderRadius: 8, padding: "8px 10px" }}>
+        <summary style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)", cursor: "pointer" }}>
+          Advanced: berichtsjabloon
+        </summary>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+          <div style={{ fontSize: 11.5, color: "var(--si-text-muted)" }}>
+            Pas de tekst van de notificatie aan. Leeg = standaardbericht (titel + link).
+          </div>
+          <textarea
+            value={form.messageTemplate}
+            onChange={(e) => setForm((prev) => ({ ...prev, messageTemplate: e.target.value }))}
+            placeholder={"{title}\n{url}"}
+            rows={4}
+            style={{ border: "1px solid var(--si-border)", borderRadius: 7, padding: "8px 10px", fontSize: 12.5, fontFamily: "var(--si-mono, monospace)", resize: "vertical" }}
+          />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            {TEMPLATE_PLACEHOLDERS.map((p) => (
+              <span
+                key={p.token}
+                className="si-mono"
+                title={p.desc}
+                style={{ fontSize: 10.5, color: "var(--si-text-secondary)", background: "var(--si-bg)", borderRadius: 5, padding: "2px 6px" }}
+              >
+                {p.token}
+              </span>
+            ))}
+          </div>
+        </div>
+      </details>
+
+      {formError && <div style={{ fontSize: 12, color: "var(--si-red)" }}>{formError}</div>}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+        {selectedRuleId && (
+          <>
+            <button
+              type="button"
+              onClick={handleRss}
+              disabled={testing}
+              style={{
+                height: 36,
+                padding: "0 16px",
+                border: "1px solid var(--si-yellow)",
+                borderRadius: 8,
+                background: "var(--si-yellow-bg)",
+                color: "var(--si-text)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {testing ? "RSS..." : <><FaRss /> RSS</>}
+            </button>
+            <a
+              href={`/alerts/${selectedRuleId}/dashboard`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                height: 36,
+                padding: "0 16px",
+                border: "1px solid var(--si-blue)",
+                borderRadius: 8,
+                background: "var(--si-blue-bg)",
+                color: "var(--si-text)",
+                fontSize: 13,
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+                marginRight: "auto",
+              }}
+            >
+              <FaTv /> TV-dashboard
+            </a>
+            <button
+              type="button"
+              onClick={handleTest}
+              disabled={testing}
+              style={{
+                height: 36,
+                padding: "0 16px",
+                border: "1px solid var(--si-border)",
+                borderRadius: 8,
+                background: "var(--si-surface)",
+                color: "var(--si-text)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {testing ? "Testen..." : "Testen"}
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              style={{
+                height: 36,
+                padding: "0 16px",
+                border: "1px solid var(--si-red)",
+                borderRadius: 8,
+                background: "var(--si-surface)",
+                color: "var(--si-red)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {deleting ? "Verwijderen..." : <><FaRegTrashCan /> Verwijderen</>}
+            </button>
+          </>
+        )}
+        <button
+          type="submit"
+          disabled={saving}
+          style={{
+            height: 36,
+            padding: "0 18px",
+            border: "none",
+            borderRadius: 8,
+            background: "var(--si-navy)",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          {saving ? "Opslaan..." : selectedRuleId ? "Wijzigingen opslaan" : "Alert-regel opslaan"}
+        </button>
+      </div>
+
+      {(testError || testResults) && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, borderTop: "1px solid var(--si-border)", paddingTop: 14 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+            Meest recente hits {testResults ? `(${testResults.length})` : ""}
+          </div>
+          {testError && <div style={{ fontSize: 12, color: "var(--si-red)" }}>{testError}</div>}
+          {testResults && testResults.length === 0 && (
+            <div style={{ fontSize: 12.5, color: "var(--si-text-muted)" }}>
+              Geen recente items komen overeen met deze voorwaarden.
+            </div>
+          )}
+          {testResults?.map((match) => (
+            <div
+              key={match.item_id}
+              style={{ border: "1px solid var(--si-border)", borderRadius: 8, padding: "9px 11px", display: "flex", flexDirection: "column", gap: 5 }}
+            >
+              <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--si-text)", flexGrow: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {match.title ?? match.url}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--si-text-muted)", flexShrink: 0 }}>{match.source_name}</span>
+              </div>
+              <div style={{ fontSize: 11.5, color: "var(--si-text-muted)", whiteSpace: "pre-wrap" }}>{match.message_preview}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </form>
+  );
+
+  return (
+    <Shell active="alerts">
+      <>
+        {/* Mobile layout */}
+        <div className="mobile-only">
+          {mobileRulesLayout}
+          {selectedRuleId !== null && mobileFormLayout}
+        </div>
+        
+        {/* Desktop layout */}
+        <div className="desktop-only" style={{ display: "none" }}>
+          {desktopRulesLayout}
+          {desktopFormLayout}
+        </div>
+        
+        {/* Show form on desktop or when editing on mobile */}
+        {selectedRuleId !== null && (
+          <div className="desktop-only">
+            {desktopFormLayout}
+          </div>
+        )}
+        
+        {/* Show rules list on desktop or when not editing on mobile */}
+        {selectedRuleId === null && (
+          <div className="desktop-only" style={{ display: "flex" }}>
+            {desktopRulesLayout}
+          </div>
+        )}
+      </>
     </Shell>
   );
 }

@@ -32,17 +32,38 @@ export default function CveDetailPage() {
       .finally(() => setLoading(false));
   }, [params.id, router]);
 
+  // Mobile layout
+  const mobileLayout = (
+    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+      <Link href="/cve" style={{ fontSize: 13, color: "var(--si-blue)", minHeight: "44px", display: "flex", alignItems: "center" }}>
+        ← Terug naar CVE database
+      </Link>
+
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+      {cve && <CveDetailContent cve={cve} onOpenItem={setSelectedItemId} />}
+    </div>
+  );
+
+  // Desktop layout
+  const desktopLayout = (
+    <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 18, maxWidth: 920 }}>
+      <Link href="/cve" style={{ fontSize: 12.5, color: "var(--si-blue)" }}>
+        ← Terug naar CVE database
+      </Link>
+
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+      {cve && <CveDetailContent cve={cve} onOpenItem={setSelectedItemId} />}
+    </div>
+  );
+
   return (
     <Shell active="cve">
-      <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 18, maxWidth: 920 }}>
-        <Link href="/cve" style={{ fontSize: 12.5, color: "var(--si-blue)" }}>
-          ← Terug naar CVE database
-        </Link>
-
-        {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
-        {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
-        {cve && <CveDetailContent cve={cve} onOpenItem={setSelectedItemId} />}
-      </div>
+      <>
+        <div className="mobile-only">{mobileLayout}</div>
+        <div className="desktop-only">{desktopLayout}</div>
+      </>
       <ItemDetailPanel itemId={selectedItemId} onClose={() => setSelectedItemId(null)} onOpenCve={setSelectedCveId} />
       <CveDetailPanel
         cveId={selectedCveId}

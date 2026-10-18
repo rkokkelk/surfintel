@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="nl">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         {/* Dark is the default (app/globals.css :root); this only needs to
             run when the viewer previously chose light, and must run before
             first paint to avoid a flash of the wrong theme. */}

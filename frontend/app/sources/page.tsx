@@ -44,6 +44,28 @@ const EMPTY_FORM: SourceFormState = {
   enrichment: { enrich_cve: true, enrich_cpe: true, enrich_mitre: false, enrich_ai: true },
 };
 
+function fieldStyle(): React.CSSProperties {
+  return {
+    height: 36,
+    border: "1px solid var(--si-border)",
+    borderRadius: 8,
+    padding: "0 10px",
+    fontSize: 13,
+    color: "var(--si-text)",
+    background: "var(--si-surface)",
+  };
+}
+
+function mobileFieldStyle(): React.CSSProperties {
+  return {
+    height: 40,
+    border: "1px solid var(--si-border)",
+    borderRadius: 8,
+    padding: "0 12px",
+    fontSize: 14,
+  };
+}
+
 export default function SourcesPage() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
@@ -51,7 +73,6 @@ export default function SourcesPage() {
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
-  const [isPopupOpen, setPopupOpen] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SourceFormState>(EMPTY_FORM);
@@ -191,7 +212,7 @@ export default function SourcesPage() {
   if (authorized === false) {
     return (
       <Shell active="sources">
-        <div style={{ padding: 32, color: "var(--si-text-muted)" }}>
+        <div style={{ padding: "16px 18px", color: "var(--si-text-muted)" }}>
           Deze pagina is alleen beschikbaar voor platformbeheerders.
         </div>
       </Shell>
@@ -202,351 +223,690 @@ export default function SourcesPage() {
     return null;
   }
 
-  return (
-    <Shell active="sources">
-      <div style={{ padding: "22px 24px", display: "flex", gap: 20 }}>
-        <div style={{ flex: 1.1, minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
-              Bronnen
+  // Mobile sources list
+  const mobileSourcesLayout = (
+    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
+          Bronnen
+        </div>
+        <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{sources.length} bronnen</div>
+      </div>
+
+      <button
+        type="button"
+        onClick={startCreate}
+        style={{
+          alignSelf: "flex-start",
+          height: 40,
+          padding: "0 16px",
+          border: "none",
+          borderRadius: 8,
+          background: "var(--si-blue)",
+          color: "#fff",
+          fontSize: 13,
+          fontWeight: 600,
+        }}
+      >
+        + Nieuwe bron
+      </button>
+
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {sources.map((source) => (
+          <button
+            key={source.id}
+            onClick={() => startEdit(source)}
+            style={{
+              textAlign: "left",
+              background: editingId === source.id ? "var(--si-blue-bg)" : "var(--si-surface)",
+              border: editingId === source.id ? "1px solid var(--si-blue)" : "1px solid var(--si-border)",
+              borderRadius: 10,
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+              {source.favicon && (
+                <img 
+                  src={`data:image/png;base64,${source.favicon}`} 
+                  height="20px"
+                  width="20px"
+                />
+              )}
+              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--si-text)" }}>{source.name}</span>
+              <span
+                className="si-mono"
+                style={{ fontSize: 12, color: "var(--si-text-secondary)", background: "var(--si-neutral-bg)", borderRadius: 6, padding: "2px 8px" }}
+              >
+                {source.type}
+              </span>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: source.enabled ? "var(--si-green)" : "var(--si-text-muted)",
+                  background: source.enabled ? "var(--si-green-bg)" : "var(--si-neutral-bg)",
+                  borderRadius: 9,
+                  padding: "2px 9px",
+                }}
+              >
+                {source.enabled ? "Actief" : "Gepauzeerd"}
+              </span>
             </div>
-            <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{sources.length} bronnen</div>
+            <div style={{ fontSize: 12, color: "var(--si-text-muted)" }}>
+              elke {Math.round(source.poll_interval_seconds / 60)} min ·{" "}
+              {source.last_polled_at
+                ? `laatst gepolld ${new Date(source.last_polled_at).toLocaleString("nl-NL")}`
+                : "nog niet gepolld"}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Desktop sources list
+  const desktopSourcesLayout = (
+    <div style={{ flex: 1.1, minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
+          Bronnen
+        </div>
+        <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{sources.length} bronnen</div>
+        <button
+          type="button"
+          onClick={startCreate}
+          style={{
+            marginLeft: "auto",
+            height: 34,
+            padding: "0 16px",
+            border: "none",
+            borderRadius: 8,
+            background: "var(--si-blue)",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          + Nieuwe bron
+        </button>
+      </div>
+
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {sources.map((source) => (
+          <button
+            key={source.id}
+            onClick={() => startEdit(source)}
+            style={{
+              textAlign: "left",
+              background: editingId === source.id ? "var(--si-blue-bg)" : "var(--si-surface)",
+              border: editingId === source.id ? "1px solid var(--si-blue)" : "1px solid var(--si-border)",
+              borderRadius: 10,
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "left", gap: 20 }}>
+                {source.favicon && (
+                  <img 
+                    src={`data:image/png;base64,${source.favicon}`} 
+                    height="20px"
+                    width="20px"
+                  />
+                )}
+              </div>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--si-text)" }}>{source.name}</span>
+              <span
+                className="si-mono"
+                style={{ fontSize: 11, color: "var(--si-text-secondary)", background: "var(--si-neutral-bg)", borderRadius: 6, padding: "2px 8px" }}
+              >
+                {source.type}
+              </span>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: source.enabled ? "var(--si-green)" : "var(--si-text-muted)",
+                  background: source.enabled ? "var(--si-green-bg)" : "var(--si-neutral-bg)",
+                  borderRadius: 9,
+                  padding: "2px 9px",
+                }}
+              >
+                {source.enabled ? "Actief" : "Gepauzeerd"}
+              </span>
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--si-text-muted)" }}>
+              elke {Math.round(source.poll_interval_seconds / 60)} min ·{" "}
+              {source.last_polled_at
+                ? `laatst gepolld ${new Date(source.last_polled_at).toLocaleString("nl-NL")}`
+                : "nog niet gepolld"}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Mobile form layout
+  const mobileFormLayout = (
+    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+      {editingId && <SourceHealthChart sourceId={editingId} />}
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          background: "var(--si-surface)",
+          border: "1px solid var(--si-border)",
+          borderRadius: 12,
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+        }}
+      >
+        <div className="si-display" style={{ fontSize: 16, fontWeight: 600 }}>
+          {editingId ? "Bron bewerken" : "Nieuwe bron"}
+        </div>
+
+        <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Naam
+          <input
+            required
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            placeholder="bv. Security.NL"
+            style={{ ...mobileFieldStyle(), width: "100%", marginTop: 6 }}
+          />
+        </label>
+
+        <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Type
+          <select
+            value={form.type}
+            onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as SourceType }))}
+            style={{ ...mobileFieldStyle(), width: "100%", marginTop: 6 }}
+          >
+            {TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Config (JSON)
+          <textarea
+            required
+            value={form.configText}
+            onChange={(e) => setForm((f) => ({ ...f, configText: e.target.value }))}
+            rows={8}
+            spellCheck={false}
+            className="si-mono"
+            style={{ ...mobileFieldStyle(), width: "100%", marginTop: 6, minHeight: "120px", resize: "vertical" }}
+          />
+        </label>
+        <div style={{ fontSize: 12, color: "var(--si-text-muted)" }}>
+          {form.type === "rss" && <>rss verwacht: {`{ "feed_url": "..." }`}</>}
+          {form.type === "html" && (
+            <>html verwacht: {`{ "feed_url", "row_identifier", "item": { "title", "link", "description" } }`}</>
+          )}
+          {form.type === "custom_module" && <>vrije vorm, geïnterpreteerd door de geregistreerde module</>}
+        </div>
+
+        <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Poll-interval (seconden)
+          <input
+            type="number"
+            min={60}
+            required
+            value={form.poll_interval_seconds}
+            onChange={(e) => setForm((f) => ({ ...f, poll_interval_seconds: Number(e.target.value) }))}
+            style={{ ...mobileFieldStyle(), width: "100%", marginTop: 6 }}
+          />
+        </label>
+
+        <fieldset
+          style={{
+            border: "1px solid var(--si-border)",
+            borderRadius: 8,
+            padding: "12px",
+            margin: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <legend style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)", padding: "0 6px" }}>
+            Enrichment voor deze bron
+          </legend>
+          {ENRICHMENT_OPTIONS.map((opt) => (
+            <label
+              key={opt.key}
+              style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--si-text)" }}
+            >
+              <input
+                type="checkbox"
+                checked={form.enrichment[opt.key]}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, enrichment: { ...f.enrichment, [opt.key]: e.target.checked } }))
+                }
+              />
+              {opt.label}
+            </label>
+          ))}
+        </fieldset>
+
+        {editingId && (
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--si-text)" }}>
+            <input
+              type="checkbox"
+              checked={form.enabled}
+              onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
+            />
+            Actief (wordt meegenomen in de ingestion-cyclus)
+          </label>
+        )}
+
+        {formError && <div style={{ fontSize: 13, color: "var(--si-red)" }}>{formError}</div>}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {editingId && (
             <button
               type="button"
               onClick={startCreate}
               style={{
-                marginLeft: "auto",
-                height: 34,
+                height: 40,
                 padding: "0 16px",
-                border: "none",
+                border: "1px solid var(--si-border)",
                 borderRadius: 8,
-                background: "var(--si-blue)",
-                color: "#fff",
+                background: "var(--si-surface)",
+                color: "var(--si-text-secondary)",
                 fontSize: 13,
-                fontWeight: 600,
+                fontWeight: 500,
               }}
             >
-              + Nieuwe bron
+              Annuleren
             </button>
-          </div>
-
-          {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
-          {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {sources.map((source) => (
+          )}
+          
+          {editingId && (
+            <>
               <button
-                key={source.id}
-                onClick={() => startEdit(source)}
+                type="button"
+                onClick={ingestSource}
                 style={{
-                  textAlign: "left",
-                  background: editingId === source.id ? "var(--si-blue-bg)" : "var(--si-surface)",
-                  border: editingId === source.id ? "1px solid var(--si-blue)" : "1px solid var(--si-border)",
-                  borderRadius: 10,
-                  padding: "14px 16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                  cursor: "pointer",
+                  height: 40,
+                  padding: "0 18px",
+                  border: "none",
+                  borderRadius: 8,
+                  background: "var(--si-green)",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 600,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ display: "flex", alignItems: "left", gap: 20 }}>
-                    <img 
-                      src={`data:image/png;base64,${source.favicon}`} 
-                      height="20px"
-                      width="20px"
-                      hidden={source.favicon == null}
-                      />
-                  </div>
-                  <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--si-text)" }}>{source.name}</span>
-                  <span
-                    className="si-mono"
-                    style={{ fontSize: 11, color: "var(--si-text-secondary)", background: "var(--si-neutral-bg)", borderRadius: 6, padding: "2px 8px" }}
-                  >
-                    {source.type}
-                  </span>
-                  <span
-                    style={{
-                      marginLeft: "auto",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: source.enabled ? "var(--si-green)" : "var(--si-text-muted)",
-                      background: source.enabled ? "var(--si-green-bg)" : "var(--si-neutral-bg)",
-                      borderRadius: 9,
-                      padding: "2px 9px",
-                    }}
-                  >
-                    {source.enabled ? "Actief" : "Gepauzeerd"}
-                  </span>
-                </div>
-                <div style={{ fontSize: 11.5, color: "var(--si-text-muted)" }}>
-                  elke {Math.round(source.poll_interval_seconds / 60)} min ·{" "}
-                  {source.last_polled_at
-                    ? `laatst gepolld ${new Date(source.last_polled_at).toLocaleString("nl-NL")}`
-                    : "nog niet gepolld"}
-                </div>
+                Start ingest
               </button>
-            ))}
-          </div>
+              <button
+                type="button"
+                onClick={deleteSource}
+                style={{
+                  height: 40,
+                  padding: "0 18px",
+                  border: "none",
+                  borderRadius: 8,
+                  background: "var(--si-red)",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                Verwijder
+              </button>
+            </>
+          )}
+          
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              height: 40,
+              padding: "0 18px",
+              border: "none",
+              borderRadius: 8,
+              background: "var(--si-navy)",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            {saving ? "Opslaan..." : editingId ? "Wijzigingen opslaan" : "Bron aanmaken"}
+          </button>
         </div>
+      </form>
 
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 16, alignSelf: "flex-start" }}>
-        {editingId && <SourceHealthChart sourceId={editingId} />}
-        <form
-          onSubmit={handleSubmit}
+      {editingId && (
+        <div
           style={{
             background: "var(--si-surface)",
             border: "1px solid var(--si-border)",
             borderRadius: 12,
-            padding: "20px 22px",
+            padding: "16px",
             display: "flex",
             flexDirection: "column",
-            gap: 14,
+            gap: 10,
           }}
         >
           <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
-            {editingId ? "Bron bewerken" : "Nieuwe bron"}
+            Logs
           </div>
+          {logs === undefined ? (
+            <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Logs laden...</div>
+          ) : logs === "" ? (
+            <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Nog geen logregels voor deze bron.</div>
+          ) : (
+            <LazyLog text={logs} height={300} enableSearch enableLineNumbers={false} extraLines={1} follow={true} />
+          )}
+        </div>
+      )}
+    </div>
+  );
 
-          <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-            Naam
-            <input
-              required
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="bv. Security.NL"
-              style={{
-                display: "block",
-                width: "100%",
-                height: 36,
-                marginTop: 6,
-                border: "1px solid var(--si-border)",
-                borderRadius: 8,
-                padding: "0 12px",
-                fontSize: 13.5,
-              }}
-            />
-          </label>
+  // Desktop form layout
+  const desktopFormLayout = (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 16, alignSelf: "flex-start" }}>
+      {editingId && <SourceHealthChart sourceId={editingId} />}
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          background: "var(--si-surface)",
+          border: "1px solid var(--si-border)",
+          borderRadius: 12,
+          padding: "20px 22px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+        }}
+      >
+        <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
+          {editingId ? "Bron bewerken" : "Nieuwe bron"}
+        </div>
 
-          <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-            Type
-            <select
-              value={form.type}
-              onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as SourceType }))}
-              style={{
-                display: "block",
-                width: "100%",
-                height: 36,
-                marginTop: 6,
-                border: "1px solid var(--si-border)",
-                borderRadius: 8,
-                padding: "0 10px",
-                fontSize: 13.5,
-              }}
-            >
-              {TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-            Config (JSON)
-            <textarea
-              required
-              value={form.configText}
-              onChange={(e) => setForm((f) => ({ ...f, configText: e.target.value }))}
-              rows={7}
-              spellCheck={false}
-              className="si-mono"
-              style={{
-                display: "block",
-                width: "100%",
-                marginTop: 6,
-                border: "1px solid var(--si-border)",
-                borderRadius: 8,
-                padding: "10px 12px",
-                fontSize: 12.5,
-                resize: "vertical",
-              }}
-            />
-          </label>
-          <div style={{ fontSize: 11, color: "var(--si-text-muted)" }}>
-            {form.type === "rss" && <>rss verwacht: {`{ "feed_url": "..." }`}</>}
-            {form.type === "html" && (
-              <>html verwacht: {`{ "feed_url", "row_identifier", "item": { "title", "link", "description" } }`}</>
-            )}
-            {form.type === "custom_module" && <>vrije vorm, geïnterpreteerd door de geregistreerde module</>}
-          </div>
-
-          <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-            Poll-interval (seconden)
-            <input
-              type="number"
-              min={60}
-              required
-              value={form.poll_interval_seconds}
-              onChange={(e) => setForm((f) => ({ ...f, poll_interval_seconds: Number(e.target.value) }))}
-              style={{
-                display: "block",
-                width: "100%",
-                height: 36,
-                marginTop: 6,
-                border: "1px solid var(--si-border)",
-                borderRadius: 8,
-                padding: "0 12px",
-                fontSize: 13.5,
-              }}
-            />
-          </label>
-
-          <fieldset
+        <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Naam
+          <input
+            required
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            placeholder="bv. Security.NL"
             style={{
+              display: "block",
+              width: "100%",
+              height: 36,
+              marginTop: 6,
+              border: "1px solid var(--si-border)",
+              borderRadius: 8,
+              padding: "0 12px",
+              fontSize: 13.5,
+            }}
+          />
+        </label>
+
+        <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Type
+          <select
+            value={form.type}
+            onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as SourceType }))}
+            style={{
+              display: "block",
+              width: "100%",
+              height: 36,
+              marginTop: 6,
+              border: "1px solid var(--si-border)",
+              borderRadius: 8,
+              padding: "0 10px",
+              fontSize: 13.5,
+            }}
+          >
+            {TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Config (JSON)
+          <textarea
+            required
+            value={form.configText}
+            onChange={(e) => setForm((f) => ({ ...f, configText: e.target.value }))}
+            rows={7}
+            spellCheck={false}
+            className="si-mono"
+            style={{
+              display: "block",
+              width: "100%",
+              marginTop: 6,
               border: "1px solid var(--si-border)",
               borderRadius: 8,
               padding: "10px 12px",
-              margin: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
+              fontSize: 12.5,
+              resize: "vertical",
             }}
-          >
-            <legend style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)", padding: "0 6px" }}>
-              Enrichment voor deze bron
-            </legend>
-            {ENRICHMENT_OPTIONS.map((opt) => (
-              <label
-                key={opt.key}
-                style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--si-text)" }}
-              >
-                <input
-                  type="checkbox"
-                  checked={form.enrichment[opt.key]}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, enrichment: { ...f.enrichment, [opt.key]: e.target.checked } }))
-                  }
-                />
-                {opt.label}
-              </label>
-            ))}
-          </fieldset>
+          />
+        </label>
+        <div style={{ fontSize: 11, color: "var(--si-text-muted)" }}>
+          {form.type === "rss" && <>rss verwacht: {`{ "feed_url": "..." }`}</>}
+          {form.type === "html" && (
+            <>html verwacht: {`{ "feed_url", "row_identifier", "item": { "title", "link", "description" } }`}</>
+          )}
+          {form.type === "custom_module" && <>vrije vorm, geïnterpreteerd door de geregistreerde module</>}
+        </div>
 
-          {editingId && (
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--si-text)" }}>
+        <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Poll-interval (seconden)
+          <input
+            type="number"
+            min={60}
+            required
+            value={form.poll_interval_seconds}
+            onChange={(e) => setForm((f) => ({ ...f, poll_interval_seconds: Number(e.target.value) }))}
+            style={{
+              display: "block",
+              width: "100%",
+              height: 36,
+              marginTop: 6,
+              border: "1px solid var(--si-border)",
+              borderRadius: 8,
+              padding: "0 12px",
+              fontSize: 13.5,
+            }}
+          />
+        </label>
+
+        <fieldset
+          style={{
+            border: "1px solid var(--si-border)",
+            borderRadius: 8,
+            padding: "10px 12px",
+            margin: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <legend style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)", padding: "0 6px" }}>
+            Enrichment voor deze bron
+          </legend>
+          {ENRICHMENT_OPTIONS.map((opt) => (
+            <label
+              key={opt.key}
+              style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--si-text)" }}
+            >
               <input
                 type="checkbox"
-                checked={form.enabled}
-                onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
+                checked={form.enrichment[opt.key]}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, enrichment: { ...f.enrichment, [opt.key]: e.target.checked } }))
+                }
               />
-              Actief (wordt meegenomen in de ingestion-cyclus)
+              {opt.label}
             </label>
-          )}
-
-          {formError && <div style={{ fontSize: 12, color: "var(--si-red)" }}>{formError}</div>}
-
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-            {editingId && (
-              <button
-                type="button"
-                onClick={startCreate}
-                style={{
-                  height: 36,
-                  padding: "0 16px",
-                  border: "1px solid var(--si-border)",
-                  borderRadius: 8,
-                  background: "var(--si-surface)",
-                  color: "var(--si-text-secondary)",
-                  fontSize: 13,
-                  fontWeight: 500,
-                }}
-              >
-                Annuleren
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={ingestSource}
-              style={{
-                marginLeft: "auto",
-                height: 36,
-                padding: "0 18px",
-                border: "none",
-                borderRadius: 8,
-                background: "var(--si-green)",
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: 600,
-              }}
-            >
-            Start ingest
-            </button>
-            <button
-              type="button"
-              onClick={deleteSource}
-              style={{
-                marginLeft: "auto",
-                height: 36,
-                padding: "0 18px",
-                border: "none",
-                borderRadius: 8,
-                background: "var(--si-red)",
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: 600,
-              }}
-            >
-            Verwijder
-            </button>
-
-            <button
-              type="submit"
-              disabled={saving}
-              style={{
-                marginLeft: "auto",
-                height: 36,
-                padding: "0 18px",
-                border: "none",
-                borderRadius: 8,
-                background: "var(--si-navy)",
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: 600,
-              }}
-            >
-              {saving ? "Opslaan..." : editingId ? "Wijzigingen opslaan" : "Bron aanmaken"}
-            </button>
-          </div>
-        </form>
+          ))}
+        </fieldset>
 
         {editingId && (
-          <div
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--si-text)" }}>
+            <input
+              type="checkbox"
+              checked={form.enabled}
+              onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
+            />
+            Actief (wordt meegenomen in de ingestion-cyclus)
+          </label>
+        )}
+
+        {formError && <div style={{ fontSize: 12, color: "var(--si-red)" }}>{formError}</div>}
+
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          {editingId && (
+            <button
+              type="button"
+              onClick={startCreate}
+              style={{
+                height: 36,
+                padding: "0 16px",
+                border: "1px solid var(--si-border)",
+                borderRadius: 8,
+                background: "var(--si-surface)",
+                color: "var(--si-text-secondary)",
+                fontSize: 13,
+                fontWeight: 500,
+              }}
+            >
+              Annuleren
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={ingestSource}
             style={{
-              background: "var(--si-surface)",
-              border: "1px solid var(--si-border)",
-              borderRadius: 12,
-              padding: "16px 18px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
+              marginLeft: "auto",
+              height: 36,
+              padding: "0 18px",
+              border: "none",
+              borderRadius: 8,
+              background: "var(--si-green)",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
             }}
           >
-            <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
-              Logs
-            </div>
-            {logs === undefined ? (
-              <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Logs laden...</div>
-            ) : logs === "" ? (
-              <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Nog geen logregels voor deze bron.</div>
-            ) : (
-              <LazyLog text={logs} height={400} enableSearch enableLineNumbers={false} extraLines={1} follow={true} />
-            )}
-          </div>
-        )}
+            Start ingest
+          </button>
+          <button
+            type="button"
+            onClick={deleteSource}
+            style={{
+              marginLeft: "auto",
+              height: 36,
+              padding: "0 18px",
+              border: "none",
+              borderRadius: 8,
+              background: "var(--si-red)",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            Verwijder
+          </button>
+
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              marginLeft: "auto",
+              height: 36,
+              padding: "0 18px",
+              border: "none",
+              borderRadius: 8,
+              background: "var(--si-navy)",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            {saving ? "Opslaan..." : editingId ? "Wijzigingen opslaan" : "Bron aanmaken"}
+          </button>
         </div>
-      </div>
+      </form>
+
+      {editingId && (
+        <div
+          style={{
+            background: "var(--si-surface)",
+            border: "1px solid var(--si-border)",
+            borderRadius: 12,
+            padding: "16px 18px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          <div className="si-display" style={{ fontSize: 15, fontWeight: 600 }}>
+            Logs
+          </div>
+          {logs === undefined ? (
+            <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Logs laden...</div>
+          ) : logs === "" ? (
+            <div style={{ color: "var(--si-text-muted)", fontSize: 13 }}>Nog geen logregels voor deze bron.</div>
+          ) : (
+            <LazyLog text={logs} height={400} enableSearch enableLineNumbers={false} extraLines={1} follow={true} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <Shell active="sources">
+      <>
+        <div className="mobile-only">
+          {editingId ? mobileFormLayout : mobileSourcesLayout}
+        </div>
+        <div className="desktop-only" style={{ display: "none" }}>
+          <div style={{ padding: "22px 24px", display: "flex", gap: 20 }}>
+            {desktopSourcesLayout}
+            {desktopFormLayout}
+          </div>
+        </div>
+        
+        {/* Desktop layout */}
+        <div className="desktop-only">
+          <div style={{ padding: "22px 24px", display: "flex", gap: 20 }}>
+            {desktopSourcesLayout}
+            {desktopFormLayout}
+          </div>
+        </div>
+      </>
       <ToastContainer />
     </Shell>
   );

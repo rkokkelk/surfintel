@@ -29,6 +29,16 @@ function fieldStyle(active: boolean): React.CSSProperties {
   };
 }
 
+function mobileFieldStyle(): React.CSSProperties {
+  return {
+    height: 40,
+    border: "1px solid var(--si-border)",
+    borderRadius: 8,
+    padding: "0 12px",
+    fontSize: 14,
+  };
+}
+
 export default function CveListPage() {
   const router = useRouter();
   const [cves, setCves] = useState<Cve[]>([]);
@@ -62,102 +72,211 @@ export default function CveListPage() {
       .finally(() => setLoading(false));
   }, [q, inKevOnly, sort, router]);
 
-  return (
-    <Shell active="cve">
-      <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-          <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
-            CVE database
-          </div>
-          <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{cves.length} CVE's</div>
+  // Mobile layout
+  const mobileLayout = (
+    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
+          CVE database
         </div>
+        <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{cves.length} CVE's</div>
+      </div>
 
-        <div
-          style={{
-            background: "var(--si-surface)",
-            border: "1px solid var(--si-border)",
-            borderRadius: 12,
-            padding: "12px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
-          }}
-        >
-          <input
-            value={qDraft}
-            onChange={(e) => setQDraft(e.target.value)}
-            placeholder="Zoek op CVE-ID of titel..."
-            style={{ ...fieldStyle(Boolean(q)), flexGrow: 1, minWidth: 220 }}
-          />
-          <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} style={fieldStyle(false)}>
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                Sorteer: {o.label}
-              </option>
-            ))}
-          </select>
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--si-text)" }}>
-            <input type="checkbox" checked={inKevOnly} onChange={(e) => setInKevOnly(e.target.checked)} />
-            Alleen CISA KEV
-          </label>
-        </div>
+      <div
+        style={{
+          background: "var(--si-surface)",
+          border: "1px solid var(--si-border)",
+          borderRadius: 12,
+          padding: "12px 16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+        }}
+      >
+        <input
+          value={qDraft}
+          onChange={(e) => setQDraft(e.target.value)}
+          placeholder="Zoek op CVE-ID of titel..."
+          style={{ ...mobileFieldStyle(), width: "100%" }}
+        />
+        
+        <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} style={{ ...mobileFieldStyle(), width: "100%" }}>
+          {SORT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              Sorteer: {o.label}
+            </option>
+          ))}
+        </select>
+        
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--si-text)" }}>
+          <input type="checkbox" checked={inKevOnly} onChange={(e) => setInKevOnly(e.target.checked)} />
+          Alleen CISA KEV
+        </label>
+      </div>
 
-        {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
-        {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
-        {!loading && !error && cves.length === 0 && (
-          <div style={{ color: "var(--si-text-muted)" }}>Geen CVE&apos;s gevonden.</div>
-        )}
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+      {!loading && !error && cves.length === 0 && (
+        <div style={{ color: "var(--si-text-muted)" }}>Geen CVE&apos;s gevonden.</div>
+      )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 900 }}>
-          {cves.map((cve) => {
-            const severity = cvssSeverity(cve.cvss_v4_score ?? cve.cvss_v3_score);
-            const style = severity ? CVSS_SEVERITY_STYLE[severity] : null;
-            return (
-              <button
-                key={cve.cve_id}
-                type="button"
-                onClick={() => setSelectedCveId(cve.cve_id)}
-                style={{
-                  background: "var(--si-surface)",
-                  border: "1px solid var(--si-border)",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  textAlign: "left",
-                  color: "inherit",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                <span className="si-mono" style={{ fontSize: 13, fontWeight: 600, color: "var(--si-navy)", width: 150, flexShrink: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {cves.map((cve) => {
+          const severity = cvssSeverity(cve.cvss_v4_score ?? cve.cvss_v3_score);
+          const style = severity ? CVSS_SEVERITY_STYLE[severity] : null;
+          return (
+            <button
+              key={cve.cve_id}
+              type="button"
+              onClick={() => setSelectedCveId(cve.cve_id)}
+              style={{
+                background: "var(--si-surface)",
+                border: "1px solid var(--si-border)",
+                borderRadius: 10,
+                padding: "12px 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                textAlign: "left",
+                color: "inherit",
+                cursor: "pointer",
+                width: "100%",
+              }}
+            >
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                <span className="si-mono" style={{ fontSize: 13, fontWeight: 600, color: "var(--si-navy)" }}>
                   {cve.cve_id}
-                </span>
-                <span style={{ fontSize: 13.5, color: "var(--si-text)", flexGrow: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {cve.title ?? "—"}
                 </span>
                 {cve.in_kev && (
                   <span style={{ fontSize: 11, fontWeight: 600, color: "var(--si-red)", background: "var(--si-red-bg)", borderRadius: 6, padding: "3px 8px" }}>
                     KEV
                   </span>
                 )}
+                {style && (
+                  <span style={{ fontSize: 11, fontWeight: 600, color: style.color, background: style.bg, borderRadius: 6, padding: "3px 8px" }}>
+                    CVSS {(cve.cvss_v4_score ?? cve.cvss_v3_score)?.toFixed(1)}
+                  </span>
+                )}
                 {cve.epss_score !== null && (
-                  <span className="si-mono" style={{ fontSize: 11.5, color: "var(--si-text-muted)", width: 80, textAlign: "right" }}>
+                  <span className="si-mono" style={{ fontSize: 11.5, color: "var(--si-text-muted)", background: "var(--si-neutral-bg)", borderRadius: 6, padding: "3px 8px" }}>
                     EPSS {(cve.epss_score * 100).toFixed(1)}%
                   </span>
                 )}
-                {style && (
-                  <span style={{ fontSize: 11, fontWeight: 600, color: style.color, background: style.bg, borderRadius: 6, padding: "3px 8px", width: 56, textAlign: "center" }}>
-                    {(cve.cvss_v4_score ?? cve.cvss_v3_score)?.toFixed(1)}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+              </div>
+              <span style={{ fontSize: 13.5, color: "var(--si-text)", fontWeight: 500 }}>
+                {cve.title ?? "—"}
+              </span>
+            </button>
+          );
+        })}
       </div>
+    </div>
+  );
+
+  // Desktop layout
+  const desktopLayout = (
+    <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+        <div className="si-display" style={{ fontSize: 18, fontWeight: 600 }}>
+          CVE database
+        </div>
+        <div style={{ fontSize: 13, color: "var(--si-text-muted)" }}>{cves.length} CVE's</div>
+      </div>
+
+      <div
+        style={{
+          background: "var(--si-surface)",
+          border: "1px solid var(--si-border)",
+          borderRadius: 12,
+          padding: "12px 16px",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          flexWrap: "wrap",
+        }}
+      >
+        <input
+          value={qDraft}
+          onChange={(e) => setQDraft(e.target.value)}
+          placeholder="Zoek op CVE-ID of titel..."
+          style={{ ...fieldStyle(Boolean(q)), flexGrow: 1, minWidth: 220 }}
+        />
+        <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} style={fieldStyle(false)}>
+          {SORT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              Sorteer: {o.label}
+            </option>
+          ))}
+        </select>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--si-text)" }}>
+          <input type="checkbox" checked={inKevOnly} onChange={(e) => setInKevOnly(e.target.checked)} />
+          Alleen CISA KEV
+        </label>
+      </div>
+
+      {loading && <div style={{ color: "var(--si-text-muted)" }}>Laden...</div>}
+      {error && <div style={{ color: "var(--si-red)" }}>{error}</div>}
+      {!loading && !error && cves.length === 0 && (
+        <div style={{ color: "var(--si-text-muted)" }}>Geen CVE&apos;s gevonden.</div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 900 }}>
+        {cves.map((cve) => {
+          const severity = cvssSeverity(cve.cvss_v4_score ?? cve.cvss_v3_score);
+          const style = severity ? CVSS_SEVERITY_STYLE[severity] : null;
+          return (
+            <button
+              key={cve.cve_id}
+              type="button"
+              onClick={() => setSelectedCveId(cve.cve_id)}
+              style={{
+                background: "var(--si-surface)",
+                border: "1px solid var(--si-border)",
+                borderRadius: 10,
+                padding: "12px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                textAlign: "left",
+                color: "inherit",
+                cursor: "pointer",
+                width: "100%",
+              }}
+            >
+              <span className="si-mono" style={{ fontSize: 13, fontWeight: 600, color: "var(--si-navy)", width: 150, flexShrink: 0 }}>
+                {cve.cve_id}
+              </span>
+              <span style={{ fontSize: 13.5, color: "var(--si-text)", flexGrow: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {cve.title ?? "—"}
+              </span>
+              {cve.in_kev && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--si-red)", background: "var(--si-red-bg)", borderRadius: 6, padding: "3px 8px" }}>
+                  KEV
+                </span>
+              )}
+              {cve.epss_score !== null && (
+                <span className="si-mono" style={{ fontSize: 11.5, color: "var(--si-text-muted)", width: 80, textAlign: "right" }}>
+                  EPSS {(cve.epss_score * 100).toFixed(1)}%
+                </span>
+              )}
+              {style && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: style.color, background: style.bg, borderRadius: 6, padding: "3px 8px", width: 56, textAlign: "center" }}>
+                  {(cve.cvss_v4_score ?? cve.cvss_v3_score)?.toFixed(1)}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <Shell active="cve">
+      <>
+        <div className="mobile-only">{mobileLayout}</div>
+        <div className="desktop-only">{desktopLayout}</div>
+      </>
       <CveDetailPanel
         cveId={selectedCveId}
         onClose={() => setSelectedCveId(null)}

@@ -25,6 +25,32 @@ export default function LoginPage() {
     }
   }
 
+  // Mobile form style
+  const mobileFormStyle: React.CSSProperties = {
+    width: "100%",
+    maxWidth: 400,
+    background: "var(--si-surface)",
+    border: "1px solid var(--si-border)",
+    borderRadius: 12,
+    padding: "24px 20px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 16,
+    margin: "16px",
+  };
+
+  // Desktop form style
+  const desktopFormStyle: React.CSSProperties = {
+    width: 360,
+    background: "var(--si-surface)",
+    border: "1px solid var(--si-border)",
+    borderRadius: 12,
+    padding: 32,
+    display: "flex",
+    flexDirection: "column",
+    gap: 16,
+  };
+
   return (
     <div
       style={{
@@ -33,20 +59,89 @@ export default function LoginPage() {
         alignItems: "center",
         justifyContent: "center",
         background: "var(--si-bg)",
+        padding: "20px",
       }}
     >
+      {/* Mobile form */}
       <form
         onSubmit={handleSubmit}
-        style={{
-          width: 360,
-          background: "var(--si-surface)",
-          border: "1px solid var(--si-border)",
-          borderRadius: 12,
-          padding: 32,
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-        }}
+        className="mobile-only"
+        style={mobileFormStyle}
+      >
+        <div className="si-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, textAlign: "center" }}>
+          <span style={{ color: "var(--si-navy)" }}>Surf</span>
+          <span style={{ color: "var(--si-blue)" }}>Intel</span>
+        </div>
+
+        <label style={{ fontSize: 13, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          E-mailadres
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{
+              display: "block",
+              width: "100%",
+              height: 44,
+              marginTop: 6,
+              border: "1px solid var(--si-border)",
+              borderRadius: 8,
+              padding: "0 12px",
+              fontSize: 16,
+            }}
+          />
+        </label>
+
+        <label style={{ fontSize: 13, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+          Wachtwoord
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{
+              display: "block",
+              width: "100%",
+              height: 44,
+              marginTop: 6,
+              border: "1px solid var(--si-border)",
+              borderRadius: 8,
+              padding: "0 12px",
+              fontSize: 16,
+            }}
+          />
+        </label>
+
+        {error && <div style={{ fontSize: 14, color: "var(--si-red)", textAlign: "center" }}>{error}</div>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            height: 48,
+            border: "none",
+            borderRadius: 8,
+            background: "var(--si-blue)",
+            color: "#fff",
+            fontSize: 15,
+            fontWeight: 600,
+            minWidth: "100%",
+          }}
+        >
+          {loading ? "Bezig..." : "Inloggen"}
+        </button>
+
+        <div style={{ fontSize: 12, color: "var(--si-text-muted)", textAlign: "center" }}>
+          SURFconext-inloggen volgt in een latere fase.
+        </div>
+      </form>
+
+      {/* Desktop form */}
+      <form
+        onSubmit={handleSubmit}
+        className="desktop-only"
+        style={desktopFormStyle}
       >
         <div className="si-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
           <span style={{ color: "var(--si-navy)" }}>Surf</span>
