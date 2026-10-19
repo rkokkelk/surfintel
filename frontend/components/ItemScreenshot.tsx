@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { imgFetch } from "@/lib/api";
+
+// Global cache for screenshots to prevent re-fetching
+const screenshotCache = new Map<string, string>();
 
 export function ItemScreenshot({
   itemId,
@@ -15,6 +18,8 @@ export function ItemScreenshot({
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -26,25 +31,49 @@ export function ItemScreenshot({
   }, [open]);
 
   useEffect(() => {
-    let objectUrl: string | null = null;
     let cancelled = false;
+    
+    // Check if we already have this screenshot in cache
+    if (screenshotCache.has(itemId)) {
+      setSrc(screenshotCache.get(itemId)!);
+      setFailed(false);
+      return;
+    }
+
+    // Clear previous object URL if exists
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
     setSrc(null);
     setFailed(false);
+    setIsLoading(true);
     setOpen(false);
 
     imgFetch<Blob>(`/items/${itemId}/screenshot`)
       .then((blob) => {
         if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
+        const objectUrl = URL.createObjectURL(blob);
+        objectUrlRef.current = objectUrl;
+        // Cache the object URL
+        screenshotCache.set(itemId, objectUrl);
         setSrc(objectUrl);
+        setIsLoading(false);
       })
       .catch(() => {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) {
+          setFailed(true);
+          setIsLoading(false);
+        }
       });
 
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      // Don't revoke the object URL here if it's cached, as other instances might be using it
+      if (objectUrlRef.current && !screenshotCache.has(itemId)) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
     };
   }, [itemId]);
 
@@ -81,7 +110,7 @@ export function ItemScreenshot({
           <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
           <span style={{ fontSize: 11, color: "var(--si-text-muted)" }}>
-            {failed ? "Geen screenshot" : "Laden…"}
+            {isLoading ? "Laden…" : failed ? "Geen screenshot" : "Laden…"}
           </span>
         )}
       </div>

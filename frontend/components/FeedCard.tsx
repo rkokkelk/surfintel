@@ -133,150 +133,104 @@ export function FeedCard({
     minute: "2-digit",
   });
 
-  const badgeSection = (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-      {severityStyle && <Badge color={severityStyle.color} bg={severityStyle.bg}>{severityStyle.label}</Badge>}
-      {cvssStyle && (
-        <Badge color={cvssStyle.color} bg={cvssStyle.bg}>
-          CVSS {item.max_cvss_score?.toFixed(1)}
-        </Badge>
-      )}
-      {item.in_kev && (
-        <Badge color="var(--si-red)" bg="var(--si-red-bg)">
-          KEV
-        </Badge>
-      )}
-      {item.max_epss_score !== null && item.max_epss_score >= 0.1 && (
-        <Badge color="var(--si-text-muted)" bg="var(--si-neutral-bg)">
-          EPSS {(item.max_epss_score * 100).toFixed(1)}%
-        </Badge>
-      )}
-      <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--si-text-muted)", display: "flex", alignItems: "center" }}>
-        {item.source?.name} • {item.published_at ? timeFormat.format(new Date(item.published_at)) : ""}
-        {item.source.favicon && (
-          <img 
-            src={`data:image/png;base64,${item.source.favicon}`} 
-            height="20px"
-            width="20px"
-            style={{marginLeft: "8px"}}
-          />
-        )}
-      </span>
-    </div>
-  );
-
-  const titleSection = (
-    <a
-      href={item.url}
-      target="_blank"
-      rel="noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="si-display"
-      style={{ fontSize: 16, fontWeight: 600, color: "var(--si-text)" }}
-    >
-      {item.title ?? item.url}
-    </a>
-  );
-
-  const descriptionSection = item.description && (
-    <div style={{ fontSize: 13, color: "var(--si-text-secondary)", lineHeight: 1.4 }}>{item.description}</div>
-  );
-
-  const tagsSection = (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-      {cveIds.map((id) => (
-        <TagButton key={id} color="var(--si-purple)" bg="var(--si-purple-bg)" onClick={(e) => { e.stopPropagation(); onOpenCve(id); }}>
-          {id}
-        </TagButton>
-      ))}
-      {Array.from(new Set(ttps.map((ttp) => ttp.technique_id))).map((techniqueId) => {
-        const techniqueColor = mitreTechniqueColor(techniqueId);
-        return (
-          <TagLink key={techniqueId} href={mitreTechniqueUrl(techniqueId)} color={techniqueColor.color} bg={techniqueColor.bg}>
-            {techniqueId}
-          </TagLink>
-        );
-      })}
-      {actor && <Badge color={ACTOR_STYLE.color} bg={ACTOR_STYLE.bg}>{actor}</Badge>}
-      {entities.map((name) => (
-        <Badge key={name} color={ENTITY_STYLE.color} bg={ENTITY_STYLE.bg}>
-          {name}
-        </Badge>
-      ))}
-      {classification?.victim_country && (
-        <Badge color={VICTIM_STYLE.color} bg={VICTIM_STYLE.bg}>
-          {countryLabel(classification.victim_country)}
-        </Badge>
-      )}
-      {classification?.victim_industry && (
-        <Badge color={VICTIM_STYLE.color} bg={VICTIM_STYLE.bg}>
-          {industryLabel(classification.victim_industry)}
-        </Badge>
-      )}
-    </div>
-  );
-
-  // Mobile layout: stacked
-  const mobileLayout = (
+  return (
     <div
       onClick={() => onOpenDetail(item.id)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onOpenDetail(item.id)}
+      className="feed-card"
       style={{
         background: "var(--si-surface)",
         border: "1px solid var(--si-border)",
         borderRadius: 12,
-        padding: "16px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
         cursor: "pointer",
       }}
     >
-      {badgeSection}
-      {titleSection}
-      {descriptionSection}
-      <div style={{ display: "flex", justifyContent: "center" }}>
+      {/* Screenshot - will be positioned differently on mobile vs desktop */}
+      <div className="feedcard-screenshot">
         <ItemScreenshot itemId={item.id} width={260} height={200} />
       </div>
-      {tagsSection}
-    </div>
-  );
 
-  // Desktop layout: screenshot on left, content on right
-  const desktopLayout = (
-    <div
-      onClick={() => onOpenDetail(item.id)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onOpenDetail(item.id)}
-      style={{
-        background: "var(--si-surface)",
-        border: "1px solid var(--si-border)",
-        borderRadius: 12,
-        padding: "16px 20px",
-        display: "flex",
-        flexDirection: "row",
-        gap: 16,
-        cursor: "pointer",
-      }}
-    >
-      <ItemScreenshot itemId={item.id} width={260} height={200} />
-      
-      <div style={{ display: "flex", flexDirection: "column", gap: 9, minWidth: 0, flexGrow: 1 }}>
-        {badgeSection}
-        {titleSection}
-        {descriptionSection}
-        {tagsSection}
+      {/* Content area */}
+      <div className="feedcard-content">
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+          {severityStyle && <Badge color={severityStyle.color} bg={severityStyle.bg}>{severityStyle.label}</Badge>}
+          {cvssStyle && (
+            <Badge color={cvssStyle.color} bg={cvssStyle.bg}>
+              CVSS {item.max_cvss_score?.toFixed(1)}
+            </Badge>
+          )}
+          {item.in_kev && (
+            <Badge color="var(--si-red)" bg="var(--si-red-bg)">
+              KEV
+            </Badge>
+          )}
+          {item.max_epss_score !== null && item.max_epss_score >= 0.1 && (
+            <Badge color="var(--si-text-muted)" bg="var(--si-neutral-bg)">
+              EPSS {(item.max_epss_score * 100).toFixed(1)}%
+            </Badge>
+          )}
+          <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--si-text-muted)", display: "flex", alignItems: "center" }}>
+            {item.source?.name} • {item.published_at ? timeFormat.format(new Date(item.published_at)) : ""}
+            {item.source.favicon && (
+              <img 
+                src={`data:image/png;base64,${item.source.favicon}`} 
+                height="20px"
+                width="20px"
+                style={{marginLeft: "8px"}}
+              />
+            )}
+          </span>
+        </div>
+
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="si-display"
+          style={{ fontSize: 16, fontWeight: 600, color: "var(--si-text)" }}
+        >
+          {item.title ?? item.url}
+        </a>
+
+        {item.description && (
+          <div style={{ fontSize: 13, color: "var(--si-text-secondary)", lineHeight: 1.4 }}>{item.description}</div>
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          {cveIds.map((id) => (
+            <TagButton key={id} color="var(--si-purple)" bg="var(--si-purple-bg)" onClick={(e) => { e.stopPropagation(); onOpenCve(id); }}>
+              {id}
+            </TagButton>
+          ))}
+          {Array.from(new Set(ttps.map((ttp) => ttp.technique_id))).map((techniqueId) => {
+            const techniqueColor = mitreTechniqueColor(techniqueId);
+            return (
+              <TagLink key={techniqueId} href={mitreTechniqueUrl(techniqueId)} color={techniqueColor.color} bg={techniqueColor.bg}>
+                {techniqueId}
+              </TagLink>
+            );
+          })}
+          {actor && <Badge color={ACTOR_STYLE.color} bg={ACTOR_STYLE.bg}>{actor}</Badge>}
+          {entities.map((name) => (
+            <Badge key={name} color={ENTITY_STYLE.color} bg={ENTITY_STYLE.bg}>
+              {name}
+            </Badge>
+          ))}
+          {classification?.victim_country && (
+            <Badge color={VICTIM_STYLE.color} bg={VICTIM_STYLE.bg}>
+              {countryLabel(classification.victim_country)}
+            </Badge>
+          )}
+          {classification?.victim_industry && (
+            <Badge color={VICTIM_STYLE.color} bg={VICTIM_STYLE.bg}>
+              {industryLabel(classification.victim_industry)}
+            </Badge>
+          )}
+        </div>
       </div>
     </div>
-  );
-
-  return (
-    <>
-      <div className="mobile-only">{mobileLayout}</div>
-      <div className="desktop-only">{desktopLayout}</div>
-    </>
   );
 }

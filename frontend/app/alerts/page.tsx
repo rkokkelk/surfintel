@@ -1191,33 +1191,17 @@ export default function AlertsPage() {
 
   return (
     <Shell active="alerts">
-      <>
-        {/* Mobile layout */}
-        <div className="mobile-only">
-          {mobileRulesLayout}
-          {selectedRuleId !== null && mobileFormLayout}
-        </div>
-        
-        {/* Desktop layout */}
-        <div className="desktop-only" style={{ display: "none" }}>
-          {desktopRulesLayout}
-          {desktopFormLayout}
-        </div>
-        
-        {/* Show form on desktop or when editing on mobile */}
-        {selectedRuleId !== null && (
-          <div className="desktop-only">
-            {desktopFormLayout}
-          </div>
-        )}
-        
-        {/* Show rules list on desktop or when not editing on mobile */}
-        {selectedRuleId === null && (
-          <div className="desktop-only" style={{ display: "flex" }}>
-            {desktopRulesLayout}
-          </div>
-        )}
-      </>
+      {/* Mobile layout */}
+      <div className="mobile-only">
+        {mobileRulesLayout}
+        {selectedRuleId !== null && mobileFormLayout}
+      </div>
+      
+      {/* Desktop layout */}
+      <div className="desktop-only">
+        {desktopRulesLayout}
+        {selectedRuleId !== null && desktopFormLayout}
+      </div>
     </Shell>
   );
 }

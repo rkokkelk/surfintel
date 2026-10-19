@@ -888,25 +888,15 @@ export default function SourcesPage() {
 
   return (
     <Shell active="sources">
-      <>
-        <div className="mobile-only">
-          {editingId ? mobileFormLayout : mobileSourcesLayout}
+      <div className="mobile-only">
+        {editingId ? mobileFormLayout : mobileSourcesLayout}
+      </div>
+      <div className="desktop-only">
+        <div style={{ padding: "22px 24px", display: "flex", gap: 20 }}>
+          {desktopSourcesLayout}
+          {editingId && desktopFormLayout}
         </div>
-        <div className="desktop-only" style={{ display: "none" }}>
-          <div style={{ padding: "22px 24px", display: "flex", gap: 20 }}>
-            {desktopSourcesLayout}
-            {desktopFormLayout}
-          </div>
-        </div>
-        
-        {/* Desktop layout */}
-        <div className="desktop-only">
-          <div style={{ padding: "22px 24px", display: "flex", gap: 20 }}>
-            {desktopSourcesLayout}
-            {desktopFormLayout}
-          </div>
-        </div>
-      </>
+      </div>
       <ToastContainer />
     </Shell>
   );

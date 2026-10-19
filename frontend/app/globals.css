@@ -141,28 +141,271 @@ textarea {
   border-color: var(--si-border);
 }
 
-/* Base styles for mobile-first approach */
-.mobile-only {
+/* ===== Responsive Layout Components ===== */
+
+/* Shell component - responsive layout */
+.shell-header {
+  height: 72px;
+  background: var(--si-surface);
+  border-bottom: 1px solid var(--si-border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  position: relative;
+  z-index: 101;
+}
+
+.shell-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.shell-menu-toggle {
   display: none;
 }
 
-.desktop-only {
+.shell-header-right {
   display: flex;
+  gap: 8;
+  align-items: center;
 }
 
-.mobile-menu-toggle {
+.shell-sidebar {
   display: none;
-}
-
-.desktop-nav {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--si-surface);
+  border-right: 1px solid var(--si-border);
+  padding: 20px 12px;
   display: flex;
+  flex-direction: column;
+  gap: 2;
 }
 
-.desktop-sidebar {
+.shell-main {
+  flex-grow: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+/* Shell desktop layout */
+@media (min-width: 769px) {
+  .shell-header {
+    height: 72px;
+    flex-shrink: 0;
+    background: var(--si-surface);
+    border-bottom: 1px solid var(--si-border);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 24px;
+  }
+  
+  .shell-header-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  
+  .shell-menu-toggle {
+    display: none !important;
+  }
+  
+  .shell-header-right {
+    margin-left: auto;
+    display: flex;
+    gap: 10;
+    align-items: center;
+  }
+  
+  .shell-api-button,
+  .shell-logout-button {
+    height: 34px !important;
+    width: auto !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+  }
+  
+  .shell-sidebar {
+    display: flex !important;
+  }
+  
+  .shell-main {
+    flex-grow: 1;
+    min-width: 0;
+    overflow-y: auto;
+  }
+}
+
+/* OverviewFilters - responsive layout */
+.overview-filters {
+  background: var(--si-surface);
+  border: 1px solid var(--si-border);
+  border-radius: 12;
+  padding: 12px 16px;
   display: flex;
+  flex-direction: column;
+  gap: 12;
 }
 
-/* Mobile-first responsive design */
+.overview-filters-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8;
+}
+
+.overview-filters-label {
+  font-size: 11.5;
+  font-weight: 600;
+  color: var(--si-text-secondary);
+}
+
+.overview-filters-presets {
+  display: flex;
+  gap: 8;
+  flex-wrap: wrap;
+}
+
+.overview-filters-preset-button {
+  flex: 1 1 auto;
+  min-width: 100px;
+}
+
+.overview-filters-daterange {
+  display: flex;
+  gap: 8;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.overview-filters-to {
+  font-size: 12;
+  color: var(--si-text-muted);
+}
+
+.overview-filters-search-container {
+  position: relative;
+}
+
+.overview-filters-clear {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  color: var(--si-blue);
+  font-size: 12.5;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* OverviewFilters desktop layout */
+@media (min-width: 769px) {
+  .overview-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 10;
+  }
+  
+  .overview-filters-section {
+    display: flex;
+    align-items: center;
+    gap: 8;
+    flex-wrap: wrap;
+  }
+  
+  .overview-filters-label {
+    font-size: 11.5;
+    font-weight: 600;
+    color: var(--si-text-secondary);
+  }
+  
+  .overview-filters-presets {
+    display: flex;
+    gap: 8;
+    flex-wrap: wrap;
+  }
+  
+  .overview-filters-preset-button {
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 14px;
+    border: none;
+    font-size: 12.5;
+    font-weight: 500;
+  }
+  
+  .overview-filters-preset-button:not(:first-child) {
+    margin-left: 0;
+  }
+  
+  .overview-filters-daterange {
+    display: flex;
+    align-items: center;
+    gap: 8;
+    flex-wrap: wrap;
+  }
+  
+  .overview-filters-to {
+    font-size: 12;
+    color: var(--si-text-muted);
+  }
+  
+  .overview-filters-search-container {
+    flex-grow: 1;
+    min-width: 220px;
+  }
+  
+  .overview-filters-clear {
+    margin-left: auto;
+  }
+  
+  .overview-filters-section:first-child {
+    display: flex;
+    align-items: center;
+    gap: 8;
+    flex-wrap: wrap;
+  }
+  
+  .overview-filters-section:first-child .overview-filters-presets {
+    display: flex;
+    gap: 8;
+  }
+  
+  .overview-filters-section:first-child .overview-filters-daterange {
+    display: flex;
+    align-items: center;
+    gap: 8;
+    margin-left: 8px;
+  }
+  
+  .overview-filters-section:first-child .overview-filters-daterange > input {
+    width: 138px;
+  }
+  
+  .overview-filters-section:nth-child(2) {
+    display: flex;
+    align-items: center;
+    gap: 8;
+    flex-wrap: wrap;
+  }
+  
+  .overview-filters-section:nth-child(2) > div:first-child {
+    flex-grow: 1;
+    min-width: 220px;
+  }
+  
+  .overview-filters-section:nth-child(2) > select {
+    min-width: 160px;
+  }
+  
+  .overview-filters-section:nth-child(2) > input[type="text"] {
+    width: 180px;
+  }
+}
+
+/* Shell mobile layout */
 @media (max-width: 768px) {
   body {
     font-size: 14px;
@@ -186,37 +429,8 @@ textarea {
   }
   
   /* Show mobile menu toggle */
-  .mobile-menu-toggle {
+  .shell-menu-toggle {
     display: block !important;
-  }
-  
-  /* Hide desktop navigation */
-  .desktop-nav {
-    display: none !important;
-  }
-  
-  /* Hide desktop sidebar */
-  .desktop-sidebar {
-    display: none !important;
-  }
-  
-  /* Show mobile-only elements */
-  .mobile-only {
-    display: block !important;
-  }
-  
-  /* Hide desktop-only elements */
-  .desktop-only {
-    display: none !important;
-  }
-  
-  /* Mobile header adjustments */
-  header {
-    position: fixed;
-    width: 100%;
-    top: 0;
-    left: 0;
-    right: 0;
   }
   
   /* Main content should account for fixed header */
@@ -224,59 +438,54 @@ textarea {
     margin-top: 72px;
   }
   
-  /* Full-width main content on mobile */
-  .mobile-main {
-    width: 100%;
+  /* FeedCard - stacked layout on mobile */
+  .feed-card {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .feedcard-screenshot {
+    display: flex;
+    justify-content: center;
+    order: -1;
+  }
+  
+  .feedcard-content {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
   }
 }
 
-/* Tablet viewport */
-@media (min-width: 769px) and (max-width: 1024px) {
-  /* Adjust for medium screens */
-  .desktop-sidebar {
-    width: 200px;
+/* FeedCard desktop layout */
+@media (min-width: 769px) {
+  .feed-card {
+    display: flex;
+    flex-direction: row;
+    padding: 16px 20px;
+    gap: 16px;
   }
   
-  .mobile-only {
-    display: none !important;
+  .feedcard-screenshot {
+    display: flex;
+    justify-content: flex-start;
+    order: 0;
+    flex-shrink: 0;
   }
   
-  .desktop-only {
-    display: block !important;
-  }
-  
-  .mobile-menu-toggle {
-    display: none !important;
-  }
-  
-  .desktop-nav {
-    display: flex !important;
+  .feedcard-content {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+    flex-grow: 1;
   }
 }
 
-/* Desktop and larger */
-@media (min-width: 1025px) {
-  /* Desktop-specific styles can override mobile defaults */
-  .mobile-only {
-    display: none !important;
-  }
-  
-  .desktop-only {
-    display: block !important;
-  }
-  
-  .mobile-menu-toggle {
-    display: none !important;
-  }
-  
-  .desktop-nav {
-    display: flex !important;
-  }
-}
-
-/* Additional responsive styles */
+/* Make tables scrollable horizontally on mobile */
 @media (max-width: 768px) {
-  /* Make tables scrollable horizontally */
   table {
     width: 100%;
     overflow-x: auto;
@@ -288,14 +497,30 @@ textarea {
     overflow-x: hidden;
   }
   
-  /* Better spacing for mobile */
-  .mobile-only > * {
-    width: 100%;
-  }
-  
   /* Responsive images */
   img {
     max-width: 100%;
     height: auto;
+  }
+  
+  /* Show mobile-only content */
+  .mobile-only {
+    display: block;
+  }
+  
+  /* Hide desktop-only content */
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Show desktop-only content and hide mobile-only on desktop */
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
   }
 }

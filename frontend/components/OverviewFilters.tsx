@@ -142,28 +142,18 @@ export function OverviewFilters({
     value.q || value.sourceId || value.cveId || value.from || value.to || value.minCvss || value.minEpss || value.kevOnly
   );
 
-  // Mobile layout: stacked filters
-  const mobileLayout = (
-    <div
-      style={{
-        background: "var(--si-surface)",
-        border: "1px solid var(--si-border)",
-        borderRadius: 12,
-        padding: "12px 16px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-      }}
-    >
-      {/* Period presets */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>Periode</span>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+  // Single responsive layout that adapts to viewport
+  return (
+    <div className="overview-filters">
+      <div className="overview-filters-section">
+        <span className="overview-filters-label">Periode</span>
+        <div className="overview-filters-presets">
           {PRESETS.map((p) => (
             <button
               key={p.label}
               type="button"
               onClick={() => applyPreset(p.days)}
+              className="overview-filters-preset-button"
               style={presetButtonStyle(activePreset === p.label)}
             >
               {p.label}
@@ -171,8 +161,7 @@ export function OverviewFilters({
           ))}
         </div>
         
-        {/* Date range */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="overview-filters-daterange">
           <input
             type="date"
             value={value.from}
@@ -180,7 +169,7 @@ export function OverviewFilters({
             style={{ ...fieldStyle(Boolean(value.from)), flex: "1 1 120px" }}
             aria-label="Van datum"
           />
-          <span style={{ fontSize: 12, color: "var(--si-text-muted)" }}>t/m</span>
+          <span className="overview-filters-to">t/m</span>
           <input
             type="date"
             value={value.to}
@@ -191,9 +180,8 @@ export function OverviewFilters({
         </div>
       </div>
 
-      {/* Search and filters */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ position: "relative" }}>
+      <div className="overview-filters-section">
+        <div className="overview-filters-search-container">
           <svg
             width="14"
             height="14"
@@ -246,149 +234,11 @@ export function OverviewFilters({
             setEpssDraft("");
             onChange(EMPTY_FILTERS);
           }}
-          style={{
-            alignSelf: "flex-start",
-            border: "none",
-            background: "none",
-            color: "var(--si-blue)",
-            fontSize: 12.5,
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
+          className="overview-filters-clear"
         >
           Wis filters
         </button>
       )}
     </div>
-  );
-
-  // Desktop layout: single row with all filters
-  const desktopLayout = (
-    <div
-      style={{
-        background: "var(--si-surface)",
-        border: "1px solid var(--si-border)",
-        borderRadius: 12,
-        padding: "12px 16px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--si-text-secondary)" }}>Periode</span>
-        {PRESETS.map((p) => (
-          <button
-            key={p.label}
-            type="button"
-            onClick={() => applyPreset(p.days)}
-            style={{
-              height: 28,
-              padding: "0 12px",
-              borderRadius: 14,
-              border: activePreset === p.label ? "none" : "1px solid var(--si-border)",
-              background: activePreset === p.label ? "var(--si-navy)" : "var(--si-surface)",
-              color: activePreset === p.label ? "#fff" : "var(--si-text-secondary)",
-              fontSize: 12.5,
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
-            {p.label}
-          </button>
-        ))}
-        <span style={{ width: 1, height: 20, background: "var(--si-border)" }} />
-        <input
-          type="date"
-          value={value.from}
-          onChange={(e) => onChange({ ...value, from: e.target.value })}
-          style={{ ...fieldStyle(Boolean(value.from)), width: 138 }}
-          aria-label="Van datum"
-        />
-        <span style={{ fontSize: 12, color: "var(--si-text-muted)" }}>t/m</span>
-        <input
-          type="date"
-          value={value.to}
-          onChange={(e) => onChange({ ...value, to: e.target.value })}
-          style={{ ...fieldStyle(Boolean(value.to)), width: 138 }}
-          aria-label="Tot datum"
-        />
-
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={() => {
-              setQDraft("");
-              setCveDraft("");
-              setCvssDraft("");
-              setEpssDraft("");
-              onChange(EMPTY_FILTERS);
-            }}
-            style={{
-              marginLeft: "auto",
-              border: "none",
-              background: "none",
-              color: "var(--si-blue)",
-              fontSize: 12.5,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Wis filters
-          </button>
-        )}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <div style={{ position: "relative", flexGrow: 1, minWidth: 220 }}>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="var(--si-text-muted)"
-            strokeWidth="1.8"
-            style={{ position: "absolute", left: 10, top: 11 }}
-          >
-            <circle cx="9" cy="9" r="6" />
-            <path d="M17 17l-4-4" strokeLinecap="round" />
-          </svg>
-          <input
-            value={qDraft}
-            onChange={(e) => setQDraft(e.target.value)}
-            placeholder="Zoek op trefwoord..."
-            style={{ ...fieldStyle(Boolean(value.q)), width: "100%", paddingLeft: 30 }}
-          />
-        </div>
-
-        <select
-          value={value.sourceId ?? ""}
-          onChange={(e) => onChange({ ...value, sourceId: e.target.value || null })}
-          style={{ ...fieldStyle(Boolean(value.sourceId)), minWidth: 160 }}
-        >
-          <option value="">Alle bronnen</option>
-          {sources.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-
-        <input
-          value={cveDraft}
-          onChange={(e) => setCveDraft(e.target.value)}
-          placeholder="CVE-ID, bv. 2026-1234"
-          className="si-mono"
-          style={{ ...fieldStyle(Boolean(value.cveId)), width: 180 }}
-        />
-      </div>
-    </div>
-  );
-
-  return (
-    <>
-      <div className="mobile-only">{mobileLayout}</div>
-      <div className="desktop-only">{desktopLayout}</div>
-    </>
   );
 }
