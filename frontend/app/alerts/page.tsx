@@ -279,12 +279,12 @@ export default function AlertsPage() {
     setTestResults(null);
     try {
       const conditions = buildConditionsPayload();
-      const results = await apiFetch<AlertTestMatch[]>(`/alerts/${selectedRuleId}/test`, {
-        method: "POST",
-        body: JSON.stringify({ conditions, message_template: form.messageTemplate.trim() || null }),
+      const results = await apiFetch<AlertTestMatch[]>(`/alerts/${selectedRuleId}/matches`, {
+        method: "GET"
       });
       setTestResults(results);
     } catch (err) {
+      console.error(err);
       setTestError(err instanceof ApiError ? err.message : "Testen mislukt.");
     } finally {
       setTesting(false);

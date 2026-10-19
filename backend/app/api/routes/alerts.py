@@ -182,10 +182,9 @@ def delete_alert_rule(
     db.commit()
 
 
-@router.trace("/{rule_id}", response_model=list[AlertTestMatchOut])
+@router.get("/{rule_id}/matches", response_model=list[AlertTestMatchOut])
 def test_alert_rule(
     rule_id: uuid.UUID,
-    body: AlertRuleTestRequest,
     db: Session = Depends(get_db),
     current_user: CurrentUser = Depends(require_admin),
 ) -> list[AlertTestMatchOut]:
@@ -197,7 +196,7 @@ def test_alert_rule(
         raise HTTPException(404, "Alert-regel niet gevonden")
 
     results: list[AlertTestMatchOut] = []
-    matches = match_alert_items.s(rule_id, limit=TEST_RESULT_LIMIT)()
+    matches = match_alert_items.delay(rule_id, limit=TEST_RESULT_LIMIT).get()
     items = db.scalars(select(Item).where(Item.id.in_(matches)).limit(TEST_RESULT_LIMIT))
 
     for item in items:
