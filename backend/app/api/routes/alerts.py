@@ -244,7 +244,7 @@ def get_alert_items(
         select(AlertMatch, Item)
         .join(Item, Item.id == AlertMatch.item_id)
         .where(AlertMatch.alert_rule_id == rule.id)
-        .order_by(AlertMatch.matched_at.desc())
+        .order_by(Item.created_at.desc())
         .limit(limit)
     ).all()
 
