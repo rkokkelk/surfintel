@@ -55,6 +55,7 @@ def setup_source(sender: Celery, **kwargs):
             setup_source_signature.apply_async(countdown=jitter)
             logger.info("Starting run of source! (jitter={}, poll={})", jitter, poll)
 
+@app.task
 def setup_source_periodic_task(source_id: uuid.UUID) -> None:
     log = logger.bind(source=source_id)
     # outside any request. Open/close a session the same way app/cli.py does.
