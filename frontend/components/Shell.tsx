@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { clearToken } from "@/lib/api";
+import { apiFetch, clearToken } from "@/lib/api";
+import { VersionInfo } from "@/lib/types";
 import { isPlatformAdmin } from "@/lib/auth";
 import { ApiInfoModal } from "@/components/ApiInfoModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -29,7 +30,17 @@ export function Shell({
   // mismatch (server always renders false, client could render true before
   // hydration reconciles).
   const [showAdminSection, setShowAdminSection] = useState(false);
-  useEffect(() => setShowAdminSection(isPlatformAdmin()), []);
+  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
+
+  function loadVersion() {
+    apiFetch<VersionInfo>("/version")
+      .then(setVersionInfo)
+  }
+
+  useEffect(() => {
+    loadVersion();
+    setShowAdminSection(isPlatformAdmin())
+  }, []);
   const [showApiInfo, setShowApiInfo] = useState(false);
 
   function logout() {
@@ -126,6 +137,23 @@ export function Shell({
               <NavItem href="/sources" label=<><GrResources /> Bronnen</> activeItem={active === "sources"} />
             </>
           )}
+          <div
+            style={{
+              marginTop: "auto",
+              padding: "12px 8px",
+              fontSize: 11,
+              color: "var(--si-text-muted)",
+              background: "var(--si-surface)",
+              borderRadius: 6,
+              border: "1px solid var(--si-border)",
+              textAlign: "center",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
+            }}
+          >
+            Version: {versionInfo?.version} ({versionInfo?.commit?.slice(0, 7)})
+          </div>
         </nav>
 
         <main style={{ flexGrow: 1, minWidth: 0 }}>{children}</main>

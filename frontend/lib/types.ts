@@ -1,5 +1,10 @@
 export type SourceType = "rss" | "html" | "gh" | "custom_module";
 
+export interface VersionInfo {
+  version: string;
+  commit: string;
+}
+
 export interface Source {
   id: string;
   name: string;
