@@ -3,6 +3,11 @@
 # command (set in docker-compose.yml) differs.
 FROM python:3.12-slim
 
+ARG VERSION="v1.0.0"
+ENV SURFINTEL_VERSION=${VERSION}
+ARG COMMIT="9dce0c5"
+ENV SURFINTEL_COMMIT=${COMMIT}
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*

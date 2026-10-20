@@ -18,6 +18,10 @@
       "cwd": "${workspaceFolder}/backend",
       "python": "${workspaceFolder}/backend/.venv/bin/python",
       "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "SURFINTEL_VERSION": "v1.0.0",
+        "SURFINTEL_COMMIT": "19f713"
+      },
       "preLaunchTask": "api setup",
       "justMyCode": true
     },
@@ -118,6 +122,6 @@
     { "id": "itemId", "type": "promptString", "description": "ItemID to lookup again." },
     { "id": "adminEmail", "type": "promptString", "description": "E-mailadres nieuwe platform-admin" },
     { "id": "adminName", "type": "promptString", "description": "Naam nieuwe platform-admin" },
-    { "id": "adminPassword", "type": "promptString", "description": "Wachtwoord nieuwe platform-admin", "password": true }
+    { "id": "adminPassword", "type": "promptString", "description": "Wachtwoord nieuwe platform-admin", "password": true },
   ]
 }

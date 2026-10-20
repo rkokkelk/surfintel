@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,11 +7,11 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.router import api_router
-from app.db.session import SessionLocal
 from app.core import logging
 from app.core.config import settings
+from app.db.session import SessionLocal
 
-app = FastAPI(title="SurfIntel API", version="0.1.0")
+app = FastAPI(title="SurfIntel API", version=settings.version)
 
 class CatchAllMiddleware(BaseHTTPMiddleware):
     """An exception handler registered for the bare `Exception` type is

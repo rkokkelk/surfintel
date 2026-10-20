@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="SURFINTEL_", env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+psycopg://surfintel:surfintel@localhost:5432/surfintel"
 
@@ -27,6 +27,10 @@ class Settings(BaseSettings):
 
     # Default log dir
     log_dir: str = 'logs'
+
+    # Version info
+    version: str = ''
+    commit: str = ''
 
     # CORS is origin-exact (see app/main.py) — "localhost" and "127.0.0.1" are
     # different origins even though they're the same machine, so both are
