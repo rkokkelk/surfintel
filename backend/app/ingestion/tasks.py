@@ -51,7 +51,7 @@ def setup_source(sender: Celery, **kwargs):
             poll = source.poll_interval_seconds
             jitter = random.randint(1, poll)
 
-            setup_source_signature = setup_source_periodic_task.s(source=source.id)
+            setup_source_signature = setup_source_periodic_task.s(source_id=source.id)
             setup_source_signature.apply_async(countdown=jitter)
             logger.info("Starting run of source! (jitter={}, poll={})", jitter, poll)
 
