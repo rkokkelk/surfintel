@@ -1,5 +1,4 @@
 import datetime as dt
-import os
 import re
 
 import httpx
@@ -8,6 +7,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.enrichment.base import EnrichmentModule
 from app.models.cve import Cve, ItemCve
 from app.models.item import Item
@@ -26,8 +26,8 @@ class CveExtractor(EnrichmentModule):
     source_toggle = "enrich_cve"
 
     def __init__(self):
-        self.url = "https://app.opencve.io/api/v2"
-        self.headers = {"Authorization": f"Bearer {os.environ.get('OPENCVE_API_KEY')}"}
+        self.url = settings.opencve_api_url
+        self.headers = {"Authorization": f"Bearer {settings.opencve_api_key}"}
 
     def run(self, item: Item, db: Session) -> dict:
         self.log = logger.bind(source=item.source_id, item=item.id)
@@ -71,7 +71,7 @@ class CveExtractor(EnrichmentModule):
         return fields
 
     def _sync_cve(self, db: Session, cve_id: str) -> Cve:
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         existing = db.get(Cve, cve_id)
 
         if existing and existing.fetched_at and now - existing.fetched_at < _REFRESH_INTERVAL:

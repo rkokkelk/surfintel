@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     version: str = ''
     commit: str = ''
 
+    # enrichment credentials OpenAI
+    azure_openai_model: str = ''
+    azure_openai_url: str = ''
+    azure_openai_version: str = ''
+    azure_openai_key: str = ''
+
+    # enrichment OpenCVE
+    opencve_api_key: str = ''
+    opencve_api_url: str = ''
+
     # CORS is origin-exact (see app/main.py) — "localhost" and "127.0.0.1" are
     # different origins even though they're the same machine, so both are
     # allowed by default to avoid that footgun. Override via CORS_ORIGINS as

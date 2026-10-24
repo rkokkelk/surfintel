@@ -1,12 +1,11 @@
 """Mitre classification.
 """
-import os
-
 import instructor
 from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.enrichment.base import EnrichmentModule
 from app.models.item import Item
 
@@ -29,10 +28,10 @@ class MitreCategorizer(EnrichmentModule):
     def run(self, item: Item, db: Session) -> dict:
         self.log = logger.bind(source=item.source_id, item=item.id)
         client = instructor.from_provider(
-            "azure_openai/gpt-5.4-mini",
-            api_key=os.environ['AZURE_OPENAI_KEY'],
-            azure_endpoint="https://swedencentral.api.cognitive.microsoft.com/",
-            api_version="2024-12-01-preview"
+            settings.azure_openai_model,
+            api_key=settings.azure_openai_key,
+            azure_endpoint=settings.azure_openai_url,
+            api_version=settings.azure_openai_version
         )
 
         self.log.trace("{}[{}] - starting classification", self.name, item.id)

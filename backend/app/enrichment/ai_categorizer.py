@@ -6,7 +6,6 @@ working v1 (not a stub): swapping it for an LLM-backed classifier later is a
 drop-in replacement behind the same EnrichmentModule interface, and the
 result shape (`severity`, `category`) stays the same either way.
 """
-import os
 from typing import Literal
 
 import instructor
@@ -15,6 +14,7 @@ from pydantic import BaseModel, Field, PositiveInt
 from pydantic_extra_types.country import CountryAlpha2
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.enrichment.base import EnrichmentModule
 from app.models.item import Item
 
@@ -41,10 +41,10 @@ class AiCategorizer(EnrichmentModule):
     def run(self, item: Item, db: Session) -> dict:
         self.log = logger.bind(source=item.source_id, item=item.id)
         client = instructor.from_provider(
-            "azure_openai/gpt-5.4-mini",
-            api_key=os.environ['AZURE_OPENAI_KEY'],
-            azure_endpoint="https://swedencentral.api.cognitive.microsoft.com/",
-            api_version="2024-12-01-preview"
+            settings.azure_openai_model,
+            api_key=settings.azure_openai_key,
+            azure_endpoint=settings.azure_openai_url,
+            api_version=settings.azure_openai_version
         )
 
         self.log.trace("{}[{}] - starting classification", self.name, item.id)
