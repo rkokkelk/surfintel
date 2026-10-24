@@ -6,10 +6,14 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_platform_admin
-from app.celery import app
 from app.core import logging
 from app.db.session import get_db
-from app.ingestion.tasks import run_ingestion
+from app.ingestion.tasks import (
+    delete_source_task,
+    run_ingestion,
+    setup_source_periodic_task,
+    stop_source_beat,
+)
 from app.models.item import Item, ItemStatus
 from app.models.source import Source
 from app.schemas.source import (
@@ -78,8 +82,10 @@ def update_source(
         setattr(source, field, value)
 
     # Update periodic task
-    source_signature = run_ingestion.s(source.id, fetch_identifier='PLAYWRIGHT')
-    app.add_periodic_task(source.poll_interval_seconds, source_signature, name=f"periodic_{source.id}")  #TODO: fix updating periodic tasks
+    if source.enabled:
+        setup_source_periodic_task.delay(source_id=source.id)
+    else:
+        stop_source_beat(source_id=source.id)
 
     source.get_favicon()
 
@@ -96,8 +102,7 @@ def delete_source(
     if source is None:
         raise HTTPException(404, "Bron niet gevonden")
 
-    db.delete(source)
-    db.commit()
+    delete_source_task.delay(source_id=source.id)
 
 @router.get("/{source_id}/health", response_model=SourceHealth)
 def health(

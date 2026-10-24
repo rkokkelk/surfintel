@@ -46,7 +46,7 @@ def setup_source(sender: Celery, **kwargs):
     Adds jitter so that not all sources are gathered simultanously
     """
     with SessionLocal() as db:
-        sources = db.scalars(select(Source))
+        sources = db.scalars(select(Source).where(Source.enabled == True))
 
         for source in sources:
             poll = source.poll_interval_seconds
@@ -56,7 +56,7 @@ def setup_source(sender: Celery, **kwargs):
             setup_source_signature.apply_async(countdown=jitter)
             logger.info("Starting run of source! (jitter={}, poll={})", jitter, poll)
 
-@app.task
+@app.task(base=UuidSafeSingleton)
 def setup_source_periodic_task(source_id: uuid.UUID) -> None:
     log = logger.bind(source=source_id)
     # outside any request. Open/close a session the same way app/cli.py does.
@@ -78,8 +78,29 @@ def setup_source_periodic_task(source_id: uuid.UUID) -> None:
         run_source_ingestion = run_ingestion.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
         run_source_ingestion()
 
+@app.task(base=UuidSafeSingleton)
+def delete_source_task(source_id: uuid.UUID) -> None:
+    log = logger.bind(source=source_id)
+    # outside any request. Open/close a session the same way app/cli.py does.
+    with app.conf['dbSession']() as db:
+        source = db.get(Source, source_id)
 
-@app.task
+        stop_source_beat(source.id)
+        db.delete(source)
+        db.commit()
+
+        log.error("Deleted source")
+
+def stop_source_beat(source_id: uuid.UUID) -> None:
+    log = logger.bind(source=source_id)
+    # outside any request. Open/close a session the same way app/cli.py does.
+    entry = RedBeatSchedulerEntry.from_key(
+        f"redbeat:periodic_{source_id}", app=app
+    )
+    entry.delete()
+    log.warning("Stopped beat!")
+
+@app.task(base=UuidSafeSingleton)
 def run_ingestion(source_id: uuid.UUID, fetch_identifier: str | None = FETCH_TYPES.HTTPX, force: bool = False) -> None:
     """ Start Ingestion cycle
     
