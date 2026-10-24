@@ -10,6 +10,8 @@ app = Celery(
     __name__,
     broker_url=settings.celery_broker_url,
     result_backend=settings.celery_result_backend,
+    redbeat_redis_url=settings.celery_beat_url,
+    beat_scheduler="redbeat.RedBeatScheduler",
     timezone="Europe/Amsterdam",
     enable_utc=True,
     task_acks_late=False,

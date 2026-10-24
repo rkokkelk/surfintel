@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     # Defaults match local dev (redis running on the host); in docker-compose
     # these are overridden to point at the "redis" service by name, since
     # 127.0.0.1 inside a container doesn't reach another container.
+    celery_beat_url: str = "redis://127.0.0.1:6379/1"
     celery_broker_url: str = "redis://127.0.0.1:6379/0"
     celery_result_backend: str = "redis://127.0.0.1:6379/0"
 

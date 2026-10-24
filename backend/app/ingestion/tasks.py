@@ -10,6 +10,7 @@ from enum import Enum
 
 from celery import Celery, chord, group
 from loguru import logger
+from redbeat import RedBeatSchedulerEntry
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -63,9 +64,18 @@ def setup_source_periodic_task(source_id: uuid.UUID) -> None:
         source = db.get(Source, source_id)
 
         log.success("Setting up periodic tasks: {}", source.poll_interval_seconds)
-        run_source_ingestion = run_ingestion.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
 
-        app.add_periodic_task(source.poll_interval_seconds, run_source_ingestion, name=f"periodic_{source.id}")
+        entry = RedBeatSchedulerEntry(
+            name=f"periodic_{source_id}",
+            task="app.tasks.run_ingestion",       
+            schedule=source.poll_interval_seconds,
+            args=[str(source_id)],
+            kwargs={"fetch_identifier": "PLAYWRIGHT"},
+            app=app,
+        )
+        entry.save() 
+
+        run_source_ingestion = run_ingestion.s(source.id, fetch_identifier=FETCH_TYPES.PLAYWRIGHT.name)
         run_source_ingestion()
 
 
