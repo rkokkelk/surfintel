@@ -154,7 +154,7 @@ def retry_failed_items(status: list[ItemStatus] = [ItemStatus.discovered, ItemSt
 
         # Start paralell fetching tasks
         group_task = group(fetch_discovered_item.s(item.id, item.source.id, fetch_identifier='PLAYWRIGHT') for item in redo_items)
-        group_task()  
+        group_task.skew(start=1, step=25)()  
 
 
 def poll_source(db: Session, source: Source) -> None:
