@@ -1,10 +1,10 @@
-import os
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.router import api_router
 from app.core import logging
@@ -34,6 +34,7 @@ class CatchAllMiddleware(BaseHTTPMiddleware):
             return JSONResponse(status_code=500, content={"detail": "Interne serverfout"})
 
 
+app.add_middleware(SessionMiddleware, secret_key=settings.jwt_secret)
 app.add_middleware(CatchAllMiddleware)
 app.add_middleware(
     CORSMiddleware,
