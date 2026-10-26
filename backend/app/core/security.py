@@ -9,7 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.user import AppUser
+from app.models.organization import Organization
+from app.models.user import AppUser, UserRole
 from app.schemas.auth import CurrentUser
 
 oauth: OAuth = None
@@ -86,4 +87,35 @@ def pw_authenticate(db: Session, email: str, password: str) -> AppUser | None:
         return None
     if not verify_password(password, user.password_hash):
         return None
+    return user
+
+def user_upsert(db: Session, user_info: dict) -> AppUser:
+    """ Insert or update existing user based on OAUTH userinfo
+    
+    :param db: Database session
+    :param user_info: OAUTH2 IDP userinfo
+    """
+
+    user = db.scalar(select(AppUser).where(AppUser.email == user_info['email']))
+
+    if not user:
+
+        org = db.query(Organization).filter_by(is_platform_operator=True).first()
+        if org is None:
+            org = Organization(name="SURF", slug="surf", is_platform_operator=True)
+            db.add(org)
+            db.flush()
+
+        user = AppUser(
+            organization_id=org.id,
+            email=user_info['email'],
+            name=user_info['name'],
+            role=UserRole.admin
+        )
+        db.add(user)
+        db.flush()
+
+    user.last_login_at = dt.datetime.now(dt.UTC)
+    db.commit()
+
     return user
