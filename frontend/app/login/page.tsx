@@ -17,9 +17,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await sso();
-      router.push("/overview");
+      // sso() now does a redirect, so we won't reach here
+      // The callback page will handle the token and redirect
     } catch {
-      setError("Ongeldige inloggegevens.");
+      setError("Fout bij SSO inloggen.");
     } finally {
       setLoading(false);
     }
