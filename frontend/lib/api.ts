@@ -96,3 +96,10 @@ export async function login(email: string, password: string): Promise<string> {
   setToken(result.access_token);
   return result.access_token;
 }
+
+export async function sso(): Promise<string> {
+  const result = await apiFetch("/auth/login", {
+    method: "GET"
+  });
+  return '';
+}

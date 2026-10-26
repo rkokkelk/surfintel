@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/api";
+import { login, sso } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +10,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  async function handleSSO(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await sso();
+      router.push("/overview");
+    } catch {
+      setError("Ongeldige inloggegevens.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -112,7 +126,21 @@ export default function LoginPage() {
         </button>
 
         <div style={{ fontSize: 11, color: "var(--si-text-muted)", textAlign: "center" }}>
-          SURFconext-inloggen volgt in een latere fase.
+          <button
+            onClick={handleSSO}
+            style={{
+              height: 40,
+              border: "none",
+              borderRadius: 8,
+              background: "var(--si-blue)",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            SSO
+          </button>
+
         </div>
       </form>
     </div>
