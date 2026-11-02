@@ -46,7 +46,7 @@ async def auth(request: Request, db: Session = Depends(get_db)) -> RedirectRespo
     access_token = security.create_access_token(user=current_user)
 
     # TODO: whether returning a JWT toket in a GET request is not the best way to do this
-    return RedirectResponse(url=f"{settings.cors_origins[0]}/auth/callback#access_token={access_token}")
+    return RedirectResponse(url=f"{settings.cors_origins[0]}/login/callback#access_token={access_token}")
 
 
 @router.post("/api-token", response_model=TokenResponse)
