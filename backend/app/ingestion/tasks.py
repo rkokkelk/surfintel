@@ -67,7 +67,7 @@ def setup_source_periodic_task(source_id: uuid.UUID) -> None:
 
         entry = RedBeatSchedulerEntry(
             name=f"periodic_{source_id}",
-            task="app.tasks.run_ingestion",       
+            task="app.ingestion.tasks.run_ingestion", 
             schedule=source.poll_interval_seconds,
             args=[str(source_id)],
             kwargs={"fetch_identifier": "PLAYWRIGHT"},
