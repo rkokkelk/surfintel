@@ -34,7 +34,8 @@ dependencies = [
   "httpx-retries>=0.6",
   "feedgen>=1.0",
   "flower>=2.2",
-  "markdownify>=1.2"
+  "markdownify>=1.2",
+  "packaging>=26.3"
 ]
 
 [project.optional-dependencies]
