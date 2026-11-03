@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/api";
+import { login, sso } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +10,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const SSO_SLUG = process.env.NEXT_PUBLIC_SSO_SLUG;
+
+  async function handleSSO(event: React.MouseEvent) {
+    event.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await sso();
+    } catch {
+      setError("Fout bij SSO inloggen.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -38,7 +53,7 @@ export default function LoginPage() {
       <form
         onSubmit={handleSubmit}
         style={{
-          width: 360,
+          width: 400,
           background: "var(--si-surface)",
           border: "1px solid var(--si-border)",
           borderRadius: 12,
@@ -51,69 +66,95 @@ export default function LoginPage() {
         <div className="si-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
           <span style={{ color: "var(--si-navy)" }}>Surf</span>
           <span style={{ color: "var(--si-blue)" }}>Intel</span>
+          <span> - Sign in</span>
         </div>
 
-        <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-          E-mailadres
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              height: 38,
-              marginTop: 6,
-              border: "1px solid var(--si-border)",
-              borderRadius: 8,
-              padding: "0 12px",
-              fontSize: 14,
-            }}
-          />
-        </label>
 
-        <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
-          Wachtwoord
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              height: 38,
-              marginTop: 6,
-              border: "1px solid var(--si-border)",
-              borderRadius: 8,
-              padding: "0 12px",
-              fontSize: 14,
-            }}
-          />
-        </label>
+        {!SSO_SLUG && (
+          <Fragment>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+              E-mailadres
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  height: 38,
+                  marginTop: 6,
+                  border: "1px solid var(--si-border)",
+                  borderRadius: 8,
+                  padding: "0 12px",
+                  fontSize: 14,
+                }}
+              />
+            </label>
+
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--si-text-secondary)" }}>
+              Wachtwoord
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  height: 38,
+                  marginTop: 6,
+                  border: "1px solid var(--si-border)",
+                  borderRadius: 8,
+                  padding: "0 12px",
+                  fontSize: 14,
+                }}
+              />
+            </label>
+          </Fragment>
+        )}
 
         {error && <div style={{ fontSize: 13, color: "var(--si-red)" }}>{error}</div>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            height: 40,
-            border: "none",
-            borderRadius: 8,
-            background: "var(--si-blue)",
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          {loading ? "Bezig..." : "Inloggen"}
-        </button>
+        {!SSO_SLUG && (
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              height: 40,
+              border: "none",
+              borderRadius: 8,
+              background: "var(--si-blue)",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            {loading ? "Bezig..." : "Inloggen"}
+          </button>
+        )}
 
-        <div style={{ fontSize: 11, color: "var(--si-text-muted)", textAlign: "center" }}>
-          SURFconext-inloggen volgt in een latere fase.
-        </div>
+        {SSO_SLUG && (
+          <Fragment>
+            <p>Your organization uses single sign-on (SSO).</p>
+            <div style={{ fontSize: 11, color: "var(--si-text-muted)", textAlign: "center" }}>
+              <button
+                onClick={handleSSO}
+                style={{
+                  height: 40,
+                  border: "none",
+                  borderRadius: 8,
+                  background: "var(--si-blue)",
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                Continue with SSO: {SSO_SLUG}
+              </button>
+            </div>
+          </Fragment>
+        )}
       </form>
     </div>
   );

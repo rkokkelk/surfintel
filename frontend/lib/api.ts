@@ -96,3 +96,10 @@ export async function login(email: string, password: string): Promise<string> {
   setToken(result.access_token);
   return result.access_token;
 }
+
+export async function sso(): Promise<void> {
+  // OAuth requires a full page redirect, not an API call
+  // Redirect to backend OAuth login endpoint which will redirect to the provider
+  const apiUrl = getApiUrl();
+  window.location.href = `${apiUrl}/auth/login`;
+}

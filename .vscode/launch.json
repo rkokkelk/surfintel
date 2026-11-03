@@ -101,6 +101,9 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev",
+      "env": {
+        "NEXT_PUBLIC_SSO_SLUG": "Authentik"
+      },
       "cwd": "${workspaceFolder}/frontend"
     },
     {
@@ -109,6 +112,9 @@
       "request": "launch",
       "command": "npm run dev",
       "cwd": "${workspaceFolder}/frontend",
+      "env": {
+        "NEXT_PUBLIC_SSO_SLUG": "Authentik"
+      },
     }
   ],
   "compounds": [

@@ -43,6 +43,12 @@ class Settings(BaseSettings):
     opencve_api_key: str = ''
     opencve_api_url: str = ''
 
+    # OAUTH settings
+    oidc_issuer: str = ''
+    oidc_client_id: str = ''
+    oidc_client_secret: str = ''
+    oidc_scope: str = ''
+
     # CORS is origin-exact (see app/main.py) — "localhost" and "127.0.0.1" are
     # different origins even though they're the same machine, so both are
     # allowed by default to avoid that footgun. Override via CORS_ORIGINS as
