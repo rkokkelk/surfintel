@@ -55,6 +55,8 @@ def create_source(
 
     db.add(source)
     db.commit()
+
+    setup_source_periodic_task.delay(source_id=source.id)
     return source
 
 
