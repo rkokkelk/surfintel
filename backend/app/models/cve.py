@@ -20,6 +20,7 @@ class Cve(Base, TimestampMixin):
     cve_id: Mapped[str] = mapped_column(String(20), primary_key=True)
     title: Mapped[str | None] = mapped_column(String(500), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    year: Mapped[int] = mapped_column(int, nullable=False)
 
     cvss_v3_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     cvss_v3_vector: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -40,6 +41,11 @@ class Cve(Base, TimestampMixin):
     raw_data: Mapped[dict] = mapped_column(JSON, default=dict)
 
     fetched_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    def get_year(self) -> int:
+        """ Get the year of the Cve
+        """
+        return self.year if self.year else self.cve_id.split('-')[1]
 
 
 class ItemCve(Base, UUIDPk):
