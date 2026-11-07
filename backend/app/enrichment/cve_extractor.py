@@ -91,6 +91,7 @@ class CveExtractor(EnrichmentModule):
 
         csaf = self._fetch_cve_info(cve_id)
         cve = existing or Cve(cve_id=cve_id)
+        cve.year = cve.get_year()
 
         if csaf:
             _apply_csaf(cve, csaf)
