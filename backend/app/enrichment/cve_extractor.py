@@ -13,10 +13,20 @@ from app.models.item import Item
 
 _CVE_PATTERN = re.compile(r"CVE-\d{4}-\d{4,7}", re.IGNORECASE)
 
-# How long a cached Cve row is trusted before we ask OpenCVE again — CVE
+
+# Determine how long a CVE value is cached
 # metadata (CVSS, KEV, EPSS) does change after publication, but not often
 # enough to justify hitting a rate-limited API on every mention.
-_REFRESH_INTERVAL = dt.timedelta(hours=24)
+_REFRESH_INTERVALS = {
+    # How recent the cve has been fetched: how long the cve should be cached
+    dt.timedelta(weeks=1): dt.timedelta(hours=24),
+    dt.timedelta(weeks=2): dt.timedelta(days=2),
+    dt.timedelta(weeks=4): dt.timedelta(weeks=1),
+    dt.timedelta(weeks=8): dt.timedelta(weeks=2),
+    dt.timedelta(weeks=12): dt.timedelta(weeks=3),
+    dt.timedelta(weeks=26): dt.timedelta(weeks=8),
+    dt.timedelta(weeks=52): dt.timedelta(weeks=12),
+}
 
 
 class CveExtractor(EnrichmentModule):
@@ -69,9 +79,15 @@ class CveExtractor(EnrichmentModule):
         now = dt.datetime.now(dt.UTC)
         existing = db.get(Cve, cve_id)
 
-        if existing and existing.fetched_at and now - existing.fetched_at < _REFRESH_INTERVAL:
-            self.log.trace("cached CVE: {} latest {}", cve_id, existing.fetched_at)
-            return existing
+        # Verify the create_at and fetch_at do determine whether the cached data can returned
+        if existing and existing.fetched_at:
+            for c_delta, f_delta in _REFRESH_INTERVALS.items():
+                create_delta = now - existing.created_at
+                fetch_delta = now - existing.fetched_at
+
+                if  create_delta < c_delta and fetch_delta < f_delta:
+                    self.log.trace("cached CVE: {} latest {}", cve_id, existing.fetched_at)
+                    return existing
 
         csaf = self._fetch_cve_info(cve_id)
         cve = existing or Cve(cve_id=cve_id)
