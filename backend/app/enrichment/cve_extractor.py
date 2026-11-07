@@ -7,7 +7,6 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.enrichment.base import EnrichmentModule
 from app.models.cve import Cve, ItemCve
 from app.models.item import Item
@@ -24,10 +23,6 @@ class CveExtractor(EnrichmentModule):
     name = "cve_extractor"
     version = "2"
     source_toggle = "enrich_cve"
-
-    def __init__(self):
-        self.url = settings.opencve_api_url
-        self.headers = {"Authorization": f"Bearer {settings.opencve_api_key}"}
 
     def run(self, item: Item, db: Session) -> dict:
         self.log = logger.bind(source=item.source_id, item=item.id)
@@ -78,27 +73,28 @@ class CveExtractor(EnrichmentModule):
             self.log.trace("cached CVE: {} latest {}", cve_id, existing.fetched_at)
             return existing
 
-        payload = self._fetch_opencve_info(cve_id)
+        csaf = self._fetch_cve_info(cve_id)
         cve = existing or Cve(cve_id=cve_id)
 
-        if payload:
-            _apply_opencve_payload(cve, payload)
+        if csaf:
+            _apply_csaf(cve, csaf)
         cve.fetched_at = now
 
         if not existing:
             db.add(cve)
         return cve
 
-    def _fetch_opencve_info(self, cve_id: str) -> dict:
+    def _fetch_cve_info(self, cve_id: str) -> dict:
         data = {}
-        url = f"{self.url}/cves/{cve_id}"
+        year = cve_id.split('-')[1]
+        url = f"https://vulnerabilities.ncsc.nl/csaf/v2/{year}/{cve_id}.json"
 
         retry = Retry(total=5, backoff_factor=5)
         transport = RetryTransport(retry=retry)
 
         with httpx.Client(transport=transport) as client:
             response = client.get(
-                url, headers=self.headers, params={"include": "nvd_cpe_configurations,references"}, timeout=20
+                url,timeout=20
             )
 
             try:
@@ -110,7 +106,7 @@ class CveExtractor(EnrichmentModule):
 
         return data
 
-def _apply_opencve_payload(cve: Cve, payload: dict) -> None:
+def _apply_csaf(cve: Cve, payload: dict) -> None:
     metrics = payload.get("metrics", {})
 
     def score_vector(*keys: str) -> tuple[float | None, str | None]:
