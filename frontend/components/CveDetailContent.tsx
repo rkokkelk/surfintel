@@ -64,8 +64,8 @@ export function CveDetailContent({ cve, onOpenItem }: { cve: CveDetail; onOpenIt
             {cve.title}
           </div>
         )}
-        <a href={`https://app.opencve.io/cve/${cve.cve_id}`} target="_blank" rel="noreferrer" style={{ fontSize: 12.5 }}>
-          Bekijk op opencve.io ↗
+        <a href={`https://vulnerabilities.ncsc.nl/vulnerability.html?id=${cve.year}/${cve.cve_id}`} target="_blank" rel="noreferrer" style={{ fontSize: 12.5 }}>
+          Bekijk op NCSC-NL ↗
         </a>
       </div>
 
