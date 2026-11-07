@@ -87,7 +87,7 @@ class CveExtractor(EnrichmentModule):
     def _fetch_cve_info(self, cve_id: str) -> dict:
         data = {}
         year = cve_id.split('-')[1]
-        url = f"https://vulnerabilities.ncsc.nl/csaf/v2/{year}/{cve_id}.json"
+        url = f"https://vulnerabilities.ncsc.nl/csaf/v2/{year}/{cve_id.lower()}.json"
 
         retry = Retry(total=5, backoff_factor=5)
         transport = RetryTransport(retry=retry)
@@ -107,6 +107,130 @@ class CveExtractor(EnrichmentModule):
         return data
 
 def _apply_csaf(cve: Cve, payload: dict) -> None:
+    """Apply CSAF data to a Cve object.
+    
+    Supports both OpenCVE-style flat payloads and CSAF 2.0 format from NCSC.
+    """
+    # Check if this is a CSAF 2.0 document (has "document" and "vulnerabilities" keys)
+    is_csaf_v2 = "document" in payload and "vulnerabilities" in payload
+    
+    if is_csaf_v2:
+        _apply_csaf_v2(cve, payload)
+    else:
+        _apply_csaf_legacy(cve, payload)
+
+
+def _apply_csaf_v2(cve: Cve, payload: dict) -> None:
+    """Apply CSAF 2.0 format data (NCSC style) to a Cve object."""
+    doc = payload.get("document", {})
+    vulnerabilities = payload.get("vulnerabilities", [])
+    vuln = vulnerabilities[0]
+    
+    # Title: prefer vulnerability title, then document title
+    cve.title = vuln.get("title") or doc.get("title")
+    
+    # Description: extract from notes with category "description"
+    description_notes = [
+        note.get("text") 
+        for note in vuln.get("notes", []) 
+        if note.get("category") == "description"
+    ]
+    cve.description = description_notes[0] if description_notes else None
+    
+    # CVSS scores: extract from scores array
+    def extract_cvss_scores(scores_list: list) -> tuple[float | None, str | None, float | None, str | None]:
+        """Extract CVSS v3 and v4 scores from CSAF scores array."""
+        cvss_v3_score = None
+        cvss_v3_vector = None
+        cvss_v4_score = None
+        cvss_v4_vector = None
+        
+        for score in scores_list or []:
+            if "cvss_v3" in score:
+                cvss_data = score.get("cvss_v3", {})
+                cvss_v3_score = cvss_data.get("baseScore")
+                cvss_v3_vector = cvss_data.get("vectorString")
+            if "cvss_v4" in score:
+                cvss_data = score.get("cvss_v4", {})
+                cvss_v4_score = cvss_data.get("baseScore")
+                cvss_v4_vector = cvss_data.get("vectorString")
+        
+        return cvss_v3_score, cvss_v3_vector, cvss_v4_score, cvss_v4_vector
+    
+    scores = vuln.get("scores", [])
+    cve.cvss_v3_score, cve.cvss_v3_vector, cve.cvss_v4_score, cve.cvss_v4_vector = extract_cvss_scores(scores)
+    
+    # EPSS score: extract from notes with category "other" and title "EPSS"
+    epss_notes = [
+        note.get("text") 
+        for note in vuln.get("notes", []) 
+        if note.get("category") == "other" and note.get("title") == "EPSS"
+    ]
+    epss_text = epss_notes[0] if epss_notes else None
+    try:
+        cve.epss_score = float(epss_text) if epss_text else None
+    except (ValueError, TypeError):
+        cve.epss_score = None
+    
+    # KEV: Not available in NCSC CSAF, so set to False/None
+    cve.in_kev = False
+    cve.kev_date_added = None
+    
+    # CPES: extract from product_tree and product_identification_helper
+    def extract_cpes_from_tree(tree: dict | list) -> list[str]:
+        """Recursively extract CPEs from product tree."""
+        cpes = []
+        
+        if isinstance(tree, list):
+            for item in tree:
+                cpes.extend(extract_cpes_from_tree(item))
+        elif isinstance(tree, dict):
+            # Check for product_identification_helper
+            helper = tree.get("product_identification_helper", {})
+            if helper and "cpe" in helper:
+                cpes.append(helper["cpe"])
+            
+            # Recursively check branches
+            for branch in tree.get("branches", []):
+                cpes.extend(extract_cpes_from_tree(branch))
+            
+            # Check product directly
+            product = tree.get("product", {})
+            helper = product.get("product_identification_helper", {})
+            if helper and "cpe" in helper:
+                cpes.append(helper["cpe"])
+        
+        return cpes
+    
+    product_tree = payload.get("product_tree", {})
+    cpes = extract_cpes_from_tree(product_tree)
+    cve.cpes = sorted(set(cpes)) if cpes else []
+    
+    # Weaknesses: extract CWE information
+    cwe = vuln.get("cwe", {})
+    if cwe:
+        cve.weaknesses = [{"id": cwe.get("id"), "name": cwe.get("name"), "type": "CWE"}]
+    else:
+        cve.weaknesses = []
+    
+    # References: extract from vulnerability references
+    vuln_refs = vuln.get("references", [])
+    by_url: dict[str, set[str]] = {}
+    for ref in vuln_refs:
+        url = ref.get("url")
+        if not url:
+            continue
+        # Use summary as tag if available
+        tags = [ref.get("summary", "")] if ref.get("summary") else []
+        by_url.setdefault(url, set()).update(tags)
+    cve.references = [{"url": url, "tags": sorted(tags)} for url, tags in by_url.items()]
+    
+    # Raw data: store the entire payload
+    cve.raw_data = payload
+
+
+def _apply_csaf_legacy(cve: Cve, payload: dict) -> None:
+    """Apply legacy OpenCVE-style CSAF data to a Cve object."""
     metrics = payload.get("metrics", {})
 
     def score_vector(*keys: str) -> tuple[float | None, str | None]:
