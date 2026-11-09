@@ -58,6 +58,12 @@ export interface Cve {
   fetched_at: string | null;
 }
 
+export interface CWE {
+  id: string;
+  name: string;
+  type: string;
+}
+
 export interface CveReference {
   url: string;
   tags: string[];
@@ -76,7 +82,7 @@ export interface CveDetail extends Cve {
   cvss_v4_vector: string | null;
   kev_date_added: string | null;
   cpes: string[];
-  weaknesses: string[];
+  weaknesses: CWE[];
   references: CveReference[];
   items: CveLinkedItem[];
 }

@@ -41,6 +41,6 @@ class CveDetailOut(CveOut):
     cvss_v4_vector: str | None
     kev_date_added: dt.datetime | None
     cpes: list[str] = []
-    weaknesses: list[str] = []
+    weaknesses: list[dict] = []
     references: list[CveReference] = []
     items: list[CveLinkedItem] = []
