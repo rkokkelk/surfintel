@@ -8,6 +8,9 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 
 from app.models.cve import Cve
 
@@ -19,13 +22,15 @@ depends_on: Union[Sequence[str], None] = None
 
 
 def upgrade() -> None:
+
     op.add_column(
         "cve",
-        sa.Column("year", sa.Integer, nullable=False)
+        sa.Column("year", sa.Integer, nullable=False, server_default='2026'),
     )
 
     bind = op.get_bind()
-    session = sa.Session(bind=bind)
+    Session = sessionmaker(bind=bind)
+    session = Session()
 
     for cve in session.query(Cve).all():
         cve.year = cve.get_year()

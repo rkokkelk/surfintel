@@ -27,6 +27,7 @@ class CveOut(BaseModel):
 
     cve_id: str
     title: str | None
+    year: int
     cvss_v3_score: float | None
     cvss_v4_score: float | None
     epss_score: float | None

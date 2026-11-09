@@ -1,7 +1,17 @@
 import datetime as dt
 import uuid
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPk
@@ -20,7 +30,7 @@ class Cve(Base, TimestampMixin):
     cve_id: Mapped[str] = mapped_column(String(20), primary_key=True)
     title: Mapped[str | None] = mapped_column(String(500), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    year: Mapped[int] = mapped_column(int, nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
 
     cvss_v3_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     cvss_v3_vector: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -45,8 +55,7 @@ class Cve(Base, TimestampMixin):
     def get_year(self) -> int:
         """ Get the year of the Cve
         """
-        return self.year if self.year else self.cve_id.split('-')[1]
-
+        return self.year if self.year else int(self.cve_id.split('-')[1])
 
 class ItemCve(Base, UUIDPk):
     """Many-to-many: one item can mention several CVEs, and (across the whole
