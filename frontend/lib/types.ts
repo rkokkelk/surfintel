@@ -50,11 +50,18 @@ export interface ItemDetail extends Item {
 export interface Cve {
   cve_id: string;
   title: string | null;
+  year: number | null;
   cvss_v3_score: number | null;
   cvss_v4_score: number | null;
   epss_score: number | null;
   in_kev: boolean;
   fetched_at: string | null;
+}
+
+export interface CWE {
+  id: string;
+  name: string;
+  type: string;
 }
 
 export interface CveReference {
@@ -75,7 +82,7 @@ export interface CveDetail extends Cve {
   cvss_v4_vector: string | null;
   kev_date_added: string | null;
   cpes: string[];
-  weaknesses: string[];
+  weaknesses: CWE[];
   references: CveReference[];
   items: CveLinkedItem[];
 }

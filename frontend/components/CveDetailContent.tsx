@@ -64,8 +64,8 @@ export function CveDetailContent({ cve, onOpenItem }: { cve: CveDetail; onOpenIt
             {cve.title}
           </div>
         )}
-        <a href={`https://app.opencve.io/cve/${cve.cve_id}`} target="_blank" rel="noreferrer" style={{ fontSize: 12.5 }}>
-          Bekijk op opencve.io ↗
+        <a href={`https://vulnerabilities.ncsc.nl/vulnerability.html?id=${cve.year}/${cve.cve_id.toLowerCase()}`} target="_blank" rel="noreferrer" style={{ fontSize: 12.5 }}>
+          Bekijk op NCSC-NL ↗
         </a>
       </div>
 
@@ -98,9 +98,9 @@ export function CveDetailContent({ cve, onOpenItem }: { cve: CveDetail; onOpenIt
       {cve.weaknesses.length > 0 && (
         <Section title="Zwaktes (CWE)">
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {cve.weaknesses.map((w) => (
-              <span key={w} className="si-mono" style={{ fontSize: 12, color: "var(--si-purple)", background: "var(--si-purple-bg)", borderRadius: 6, padding: "4px 9px" }}>
-                {w}
+            {cve.weaknesses.map((cwe) => (
+              <span key={cwe.id} className="si-mono" style={{ fontSize: 12, color: "var(--si-purple)", background: "var(--si-purple-bg)", borderRadius: 6, padding: "4px 9px" }}>
+                {cwe.id} - {cwe.name}
               </span>
             ))}
           </div>

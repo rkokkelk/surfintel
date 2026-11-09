@@ -11,7 +11,6 @@ from app.celery import app
 from app.core.encryption import decrypt
 from app.core.media import screenshot_path
 from app.core.singleton_task import UuidSafeSingleton
-from app.enrichment.tasks import ENRICHMENT_MODULES
 from app.models.alert import (
     AlertChannel,
     AlertCondition,
@@ -44,6 +43,7 @@ def match_alert_items(rule_id: uuid.UUID, limit: int=25) -> list[Item]:
             .order_by(Item.published_at.desc().nullslast(), Item.last_checked_at.desc())
         ).yield_per(100)
 
+        from app.enrichment.tasks import ENRICHMENT_MODULES
         modules = list(ENRICHMENT_MODULES.values())
 
         for item in items:
@@ -98,6 +98,7 @@ def notify(results: list[tuple[str, dict]], item_id: uuid.UUID, source_id: uuid.
         db.commit()
 
         enrichment_results = dict(results)
+        from app.enrichment.tasks import ENRICHMENT_MODULES
         view = build_match_view(item, source, list(ENRICHMENT_MODULES.values()), enrichment_results)
 
         active_rules = db.scalars(select(AlertRule).where(AlertRule.status == AlertRuleStatus.active)).all()
