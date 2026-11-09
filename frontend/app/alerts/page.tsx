@@ -36,6 +36,7 @@ const THRESHOLD_FIELDS: AlertField[] = ["cvss_score", "epss_score"];
 const TEMPLATE_PLACEHOLDERS = [
   { token: "{title}", desc: "Titel van het item" },
   { token: "{url}", desc: "Link naar het item" },
+  { token: "{content}", desc: "Tekst van item in vorm van Markdown" },
   { token: "{source}", desc: "Naam van de bron" },
   { token: "{rule_name}", desc: "Naam van deze alert-regel" },
   { token: "{published_at}", desc: "Publicatiedatum" },

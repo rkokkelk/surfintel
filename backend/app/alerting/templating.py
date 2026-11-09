@@ -35,6 +35,7 @@ def build_template_context(item: Item, source: Source, rule: AlertRule, view: Ma
         "title": item.title or item.url,
         "url": item.url,
         "source": source.name,
+        "content": item.extracted_text,
         "rule_name": rule.name,
         "description": item.description or "",
         "published_at": item.published_at.strftime("%Y-%m-%d %H:%M") if item.published_at else "",
