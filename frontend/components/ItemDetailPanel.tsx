@@ -332,7 +332,6 @@ export function ItemDetailPanel({
                       fontSize: 12.5,
                       color: "var(--si-text-secondary)",
                       lineHeight: 1.5,
-                      maxHeight: 220,
                       overflowY: "auto",
                       background: "var(--si-bg)",
                       border: "1px solid var(--si-border)",
