@@ -16,6 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const apiUrl = process.env.API_URL ?? "http://localhost:8000";
+  const ssoSlug = process.env.SSO_SLUG ?? null;
 
   return (
     <html lang="nl">
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
         <script
-          dangerouslySetInnerHTML={{ __html: `window.__ENV__=${JSON.stringify({ API_URL: apiUrl })};` }}
+          dangerouslySetInnerHTML={{ __html: `window.__ENV__=${JSON.stringify({ API_URL: apiUrl, SSO_SLUG: ssoSlug })};` }}
         />
       </head>
       <body>{children}</body>

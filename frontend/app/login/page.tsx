@@ -10,8 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const SSO_SLUG = process.env.NEXT_PUBLIC_SSO_SLUG;
+  const SSO_SLUG = typeof window !== "undefined" ? window.__ENV__?.SSO_SLUG : null;
 
   async function handleSSO(event: React.MouseEvent) {
     event.preventDefault();
