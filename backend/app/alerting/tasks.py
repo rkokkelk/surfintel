@@ -1,5 +1,6 @@
 import datetime as dt
 import uuid
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import apprise
 from sqlalchemy import select
@@ -116,6 +117,28 @@ def notify(results: list[tuple[str, dict]], item_id: uuid.UUID, source_id: uuid.
         db.commit()  # the `with` only closes the session: uncommitted matches would be rolled back
 
 
+def apprise_url_format(url: str) -> str:
+    """ Set required preformatted AppRise URL configurations
+
+    Ensures that the markdown format, which is used within this application,
+    is always set.
+    
+    :param str: AppRise URL to format
+    :return: properly formatted URL
+    """
+    parts = urlsplit(url)
+    # lijst van (key, value) paren, volgorde blijft behouden
+    pairs = parse_qsl(parts.query, keep_blank_values=True)
+
+    # verwijder eventueel bestaande format-parameters
+    pairs = [(k, v) for k, v in pairs if k != "format"]
+
+    # voeg toe (of vervang door) format=markdown
+    pairs.append(("format", "markdown"))
+
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(pairs), parts.fragment))
+
+
 def send_alert_notification(
     db: Session, rule: AlertRule, item: Item, match: AlertMatch, view: dict, source: Source
 ) -> None:
@@ -129,7 +152,9 @@ def send_alert_notification(
 
     notifier = apprise.Apprise()
     for channel in channels:
-        notifier.add(decrypt(channel.apprise_url_encrypted))
+        apprise_url = decrypt(channel.apprise_url_encrypted)
+        apprise_url_formatted = apprise_url_format(apprise_url)
+        notifier.add(apprise_url_formatted)
 
     title = f"SurfIntel alert: {rule.name}"
     body = render_message(rule.message_template, build_template_context(item, source, rule, view))
